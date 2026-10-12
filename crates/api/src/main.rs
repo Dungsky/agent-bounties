@@ -20868,6 +20868,8 @@ mod tests {
             let mut document: AutonomousBountyTermsDocument =
                 serde_json::from_str(include_str!("../../../bounties/autonomous-v1/244.json"))
                     .unwrap();
+            document.contract_terms["funding_deadline"] =
+                serde_json::json!(now.timestamp() + 86_400);
             document.source_url = Some(format!(
                 "https://github.com/agent-bounties/agent-bounties/issues/{}",
                 Uuid::new_v4().as_u128()
