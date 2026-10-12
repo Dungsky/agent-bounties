@@ -2263,7 +2263,11 @@ fn mcp_tool_descriptor_for_mode(
     value.insert("description".to_string(), json!(description));
     value.insert(
         "inputSchema".to_string(),
-        public_review_input_schema(descriptor.name, descriptor.input_schema, public_review),
+        public_review_input_schema(
+            descriptor.name,
+            model_facing_input_schema(descriptor.name, descriptor.input_schema),
+            public_review,
+        ),
     );
     value.insert(
         "annotations".to_string(),
@@ -2583,7 +2587,7 @@ async fn call_tool(
                 })?;
             return Ok(tool_result(
                 legacy_result(inspect_open_competition_v2(State(state), Json(args)).await.0)?,
-                "Returned indexed Open Competition V2 Beta3 state. Only CompetitionSettledV2 proves solver payment.",
+                "Returned Open Competition V2 Beta3 inspection data. Only CompetitionSettledV2 proves solver payment.",
                 false,
             ));
         }
@@ -5049,6 +5053,23 @@ fn public_review_tool_description<'a>(name: &str, fallback: &'a str) -> &'a str 
     }
 }
 
+fn model_facing_input_schema(name: &str, mut schema: Value) -> Value {
+    if name == "prepare_open_competition_v2" {
+        // Native clients can reject the entire catalog when handed the full
+        // conditional mutation schema. Keep that schema in /tools and expose
+        // each exact argument schema through the read-only inspection tool.
+        if let Some(object) = schema.as_object_mut() {
+            object.remove("allOf");
+            object.remove("$defs");
+        }
+        schema["properties"]["arguments"]["additionalProperties"] = json!(true);
+        schema["properties"]["arguments"]["description"] = json!(
+            "Exact argument object for the selected operation. First call inspect_open_competition_v2 with operation=schema and for_operation set to that operation; follow its arguments_schema. Never guess fields or include private keys."
+        );
+    }
+    schema
+}
+
 fn chatgpt_tool_description(name: &str, fallback: &'static str) -> &'static str {
     match name {
         "get_bounty_feed" => "Use this when the model or mounted feed needs fresh structured bounty data without rendering another widget. It is read-only; use render_bounty_feed only when the person wants the interactive feed shown.",
@@ -5077,8 +5098,8 @@ fn chatgpt_tool_description(name: &str, fallback: &'static str) -> &'static str 
         "submit_unfunded_bounty_solution" => "Use this when a registered agent explicitly wants to publish or replace its public solution to an open unfunded request. This public write creates no payment claim.",
         "prepare_bounty_post" => "Use this when the person's AI has gathered complete bounty terms and received explicit approval. Reuse posting_operation_id when resuming. For creator review, set review_mode=creator and the exact agreed delivery_deadline with timezone offset, omit automated benchmark/evidence fields, and explain that the creator confirms the verdict. Preserve parent bindings, the approved reference_attachment, and any approved bounty_image with its exact prompt and alt text; omit all three image fields together to use the deterministic review-page visual. This prepares a reviewable handoff; it does not publish, move funds, request a secret, or prove that a bounty exists.",
         "list_autonomous_bounties" => "Use this when the person wants funded Agent Bounties work or canonical lifecycle inventory. Set claimable_only=true for work that is currently funded and open to solve.",
-        "inspect_open_competition_v2" => "New users start with operation=guide. Then inspect the V2 Beta3 release, reviewed profiles, inventory, events, or proof-job state in the returned order. Treat only CompetitionSettledV2 as payment evidence.",
-        "prepare_open_competition_v2" => "Use this only after inspect_open_competition_v2(operation=guide). Match arguments to the selected operation's exact schema. Some operations return unsigned plans; quote_proof creates a hosted job, pay_proof may transfer Base USDC after explicit approval, and authorize_relay may submit a proof after explicit approval. Follow next_action and treat only CompetitionSettledV2 as payment evidence.",
+        "inspect_open_competition_v2" => "New users start with operation=guide. Read exact mutation arguments using operation=schema and for_operation set to the desired mutation operation. Inspect the V2 Beta3 release, reviewed profiles, inventory, events, or proof-job state in the guide's order. Treat only CompetitionSettledV2 as payment evidence.",
+        "prepare_open_competition_v2" => "Use this only after inspect_open_competition_v2(operation=guide). Before each operation, read its exact arguments_schema with inspect_open_competition_v2(operation=schema, for_operation=the selected operation). Some operations return unsigned plans; quote_proof creates a hosted job, pay_proof may transfer Base USDC after explicit approval, and authorize_relay may submit a proof after explicit approval. Follow next_action and treat only CompetitionSettledV2 as payment evidence.",
         _ => fallback,
     }
 }
@@ -6276,6 +6297,7 @@ mod tests {
             operations,
             [
                 "guide",
+                "schema",
                 "release",
                 "profiles",
                 "inventory",
@@ -6302,6 +6324,18 @@ mod tests {
         assert_eq!(
             events["properties"]["bounty_id"]["pattern"],
             "^0x[0-9a-fA-F]{64}$"
+        );
+        let schema_read = branches
+            .iter()
+            .find(|branch| branch["properties"]["operation"]["const"] == "schema")
+            .unwrap();
+        assert!(schema_read["required"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("for_operation")));
+        assert_eq!(
+            schema_read["properties"]["for_operation"]["enum"],
+            OpenCompetitionV2MutationArgs::input_schema()["properties"]["operation"]["enum"]
         );
     }
 
@@ -6377,11 +6411,79 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn v2_model_catalog_is_compact_and_exact_schemas_remain_discoverable() {
+        let canonical = OpenCompetitionV2MutationArgs::input_schema();
+        let catalog = mcp_tools_for_catalog(McpCatalogProfile::Core).await;
+        let tool = catalog
+            .iter()
+            .find(|tool| tool["name"] == "prepare_open_competition_v2")
+            .unwrap();
+        let input = &tool["inputSchema"];
+        assert!(input.get("allOf").is_none());
+        assert!(input.get("$defs").is_none());
+        assert!(serde_json::to_string(input).unwrap().len() < 1500);
+        assert_eq!(
+            input["properties"]["operation"],
+            canonical["properties"]["operation"]
+        );
+        assert_eq!(input["required"], canonical["required"]);
+        assert_eq!(input["properties"]["arguments"]["type"], "object");
+        assert_eq!(
+            input["properties"]["arguments"]["additionalProperties"],
+            true
+        );
+        assert_eq!(tool["annotations"]["readOnlyHint"], false);
+
+        // Exercise the actual inspection handler for every operation. Its
+        // response must preserve the exact advanced-schema constraints.
+        for (operation, arguments_schema) in canonical["$defs"].as_object().unwrap() {
+            let response = inspect_open_competition_v2(
+                State(public_tool_test_state()),
+                Json(OpenCompetitionV2InspectArgs {
+                    operation: "schema".to_string(),
+                    for_operation: Some(operation.to_string()),
+                    ..Default::default()
+                }),
+            )
+            .await
+            .0;
+            let result = response.pointer("/content/0/json").unwrap();
+            assert_eq!(result["operation"], operation.as_str());
+            assert_eq!(result["tool"], "prepare_open_competition_v2");
+            assert_eq!(&result["arguments_schema"], arguments_schema);
+            assert!(result.get("$defs").is_none());
+        }
+    }
+
+    #[tokio::test]
+    async fn v2_schema_discovery_rejects_missing_unknown_and_misplaced_selectors() {
+        for (operation, for_operation) in [
+            ("schema", None),
+            ("schema", Some("unknown")),
+            ("guide", Some("create")),
+            ("release", Some("create")),
+        ] {
+            let response = inspect_open_competition_v2(
+                State(public_tool_test_state()),
+                Json(OpenCompetitionV2InspectArgs {
+                    operation: operation.to_string(),
+                    for_operation: for_operation.map(str::to_string),
+                    ..Default::default()
+                }),
+            )
+            .await
+            .0;
+            assert!(response["error"].is_string(), "{response}");
+        }
+    }
+
+    #[tokio::test]
     async fn open_competition_v2_guide_covers_complete_safe_role_flows() {
         let response = inspect_open_competition_v2(
             State(public_tool_test_state()),
             Json(OpenCompetitionV2InspectArgs {
                 operation: "guide".to_string(),
+                for_operation: None,
                 network: None,
                 state: None,
                 bounty_id: None,

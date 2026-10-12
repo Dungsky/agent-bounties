@@ -21251,6 +21251,14 @@ mod tests {
     fn terms_publication_returns_actionable_semantic_error() {
         let mut document: AutonomousBountyTermsDocument =
             serde_json::from_str(include_str!("../../../bounties/autonomous-v1/244.json")).unwrap();
+        // Keep this semantic-error test independent of the historical fixture deadline.
+        document.contract_terms["funding_deadline"] =
+            serde_json::json!(Utc::now().timestamp() + 86_400);
+        autonomous_terms_record(PublishAutonomousBountyTermsRequest {
+            creator_wallet: "0x884834E884d6E93462655A2820140aD03E6747bC".to_string(),
+            document: document.clone(),
+        })
+        .unwrap();
         document.benchmark = serde_json::json!({
             "engine": "github_ci",
             "required_checks": ["ci"]
@@ -21265,9 +21273,12 @@ mod tests {
         let (status, Json(body)) = error;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         assert_eq!(body.error_code, "invalid_autonomous_bounty_terms");
-        assert!(body
-            .message
-            .contains("known leading-zero verifier must use its exact 16-bit"));
+        assert!(
+            body.message
+                .contains("known leading-zero verifier must use its exact 16-bit"),
+            "unexpected semantic error: {}",
+            body.message
+        );
         assert!(body.next_action.contains("before creating or funding"));
     }
 

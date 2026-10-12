@@ -123,9 +123,8 @@ Wallet-review metadata remains separate, and errors retain `isError: true`.
 The extra text block changes neither tool schemas nor action authority. This
 follows the [MCP structured-content compatibility guidance](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content).
 
-The hosted release uses the nine-tool ChatGPT catalog and twenty-eight-tool core
-catalog described here. Query the deployed service for its actual version and
-available tools; an older source checkout may have a different catalog. The
+Query the deployed service for its actual version and available tools; the
+separately pinned hosted release can have a different catalog from public main. The
 release runtime pins tool names, instructions, schemas and safety annotations in
 `crates/mcp-server/fixtures/public-mcp-contract-v1.json`. An intentional change
 must update that fixture and the affected public onboarding documentation in
@@ -135,8 +134,25 @@ MCP path.
 
 For the core catalog's V2 extension, begin with
 `inspect_open_competition_v2(operation=guide)`. The guide supplies the complete
-post, hosted-proof, BYO-proof, and finish/refund order; the mutation tool's
-conditional schema supplies exact arguments for each operation. Treat
+post, hosted-proof, BYO-proof, and finish/refund order. Before a mutation, request
+its exact argument schema without creating state or contacting the payment API:
+
+```json
+{"name":"inspect_open_competition_v2","arguments":{"operation":"schema","for_operation":"prepare_policies"}}
+```
+
+Replace `for_operation` with the desired mutation operation. Match the returned
+`arguments_schema`, then pass that object as the existing mutation tool's
+`arguments`. Missing or unknown selectors fail explicitly. A schema read grants
+no execution or spending authority; retain the guide's release/readiness order.
+
+The model-facing mutation descriptor keeps a compact operation/arguments
+envelope. Loading the full conditional schema caused native Cline 3.0.70 to
+fail before any tool call in the October 12 diagnostic; a compact envelope
+allowed public discovery with all tools retained. The advanced HTTP `/tools`
+catalog keeps the full conditional schema, and the inspection tool returns its
+unchanged operation-specific definitions. Existing mutation request bodies and
+server-side authorization remain unchanged. Treat
 `prepare_open_competition_v2` as side-effecting: quoting creates hosted state,
 an approved payment signature may transfer Base USDC, and an approved relay
 signature may submit a proof. Its local `prepare_policies` operation derives
