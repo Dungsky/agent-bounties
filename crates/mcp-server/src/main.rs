@@ -913,6 +913,7 @@ tool_args! {
     #[derive(Default)]
     struct OpenCompetitionV2InspectArgs {
         operation: String,
+        for_operation: Option<String>,
         network: Option<String>,
         state: Option<String>,
         bounty_id: Option<String>,
@@ -3909,6 +3910,19 @@ fn object_tool_schema(properties: Value, required: &[&str]) -> Value {
     })
 }
 
+const OPEN_COMPETITION_V2_MUTATION_OPERATIONS: &[&str] = &[
+    "prepare_profile",
+    "prepare_policies",
+    "validate",
+    "create",
+    "fund",
+    "quote_proof",
+    "pay_proof",
+    "prepare_proof",
+    "authorize_relay",
+    "prepare_action",
+];
+
 fn open_competition_v2_inspect_schema() -> Value {
     let network = json!({
         "type": ["string", "null"],
@@ -3926,7 +3940,8 @@ fn open_competition_v2_inspect_schema() -> Value {
         "type": "object",
         "description": "Start with guide, then use only the fields accepted by the selected read operation.",
         "properties": {
-            "operation": {"type": "string", "enum": ["guide", "release", "profiles", "inventory", "events", "proof_job"]},
+            "operation": {"type": "string", "enum": ["guide", "schema", "release", "profiles", "inventory", "events", "proof_job"]},
+            "for_operation": {"type": "string", "enum": OPEN_COMPETITION_V2_MUTATION_OPERATIONS, "description": "For operation=schema only: mutation operation whose exact argument schema to read."},
             "network": {"type": ["string", "null"], "enum": ["base-mainnet", "base-sepolia", null]},
             "state": {"type": ["string", "null"], "enum": ["announced", "funding", "active", "settled", "cancelled", null]},
             "bounty_id": {"type": ["string", "null"], "pattern": "^0x[0-9a-fA-F]{64}$"},
@@ -3936,6 +3951,9 @@ fn open_competition_v2_inspect_schema() -> Value {
         "additionalProperties": false,
         "oneOf": [
             operation_schema("guide", json!({"network": network.clone()}), &[]),
+            operation_schema("schema", json!({
+                "for_operation": {"type": "string", "enum": OPEN_COMPETITION_V2_MUTATION_OPERATIONS}
+            }), &["for_operation"]),
             operation_schema("release", json!({"network": network.clone()}), &[]),
             operation_schema("profiles", json!({"network": network.clone()}), &[]),
             operation_schema("inventory", json!({
@@ -4311,18 +4329,7 @@ fn open_competition_v2_mutation_schema() -> Value {
             "contributor": {"oneOf": [address, {"type": "null"}], "description": "Required only for withdraw_refund_for; refunds always go to this contributor."}
         }), &["competition_contract", "action"])
     });
-    let operations = [
-        "prepare_profile",
-        "prepare_policies",
-        "validate",
-        "create",
-        "fund",
-        "quote_proof",
-        "pay_proof",
-        "prepare_proof",
-        "authorize_relay",
-        "prepare_action",
-    ];
+    let operations = OPEN_COMPETITION_V2_MUTATION_OPERATIONS;
     let operation_rules = operations
         .iter()
         .map(|operation| {
@@ -6412,6 +6419,12 @@ fn open_competition_v2_mcp_guide() -> Value {
             ]
         },
         "operations": ["prepare_profile", "prepare_policies", "validate", "create", "fund", "quote_proof", "pay_proof", "prepare_proof", "authorize_relay", "prepare_action"],
+        "argument_discovery": {
+            "tool": "inspect_open_competition_v2",
+            "operation": "schema",
+            "selector": "for_operation",
+            "instruction": "Before each mutation operation, request its exact arguments_schema using operation=schema and for_operation set to that operation. Pass a matching object as prepare_open_competition_v2.arguments. A schema read grants no execution or spending authority."
+        },
         "profile_support": {
             "structured-artifact-metric-v1": "prepare_profile accepts threshold and deterministic artifact requirements.",
             "public-vector-metric-v1": "prepare_profile accepts mode, threshold, and expected/weight policy vectors; quote_proof later adds each observed value. Copy the matching reviewed profile fields from profiles into validate.",
@@ -6438,6 +6451,29 @@ async fn inspect_open_competition_v2(
     State(_state): State<SharedState>,
     Json(args): Json<OpenCompetitionV2InspectArgs>,
 ) -> Json<serde_json::Value> {
+    if args.for_operation.is_some() && args.operation != "schema" {
+        return mcp_error("for_operation is accepted only with operation=schema");
+    }
+    if args.operation == "schema" {
+        let Some(operation) = args.for_operation.as_deref() else {
+            return mcp_error(
+                "operation=schema requires for_operation, for example prepare_policies",
+            );
+        };
+        let schema = open_competition_v2_mutation_schema();
+        let Some(arguments_schema) = schema["$defs"].get(operation) else {
+            return mcp_error(
+                "for_operation must name a supported V2 mutation operation; read operation=guide",
+            );
+        };
+        return mcp_json(json!({
+            "schema_version": "agent-bounties/open-competition-v2-operation-schema-v1",
+            "tool": "prepare_open_competition_v2",
+            "operation": operation,
+            "arguments_schema": arguments_schema,
+            "next_action": "Match arguments to this schema. Follow the guide's release, readiness and explicit-approval checks before executing the selected operation. Schema discovery itself performs no mutation."
+        }));
+    }
     if args.operation == "guide" {
         return mcp_json(open_competition_v2_mcp_guide());
     }

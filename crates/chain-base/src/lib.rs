@@ -9511,10 +9511,19 @@ mod tests {
     fn deterministic_terms_accept_the_contract_zero_verifier_set() {
         let document: AutonomousBountyTermsDocument =
             serde_json::from_str(include_str!("../../../bounties/autonomous-v1/217.json")).unwrap();
+        // Verify this historical record at a valid publication time, not today.
+        let published_at = DateTime::from_timestamp(
+            document.contract_terms["funding_deadline"]
+                .as_i64()
+                .unwrap()
+                - 86_400,
+            0,
+        )
+        .unwrap();
         let record = build_autonomous_bounty_terms_record(
             "0x884834E884d6e93462655A2820140aD03E6747bC",
             document,
-            Utc::now(),
+            published_at,
         )
         .unwrap();
         let creation_data = json!({
