@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import sys
 from html.parser import HTMLParser
@@ -12,6 +13,7 @@ from urllib.request import Request, urlopen
 
 
 PUBLIC_ORIGIN = "https://agentbounties.app"
+EDGE_PROFILE = Path(__file__).resolve().parents[1] / "ops/cloudflare/site-canary-edge.json"
 VOID_TAGS = set("area base br col embed hr img input link meta param source track wbr".split())
 # Pages intentionally substitutes these public configuration files at deployment.
 DEPLOYED_CONFIGS = {
@@ -26,9 +28,14 @@ class Page(HTMLParser):
         super().__init__()
         self.nodes: list[tuple[str, dict[str, str | None], tuple[int, ...]]] = []
         self.stack: list[int] = []
+        self.script_bodies: dict[int, str] = {}
+        self.script_attributes: dict[int, list[tuple[str, str | None]]] = {}
         self.feed(body)
 
     def handle_starttag(self, tag, attrs):
+        if tag == "script":
+            self.script_bodies[len(self.nodes)] = ""
+            self.script_attributes[len(self.nodes)] = attrs
         self.nodes.append((tag, dict(attrs), tuple(self.stack)))
         if tag not in VOID_TAGS:
             self.stack.append(len(self.nodes) - 1)
@@ -38,6 +45,14 @@ class Page(HTMLParser):
             if self.nodes[self.stack[offset]][0] == tag:
                 del self.stack[offset:]
                 return
+
+    def handle_data(self, data):
+        if self.stack and self.stack[-1] in self.script_bodies:
+            self.script_bodies[self.stack[-1]] += data
+
+    def scripts(self):
+        return [(self.script_attributes[index], body)
+                for index, body in self.script_bodies.items()]
 
     def matching(self, attribute: str, value: str | None = None) -> list[int]:
         return [i for i, (_, attrs, _) in enumerate(self.nodes)
@@ -118,6 +133,35 @@ def asset_digest(path: str, body: bytes) -> bytes:
     return hashlib.sha256(body).digest()
 
 
+def without_reviewed_edge_beacon(base_url: str, body: str) -> str:
+    # This is a reviewed public deployment expectation, not a host allowlist.
+    # Cloudflare's account RUM excludes EU visitors, so absence is valid too.
+    profile = json.loads(EDGE_PROFILE.read_text(encoding="utf-8"))
+    require(set(profile) == {"schema", "origin", "script"}
+            and profile["schema"] == "agent-bounties/site-canary-edge-v1"
+            and profile["origin"] == PUBLIC_ORIGIN
+            and isinstance(profile["script"], str) and profile["script"],
+            "invalid reviewed edge profile")
+    if base_url.rstrip("/") != profile["origin"]:
+        return body
+    script = profile["script"]
+    if script not in body:
+        return body  # Any different/additional script still fails below.
+    require(body.count(script) == 1, "duplicate reviewed edge beacon")
+    match = re.search(re.escape(script) + r"(?=\s*</body>\s*</html>\s*\Z)", body)
+    require(match is not None, "reviewed edge beacon must be last in body")
+    page = Page(body)
+    attrs = Page(script).nodes[0][1]
+    matching = [index for index, (tag, found, _) in enumerate(page.nodes)
+                if tag == "script" and found == attrs]
+    require(len(matching) == 1, "ambiguous reviewed edge beacon")
+    parents = page.nodes[matching[0]][2]
+    bodies = [index for index, (tag, _, _) in enumerate(page.nodes) if tag == "body"]
+    require(len(bodies) == 1 and parents and parents[-1] == bodies[0],
+            "reviewed edge beacon must be a direct body child")
+    return body[:match.start()] + body[match.end():]
+
+
 def check_deployed(base_url: str, site: Path, nonce: str, get=fetch) -> int:
     def read(reference: str) -> bytes:
         url = urljoin(base_url.rstrip("/") + "/", reference)
@@ -125,8 +169,9 @@ def check_deployed(base_url: str, site: Path, nonce: str, get=fetch) -> int:
         return get(url)
 
     expected = check_home((site / "index.html").read_text(encoding="utf-8"))
-    actual = check_home(read("").decode("utf-8"))
+    actual = check_home(without_reviewed_edge_beacon(base_url, read("").decode("utf-8")))
     require(actual.assets() == expected.assets(), "homepage scripts/styles differ from the Pages revision")
+    require(actual.scripts() == expected.scripts(), "homepage script attributes/content differ from the Pages revision")
     require({kind for kind, _ in expected.assets()} == {"script", "style"}, "homepage needs scripts and styles")
     for kind, reference in expected.assets():
         parsed = urlsplit(reference)

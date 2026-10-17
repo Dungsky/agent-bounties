@@ -29,3 +29,14 @@ source, wallet configuration, notification handler and manifest over valid TLS.
 Then disable the old Pages deployment schedule to avoid competing publishers.
 API/MCP hosting, mail records, account origins, budgets and signing keys are
 separate from this website cutover and remain unchanged.
+
+The public homepage canary also checks the existing account-level Web Analytics
+edge injection on `agentbounties.app`. The reviewed exact script is recorded in
+`ops/cloudflare/site-canary-edge.json`, including its URL, integrity, public site
+identifier, settings and attributes. The account excludes EU visitors, so zero
+or one exact beacon is allowed, only as the final direct child of the body. This
+is separate from Pages-project analytics and does not enable tracking or change
+provider settings. All original asset order/bytes and script attributes/content
+remain checked; other, duplicate or changed scripts fail. Re-review the profile
+when the provider changes its script. The immutable Pages URL check remains a
+separate build check and does not replace the custom-domain check.
