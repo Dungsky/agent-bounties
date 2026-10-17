@@ -43,15 +43,15 @@ def inspect(payload, now=None):
             return failure
         if {r['protocol'] for r in readers} != PROTOCOLS:
             return failure
-        safe = payload['safe_block']
-        if type(safe) is not int or safe < 0:
+        safe, latest = payload['safe_block'], payload['latest_block']
+        if type(safe) is not int or type(latest) is not int or not 0 <= safe <= latest:
             return failure
         checks = []
         for r in readers:
             age, cursor, lag = (r.get(k) for k in ('heartbeat_age_seconds', 'cursor_block', 'lag_blocks'))
             healthy = (r.get('ready') is True and r.get('blocker') is None
                        and type(age) is int and 0 <= age <= 90
-                       and type(cursor) is int and cursor >= 0
+                       and type(cursor) is int and 0 <= cursor <= latest
                        and type(lag) is int and 0 <= lag <= 20
                        and lag == max(0, safe - cursor))
             checks.append({'protocol': r['protocol'], 'ready': healthy,

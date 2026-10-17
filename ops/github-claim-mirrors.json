@@ -1,0 +1,24 @@
+{
+  "schema_version": "agent-bounties/github-claim-mirrors-v1",
+  "entries": [
+    {
+      "repository": "NSPG13/agent-bounties",
+      "repository_id": 1293030696,
+      "issue_number": 1632,
+      "issue_id": 5792618033,
+      "network": "base-mainnet",
+      "chain_id": 8453,
+      "protocol_version": "agent-bounties/autonomous-v1",
+      "bounty_contract": "0xbf99f1c2c690c8bcd45e341006bf7b7dd6c41cdc",
+      "terms_hash": "0x82f436bb4025192f21a42bb4d6b818ace499e8690d24d6d1b11601ad26668bf3",
+      "factory_contract": "0x082c52131aaf0c56e76b075f895eab6fcab6d2f9",
+      "creation_transaction_hash": "0x53aac65f9e41a01430851290ef634b4ee9c8b933511cc8f8b6abbc2ead82a54d",
+      "publication_evidence": {
+        "run_id": 38063631581,
+        "artifact_id": 11674058855,
+        "artifact_sha256": "f84a75b6e47e6f072427279772cf5b156264ef09c2aa65c78e7a4733d528b466",
+        "source_commit": "4937047df30bea4ba621d57fd317a274b07ece5c"
+      }
+    }
+  ]
+}

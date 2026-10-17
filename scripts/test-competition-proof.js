@@ -44,7 +44,7 @@ function setup(storage = new Map(), server = {}) {
       const body = options.body && JSON.parse(options.body);
       let data;
       if (url.includes("/inventory?")) data = { network: "base-mainnet", competitions: [{ record: { projection: server.projection } }] };
-      else if (url.includes("/opportunities?")) data = { schema_version: "agent-bounties/opportunity-projection-v1", items: [server.item] };
+      else if (url.includes("/opportunities?")) data = { schema_version: "agent-bounties/opportunity-projection-v1", network: "base-mainnet", degraded: false, source_statuses: [{ source_type: "canonical_base", available: true }], items: [server.item] };
       else if (url.endsWith("/proof-quotes")) {
         server.quoteCount = (server.quoteCount || 0) + 1;
         data = responseQuote(body); server.quoted = clone(data);

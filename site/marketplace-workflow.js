@@ -117,16 +117,59 @@
     }
     return counts;
   }
+  function canonicalCoverage(payload, expectedIdentity = null) {
+    const sources = payload?.source_statuses?.filter?.(source => source?.source_type === "canonical_base");
+    if (sources?.length !== 1) throw new Error("Canonical inventory evidence is unavailable.");
+    const source = sources[0];
+    // Older servers have no coverage breakdown. Keep their strict fail-closed contract.
+    if (source.coverage === undefined) {
+      if (payload.degraded !== false || source.available !== true) throw new Error("Canonical inventory evidence is unavailable.");
+      return { state: "complete", limited: payload.items?.length >= 300, missing: [], message: payload.items?.length >= 300 ? "Showing a limited page of checked listings; the full count is unknown." : "" };
+    }
+    const protocols = ["autonomous-v1", "open-competition-v1", "open-competition-v2-beta3"];
+    const forId = id => String(id || "").startsWith("canonical:") ? protocols[0]
+      : String(id || "").startsWith("open-competition:") ? protocols[1]
+      : String(id || "").startsWith("open-competition-v2:") ? protocols[2] : null;
+    const scoped = payload.coverage_scope === "canonical_identity";
+    if (scoped ? (!expectedIdentity || payload.requested_opportunity_id !== expectedIdentity)
+      : payload.coverage_scope !== "inventory_page") throw new Error("Inventory coverage has the wrong scope.");
+    const expected = scoped ? [forId(expectedIdentity)] : protocols;
+    const statuses = source.protocol_statuses;
+    if (!Array.isArray(statuses) || statuses.length !== expected.length
+      || expected.some(protocol => !protocol || statuses.filter(status => status.protocol === protocol).length !== 1)
+      || statuses.some(status => !["complete", "partial", "unavailable"].includes(status.coverage)
+        || (status.coverage === "complete" && status.error !== null)
+        || (status.coverage === "unavailable" ? status.item_count !== null : !Number.isSafeInteger(status.item_count) || status.item_count < 0))) {
+      throw new Error("Protocol coverage is incomplete or malformed.");
+    }
+    const state = statuses.every(status => status.coverage === "complete") ? "complete"
+      : statuses.every(status => status.coverage === "unavailable") ? "unavailable" : "partial";
+    if (source.coverage !== state || payload.coverage !== state || source.available !== (state === "complete")
+      || (state !== "complete" && payload.degraded !== true)
+      || typeof payload.degraded !== "boolean" || !Array.isArray(payload.items)
+      || payload.items.some(item => {
+        const status = statuses.find(status => status.protocol === forId(item.opportunity_id));
+        return !status || status.coverage === "unavailable" || (scoped && item.opportunity_id !== expectedIdentity);
+      })
+      || statuses.some(status => payload.items.filter(item => forId(item.opportunity_id) === status.protocol).length > (status.item_count ?? 0))) {
+      throw new Error("Protocol coverage does not match the returned records.");
+    }
+    const missing = statuses.filter(status => status.coverage !== "complete").map(status => status.protocol);
+    const labels = { "autonomous-v1": "bounties", "open-competition-v1": "open competitions", "open-competition-v2-beta3": "Beta3 competitions" };
+    const limited = payload.has_more === true || (payload.has_more === undefined && payload.items.length >= 300);
+    if (payload.has_more !== undefined && typeof payload.has_more !== "boolean") throw new Error("Page coverage is malformed.");
+    return { state, limited, missing, message: state === "complete" ? (limited ? "Showing a limited page of checked listings; the full count is unknown." : "") : state === "unavailable"
+      ? "Listings are unavailable. The number of bounties is unknown; try Refresh."
+      : `Showing checked listings. Some listings are missing (${missing.map(protocol => labels[protocol]).join(", ")}); the full count is unknown.` };
+  }
   function fundedInventory(payload) {
     if (payload?.schema_version !== "agent-bounties/opportunity-projection-v1" || payload.network !== NETWORK
-      || payload.applied_view !== "ready_to_earn" || payload.degraded !== false || !Array.isArray(payload.items)) {
+      || payload.applied_view !== "ready_to_earn" || !Array.isArray(payload.items)) {
       throw new Error("Funded inventory evidence is incomplete.");
     }
-    const canonical = payload.source_statuses?.find?.((source) => source?.source_type === "canonical_base");
-    if (canonical?.available !== true || payload.items.some((item) => !ready(item))) {
-      throw new Error("Canonical inventory evidence is unavailable.");
-    }
-    return { payload, items: payload.items };
+    const coverage = canonicalCoverage(payload);
+    if (payload.items.some((item) => !ready(item))) throw new Error("Canonical inventory evidence is unavailable.");
+    return { payload, items: payload.items, coverage };
   }
   function opportunityFeedUrl(location) {
     return `${apiBase(location)}/v1/opportunities?network=${NETWORK}&view=ready_to_earn&source_type=canonical_base&limit=300`;
@@ -196,7 +239,8 @@
     async function inventory(view = "ready_to_earn") {
       const payload = await request(`/v1/opportunities?network=${NETWORK}&view=${view}&source_type=canonical_base&limit=300`);
       if (payload.schema_version !== "agent-bounties/opportunity-projection-v1" || !Array.isArray(payload.items)) throw new Error("The marketplace returned an unsupported inventory format.");
-      return { payload, items: payload.items.filter(view === "ready_to_earn" ? ready : (item) => item.network === NETWORK && ADDRESS.test(item.source_id)) };
+      const coverage = canonicalCoverage(payload);
+      return { payload, coverage, items: payload.items.filter(view === "ready_to_earn" ? ready : (item) => item.network === NETWORK && ADDRESS.test(item.source_id)) };
     }
     async function opportunity(id, requireReady = false) {
       let { items } = await inventory(requireReady ? "ready_to_earn" : "recent");
@@ -393,5 +437,5 @@
       },
     };
   }
-  return { ADDRESS, UUID, BOUNDARY, GUIDANCE, POSTING_OPTIONS, postingOptions, NETWORK, SESSION_KEY, apiBase, units, isV2, ready, participationKind, phase, opportunityDeadline, sortOpportunities, inventoryCounts, fundedInventory, opportunityFeedUrl, loadFundedInventory, detailUrl, text, publicJson, summarize, createClient, createPostingJournal };
+  return { ADDRESS, UUID, BOUNDARY, GUIDANCE, POSTING_OPTIONS, postingOptions, NETWORK, SESSION_KEY, apiBase, units, isV2, ready, participationKind, phase, opportunityDeadline, sortOpportunities, inventoryCounts, canonicalCoverage, fundedInventory, opportunityFeedUrl, loadFundedInventory, detailUrl, text, publicJson, summarize, createClient, createPostingJournal };
 });

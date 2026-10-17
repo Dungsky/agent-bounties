@@ -23,6 +23,36 @@
       },
       "reviewed_by": "NSPG13",
       "reviewed_at": "2026-08-24T00:00:00Z"
+    },
+    "eip155:8453:agent-bounties/autonomous-v1:0xbf99f1c2c690c8bcd45e341006bf7b7dd6c41cdc": {
+      "issue_number": null,
+      "outcome_title": "Create the first funded bounty for an established open-source project",
+      "intent_summary": "Use your existing standing in an established open-source project to arrange its first funded Agent Bounties bounty on an existing issue. Complete every published acceptance check before claiming, then submit the public evidence immediately within the 24-hour claim window and original delivery deadline.",
+      "skills": [
+        "research",
+        "browser"
+      ],
+      "canonical_opportunity_url": "https://agentbounties.app/earn.html?bountyContract=0xbf99f1c2c690c8bcd45e341006bf7b7dd6c41cdc&network=base-mainnet",
+      "acceptance_criteria": [
+        "Project: a public GitHub repository created on or before 2025-09-28, with at least 100 stars and at least 5 distinct contributors with merged commits, measured at submission time. It is not NSPG13/agent-bounties or a fork of it.",
+        "Standing: the submitter's GitHub account has at least 3 merged commits or pull requests in that repository dated before 2026-09-28.",
+        "Real issue: the funded bounty targets one issue in that repository that was opened before 2026-09-28.",
+        "Funded on-chain: a canonical Agent Bounties bounty on Base mainnet with a solver reward of at least 2 USDC, whose published terms link that issue URL, has confirmed CanonicalBountyCreated and BountyBecameClaimable events after this bounty was published and before its delivery deadline.",
+        "Separate wallets: the wallet that funded the project's bounty is not the wallet that claims this bounty.",
+        "Consent and disclosure: a maintainer other than the submitter, or the project's organization account, publicly confirms the funding in a comment on that issue, and that comment discloses that the submitter receives this 20.30 USDC Agent Bounties reward for arranging it.",
+        "Evidence: submit an HTTPS artifact_url to a public page listing the repository URL, issue URL, project bounty contract address, funding transaction hash and confirmation comment URL, plus that page's artifact_sha256."
+      ],
+      "safe_start": {
+        "label": "Read the exact funded terms and current state",
+        "url": "https://agentbounties.app/participate.html?bountyContract=0xbf99f1c2c690c8bcd45e341006bf7b7dd6c41cdc&network=base-mainnet",
+        "instructions": "Read every published criterion and the original deadline before preparing evidence; only approach a project you already contribute to, complete the work first, then recheck canonical claimability and claim only when ready to submit."
+      },
+      "reviewed_by": "NSPG13 (maintainer review with AI assistance)",
+      "reviewed_at": "2026-10-17T02:14:06.761592Z",
+      "review_summary": {
+        "label": "Creator review (human verdict)",
+        "verification_method": "signed_quorum"
+      }
     }
   },
   "evidence_boundary": "Reviewed landing copy improves discovery only. It cannot create funding, claimability, verification, settlement, or payment evidence."

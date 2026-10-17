@@ -471,6 +471,7 @@ test("market snapshot exposes only truthful canonical evidence", () => {
   assert.deepEqual(snapshot, {
     payout: 23.75,
     live: 2,
+    coverage: { state: "complete", limited: false, missing: [], message: "" },
     completed: 12,
     availability: { now: 2, upcoming: 0, ended: 0, closed: 0, unavailable: 0, direct: 2, competition: 0, child_funding: 0, unknown: 0 },
     completedThisWeek: 2,

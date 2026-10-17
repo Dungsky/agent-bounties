@@ -1425,8 +1425,15 @@ class AgentBountiesClient:
         work_state: str | None = None,
         payment_state: str | None = None,
         limit: int | None = None,
+        opportunity_id: str | None = None,
     ):
-        """Read the combined projection without replacing source-of-truth feeds."""
+        """Return checked items and coverage metadata unchanged.
+
+        Inspect source_statuses[].protocol_statuses for complete/partial/unavailable.
+        Missing sources have unknown counts, not zero. Complete coverage applies
+        only to coverage_scope (a page or exact identity), never payment/readiness.
+        Older servers omit these fields; retain strict available/degraded checks.
+        """
         return self._request(
             "GET",
             "/v1/opportunities",
@@ -1437,6 +1444,7 @@ class AgentBountiesClient:
                 "work_state": work_state,
                 "payment_state": payment_state,
                 "limit": limit,
+                "opportunity_id": opportunity_id,
             },
         )
 

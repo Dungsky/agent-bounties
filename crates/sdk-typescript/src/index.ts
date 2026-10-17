@@ -678,6 +678,28 @@ export interface OpportunityQuery {
   work_state?: OpportunityWorkState | null;
   payment_state?: OpportunityPaymentState | null;
   limit?: number | null;
+  opportunity_id?: string | null;
+}
+
+/** Coverage describes checked sources within the requested page/identity, not readiness or payment. */
+export type OpportunityCoverage = "complete" | "partial" | "unavailable";
+export interface OpportunityProtocolStatus {
+  protocol: string;
+  coverage: OpportunityCoverage;
+  /** Public records read before filtering; null means unknown, never zero. */
+  item_count: number | null;
+  error: string | null;
+}
+export interface OpportunitySourceStatus {
+  source_type: OpportunitySourceType;
+  /** Legacy flag: true only when this whole source was checked. */
+  available: boolean;
+  coverage?: OpportunityCoverage;
+  protocol_statuses?: OpportunityProtocolStatus[];
+  authoritative_urls: string[];
+  /** Observed public records, not a market total. */
+  item_count: number;
+  error: string | null;
 }
 
 export interface OpportunityProjection extends Record<string, unknown> {
@@ -686,7 +708,13 @@ export interface OpportunityProjection extends Record<string, unknown> {
   network: string;
   applied_view: OpportunityView | null;
   degraded: boolean;
-  source_statuses: Array<Record<string, unknown>>;
+  /** Additive metadata: older servers may omit it; retain strict legacy checks then. */
+  coverage?: OpportunityCoverage;
+  coverage_scope?: "inventory_page" | "canonical_identity";
+  /** True when matching records were omitted by the result limit. */
+  has_more?: boolean;
+  requested_opportunity_id?: string | null;
+  source_statuses: OpportunitySourceStatus[];
   items: Array<Record<string, unknown>>;
 }
 
@@ -2138,6 +2166,7 @@ export class AgentBountiesClient {
     return this.query("/v1/base/autonomous-bounties/leaderboard", { network, at });
   }
 
+  /** Preserve checked items during partial coverage; do not infer an empty market from missing sources. */
   async listOpportunities(query: OpportunityQuery = {}): Promise<OpportunityProjection> {
     return this.query("/v1/opportunities", query) as Promise<OpportunityProjection>;
   }

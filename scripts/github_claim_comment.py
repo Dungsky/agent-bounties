@@ -41,6 +41,7 @@ COMMENT_ID_RE = re.compile(r"Claim comment id:\s*`?([0-9]+)`?")
 RESERVATION_RE = re.compile(r"Reservation id:\s*`?([^\s`]+)`?")
 CONTRIBUTOR_RE = re.compile(r"Contributor:\s*`?([^\s`]+)`?")
 DEFAULT_API_BASE_URL = "https://api.agentbounties.app"
+CLAIM_MIRROR_REGISTRY = pathlib.Path(__file__).resolve().parents[1] / "ops/github-claim-mirrors.json"
 STATIC_EARN_PAGE_URL = "https://agentbounties.app/"
 EVM_ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
 EVM_ADDRESS_SEARCH_RE = re.compile(r"(?<![0-9A-Za-z])0x[0-9a-fA-F]{40}(?![0-9A-Za-z])")
@@ -93,6 +94,8 @@ def write_issue_files(
     )
     meta: Dict[str, object] = {
         "repo": env.get("GITHUB_REPOSITORY") or repository.get("full_name") or "",
+        "repository_id": repository.get("id"),
+        "issue_id": issue.get("id"),
         "number": issue.get("number"),
         "title": issue.get("title") or "",
         "url": issue.get("html_url") or "",
@@ -106,7 +109,7 @@ def write_issue_files(
     missing = [
         key
         for key, value in meta.items()
-        if key not in {"comment_url", "issue_body"} and value in ("", None)
+        if key not in {"comment_url", "issue_body", "repository_id", "issue_id"} and value in ("", None)
     ]
     if missing:
         raise UserError(f"claim comment event missing required metadata: {', '.join(missing)}")
@@ -145,8 +148,83 @@ def recovery_reserved_plan(meta: Mapping[str, object]) -> Dict[str, object]:
     }
 
 
+def reviewed_claim_mirror(meta: Mapping[str, object]) -> Dict[str, object] | None:
+    """Read only the reviewed checkout registry; never use an issue-body alias."""
+    if CLAIM_MIRROR_REGISTRY.is_symlink() or not CLAIM_MIRROR_REGISTRY.is_file() or CLAIM_MIRROR_REGISTRY.stat().st_size > 262144:
+        raise UserError("reviewed claim-mirror registry must be a bounded regular file")
+    registry = json.loads(CLAIM_MIRROR_REGISTRY.read_text(encoding="utf-8"))
+    if (
+        not isinstance(registry, dict)
+        or set(registry) != {"schema_version", "entries"}
+        or registry.get("schema_version") != "agent-bounties/github-claim-mirrors-v1"
+        or not isinstance(registry.get("entries"), list)
+        or len(registry["entries"]) > 1000
+    ):
+        raise UserError("invalid reviewed claim-mirror registry")
+    fields = {
+        "repository", "repository_id", "issue_number", "issue_id", "network",
+        "chain_id", "protocol_version", "bounty_contract", "terms_hash",
+        "factory_contract", "creation_transaction_hash", "publication_evidence",
+    }
+    identities: set[Tuple[int, int]] = set()
+    numbers: set[Tuple[str, int]] = set()
+    contracts: set[Tuple[str, str]] = set()
+    selected = None
+    for entry in registry["entries"]:
+        if not isinstance(entry, dict) or set(entry) != fields:
+            raise UserError("invalid reviewed claim-mirror entry")
+        for key in ("repository_id", "issue_id", "issue_number", "chain_id"):
+            if type(entry[key]) is not int or entry[key] <= 0:
+                raise UserError(f"invalid reviewed claim-mirror {key}")
+        if not isinstance(entry["repository"], str) or not re.fullmatch(
+            r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", entry["repository"]
+        ):
+            raise UserError("invalid reviewed claim-mirror repository")
+        if (entry["network"], entry["chain_id"], entry["protocol_version"]) != (
+            "base-mainnet", 8453, "agent-bounties/autonomous-v1"
+        ):
+            raise UserError("unsupported reviewed claim-mirror network or protocol")
+        for key, length in (("bounty_contract", 40), ("factory_contract", 40),
+                            ("terms_hash", 64), ("creation_transaction_hash", 64)):
+            if not isinstance(entry[key], str) or not re.fullmatch(
+                rf"0x[0-9a-f]{{{length}}}", entry[key]
+            ) or int(entry[key], 16) == 0:
+                raise UserError(f"invalid reviewed claim-mirror {key}")
+        proof = entry["publication_evidence"]
+        if (
+            not isinstance(proof, dict)
+            or set(proof) != {"run_id", "artifact_id", "artifact_sha256", "source_commit"}
+            or any(type(proof.get(k)) is not int or proof[k] <= 0 for k in ("run_id", "artifact_id"))
+            or not re.fullmatch(r"[0-9a-f]{64}", str(proof.get("artifact_sha256", "")))
+            or not re.fullmatch(r"[0-9a-f]{40}", str(proof.get("source_commit", "")))
+        ):
+            raise UserError("invalid reviewed claim-mirror publication evidence")
+        identity = (entry["repository_id"], entry["issue_id"])
+        number = (entry["repository"], entry["issue_number"])
+        contract = (entry["network"], entry["bounty_contract"])
+        if identity in identities or number in numbers or contract in contracts:
+            raise UserError("duplicate reviewed claim-mirror binding")
+        identities.add(identity)
+        numbers.add(number)
+        contracts.add(contract)
+        if number == (meta.get("repo"), meta.get("number")) or entry["issue_id"] == meta.get("issue_id"):
+            expected_url = f"https://github.com/{entry['repository']}/issues/{entry['issue_number']}"
+            if (
+                type(meta.get("repository_id")) is not int
+                or type(meta.get("issue_id")) is not int
+                or type(meta.get("number")) is not int
+                or identity != (meta.get("repository_id"), meta.get("issue_id"))
+                or number != (meta.get("repo"), meta.get("number"))
+                or meta.get("url") != expected_url
+            ):
+                raise UserError("reviewed claim-mirror GitHub identity mismatch")
+            selected = {**entry, "issue_url": expected_url}
+    return selected
+
+
 def load_canonical_claim_records(
-    env: Mapping[str, str], repository: str
+    env: Mapping[str, str], repository: str, *, requested_issue_url: str,
+    registered_mirror: Mapping[str, object] | None = None,
 ) -> Tuple[Dict[str, Dict[str, object]], set[Tuple[str, str]]]:
     fixture = env.get("AGENT_BOUNTIES_CLAIM_FEED_FILE")
     if fixture:
@@ -166,7 +244,10 @@ def load_canonical_claim_records(
         full, earning = fetch_canonical_feeds(
             default_http_request, base_url, "base-mainnet"
         )
-    records, earning_pairs = canonical_records(full, earning, repository)
+    records, earning_pairs = canonical_records(
+        full, earning, repository, requested_issue_url=requested_issue_url,
+        registered_mirror=registered_mirror,
+    )
     return records, earning_pairs
 
 
@@ -617,7 +698,8 @@ def apply_canonical_claim_state(
             env.get("AGENT_BOUNTIES_API_BASE_URL") or DEFAULT_API_BASE_URL
         )
         records, earning_pairs = load_canonical_claim_records(
-            env, str(meta["repo"])
+            env, str(meta["repo"]), requested_issue_url=str(meta["url"]),
+            registered_mirror=reviewed_claim_mirror(meta),
         )
         claim_recovery = claim_recovery_descriptor(
             meta, api_base_url, records, earning_pairs

@@ -394,10 +394,10 @@ Safety:
       if (!response.ok) throw new Error(`Competition status request failed (${response.status})`);
       const payload = await response.json();
       if (payload?.schema_version !== "agent-bounties/opportunity-projection-v1" || payload.network !== network
-        || payload.applied_view !== "recent" || payload.degraded !== false || !Array.isArray(payload.items)
-        || payload.source_statuses?.find?.((source) => source?.source_type === "canonical_base")?.available !== true) {
+        || payload.applied_view !== "recent" || !Array.isArray(payload.items)) {
         throw new Error("Canonical competition status is unavailable");
       }
+      marketplace.canonicalCoverage(payload, id);
       const item = payload.items.find((candidate) => candidate.opportunity_id === id && candidate.network === network
         && candidate.source_type === "canonical_base" && marketplace.isV2(candidate) && String(candidate.source_id).toLowerCase() === contract);
       if (!item) throw new Error("This competition has no available public canonical record");

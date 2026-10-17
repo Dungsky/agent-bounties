@@ -33,18 +33,18 @@
     if (!response.ok) throw new Error(`Public records could not load (${response.status}). Try Refresh.`);
     return response.json();
   }
-  function projection(payload, paidOnly = false) {
+  function projection(payload, paidOnly = false, expectedIdentity = null) {
     if (payload?.schema_version !== 'agent-bounties/opportunity-projection-v1' || payload.network !== flow.NETWORK
-      || payload.applied_view !== 'recent' || payload.degraded !== false || !Array.isArray(payload.items)
-      || payload.source_statuses?.find(source => source.source_type === 'canonical_base')?.available !== true
+      || payload.applied_view !== 'recent' || !Array.isArray(payload.items)
       || payload.items.some(item => !canonical(item) || (paidOnly && !completed(item)))) throw new Error('Public bounty history is unavailable. Try Refresh.');
-    return { payload, items: payload.items };
+    const coverage = flow.canonicalCoverage(payload, expectedIdentity);
+    return { payload, items: payload.items, coverage };
   }
   const recentPath = '/v1/opportunities?network=base-mainnet&view=recent&source_type=canonical_base';
   async function loadCompleted(win) { return projection(await request(win, `${recentPath}&limit=300&work_state=completed&payment_state=paid`), true); }
   async function loadOpportunity(win, id) {
     if (!/^(canonical|open-competition|open-competition-v2):base-mainnet:0x[0-9a-f]{40}$/i.test(id || '')) throw new Error('Open View Submissions from a bounty card.');
-    const { items } = projection(await request(win, `${recentPath}&opportunity_id=${encodeURIComponent(id)}&limit=1`));
+    const { items } = projection(await request(win, `${recentPath}&opportunity_id=${encodeURIComponent(id)}&limit=1`), false, id);
     if (items.length > 1 || items.some(item => item.opportunity_id !== id)) throw new Error('Bounty lookup is unavailable. Try Refresh.');
     const item = items[0];
     if (!item) throw new Error('This bounty is not available in the public history.');

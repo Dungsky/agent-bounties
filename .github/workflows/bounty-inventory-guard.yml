@@ -19,6 +19,8 @@ on:
       - "scripts/test_reconcile_github_bounty_labels.py"
       - "ops/github-bounty-discovery-policy.json"
       - "ops/github-bounty-landing-copy.json"
+      - "ops/github-claim-mirrors.json"
+      - "scripts/github_claim_comment.py"
       - "crates/api/src/github_discovery.rs"
       - "crates/api/src/main.rs"
       - "scripts/fixtures/bounty_inventory_*.json"

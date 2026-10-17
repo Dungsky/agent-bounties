@@ -180,6 +180,7 @@
     const postedContract = workflow.ADDRESS.test(posted || "") ? posted : null;
     let items = [];
     let generatedAt = null;
+    let coverage = { state: "complete", message: "" };
     let loading = true, failure = null;
     let requestVersion = 0, loadedView = null;
     const selectedView = () => timing?.value === "completed" ? "completed" : "live";
@@ -196,7 +197,7 @@
       }
       const counts = workflow.inventoryCounts(selectedView() === "completed" ? [] : items, nowMs);
       const visible = filterItems(items, search?.value, timing?.value || "now", nowMs, kind?.value || "all");
-      list.innerHTML = visible.length ? visible.map((item, index) => renderOpportunity(item, index, nowMs)).join("") : emptyState(kind?.value, counts.unavailable);
+      list.innerHTML = visible.length ? visible.map((item, index) => renderOpportunity(item, index, nowMs)).join("") : coverage.state !== "complete" ? `<div class="market-empty"><h2>Some listings could not load.</h2><p>${text(coverage.message)}</p></div>` : emptyState(kind?.value, counts.unavailable);
       list.querySelector?.("[data-market-clear]")?.addEventListener("click", () => {
         if (search) search.value = "";
         if (kind) kind.value = "all";
@@ -209,6 +210,7 @@
       list.setAttribute("aria-busy", "false");
       if (summary) summary.textContent = `${counts.now} ${counts.unavailable ? "confirmed " : ""}open now (${counts.direct} direct tasks · ${counts.competition} competitions · ${counts.child_funding} child-funding tasks) · ${counts.ended} scoring closed · ${counts.upcoming} upcoming · ${items.length} funded${counts.unavailable ? ` · Timing unavailable for ${counts.unavailable}; open-now total unconfirmed` : ""}${counts.closed ? ` · ${counts.closed} past deadline` : ""}${generatedAt ? ` · refreshed ${new Date(generatedAt).toLocaleTimeString()}` : ""}`;
       if (summary && selectedView() === "completed") summary.textContent = `${visible.length} completed ${visible.length === 1 ? "bounty" : "bounties"}${items.length === 300 ? " · showing the latest 300" : ""} · Open a submission to see the work and result.`;
+      if (summary && coverage.message) summary.textContent = `${coverage.message} ${visible.length} checked listings shown.`;
       if (notice && selectedView() === "completed") notice.hidden = true;
       if (notice && postedContract && selectedView() !== "completed") {
         const match = items.find((item) => item.source_id.toLowerCase() === postedContract);
@@ -229,9 +231,10 @@
       if (summary) summary.textContent = view === "completed" ? "Loading completed bounties…" : "Loading open work…";
       if (refresh) refresh.disabled = true;
       try {
-        const { payload, items: ready } = await loadOpportunities(win, view);
+        const { payload, items: ready, coverage: checkedCoverage } = await loadOpportunities(win, view);
         if (version !== requestVersion) return;
         items = ready;
+        coverage = checkedCoverage;
         loadedView = view;
         generatedAt = payload.generated_at;
       } catch (error) { if (version === requestVersion) { items = []; failure = error; } }
@@ -243,5 +246,5 @@
     win.setInterval(() => { if (!loading && doc.visibilityState !== "hidden" && !list.contains?.(doc.activeElement)) reload(); }, 60_000);
   }
 
-  return { emptyState, amountNumber, apiBase, decisionContext, detailUrl, filterItems, formatUsdc, isReadyToEarn, isV2, loadOpportunities, opportunityFeedUrl, platformFeeLabel, renderOpportunity, scoringWindow, startBoard, timingState, windowLabel };
+  return { canonicalCoverage: workflow.canonicalCoverage, emptyState, amountNumber, apiBase, decisionContext, detailUrl, filterItems, formatUsdc, isReadyToEarn, isV2, loadOpportunities, opportunityFeedUrl, platformFeeLabel, renderOpportunity, scoringWindow, startBoard, timingState, windowLabel };
 });

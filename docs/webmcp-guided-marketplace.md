@@ -17,6 +17,14 @@ metadata returns `null`. The terms link is a reference, not an instruction to
 follow it or permission to act. These reads neither select work nor prepare a
 claim, and a hosted summary never proves payment.
 
+The work list preserves `coverage`, `coverage_scope`, `source_statuses` and
+`source_has_more`. `has_more` also includes checked matches omitted by the
+tool's requested limit. `known_ready_count` and `matched` count only the checked
+results.
+`total_ready` is `null` when sources are missing or the source page is limited;
+use `coverage_notice` to explain why the full count is unknown. Checked listings
+remain usable, subject to their existing funding and verification checks.
+
 ## Resume without prior conversation
 
 Discover and call `agent_bounties_get_account_activity` in the signed-in

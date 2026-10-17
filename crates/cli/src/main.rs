@@ -1,4 +1,5 @@
 mod broad_checks;
+mod opportunities;
 
 use anyhow::{anyhow, bail, Context, Result};
 use app::{
@@ -120,6 +121,8 @@ struct DiscoveryReportArgs {
 
 #[derive(Subcommand)]
 enum Command {
+    /// List checked public opportunities with per-protocol coverage; no wallet action.
+    Opportunities(opportunities::OpportunityArgs),
     Verification {
         #[command(subcommand)]
         command: broad_checks::VerificationCommand,
@@ -651,6 +654,7 @@ fn run_cli() -> Result<()> {
 async fn async_main() -> Result<()> {
     let args = Args::parse();
     match args.command {
+        Command::Opportunities(args) => opportunities::run(args).await,
         Command::Verification { command } => broad_checks::execute(command).await,
         Command::Demo => demo().await,
         Command::PooledFundingDemo => pooled_funding_demo(),

@@ -551,7 +551,7 @@ ${competitionChildBrief(item)}`;
 
   function marketSnapshot(platform, projection, now = Date.now()) {
     if (!platform || !projection) throw new Error("Marketplace evidence is unavailable");
-    const { items } = workflow.fundedInventory(projection);
+    const { items, coverage } = workflow.fundedInventory(projection);
     const availability = workflow.inventoryCounts(items, now);
 
     const payout = finiteNonNegative(platform?.marketplace_payout_volume?.lifetime?.usdc, "Lifetime payout");
@@ -562,7 +562,7 @@ ${competitionChildBrief(item)}`;
       if (!Number.isFinite(day) || day < weekStart || day > now) return total;
       return total + finiteNonNegative(item.settled_rounds, "Daily settled rounds");
     }, 0);
-    return { payout, live: availability.unavailable ? null : availability.now, availability, completed, completedThisWeek };
+    return { payout, live: availability.unavailable || coverage.state !== "complete" || coverage.limited ? null : availability.now, availability, coverage, completed, completedThisWeek };
   }
 
   function start(win, doc) {
@@ -796,9 +796,9 @@ ${competitionChildBrief(item)}`;
       doc.querySelector("[data-live-weekly]").textContent = `${counts.direct} direct tasks · ${counts.competition} competitions · ${counts.child_funding} child-funding tasks${counts.unavailable ? ` confirmed open; timing unavailable for ${counts.unavailable}` : ""}`;
       doc.querySelector("[data-completed-weekly]").textContent = `+${formatter.format(snapshot.completedThisWeek)} settled in the last 7 days`;
       const status = doc.querySelector("[data-market-status]");
-      status.textContent = counts.unavailable ? "Open-now total is unconfirmed while some timing is unavailable. See All funded on the board." : "";
-      status.hidden = !counts.unavailable;
-      status.dataset.state = counts.unavailable ? "unavailable" : "ready";
+      status.textContent = snapshot.coverage.message || (counts.unavailable ? "Open-now total is unconfirmed while some timing is unavailable. See All funded on the board." : "");
+      status.hidden = !counts.unavailable && !snapshot.coverage.message;
+      status.dataset.state = snapshot.coverage.limited ? "partial" : snapshot.coverage.state !== "complete" ? snapshot.coverage.state : counts.unavailable ? "unavailable" : "ready";
     }
 
     function applyUnavailableState(message = "Marketplace evidence is temporarily unavailable.") {
