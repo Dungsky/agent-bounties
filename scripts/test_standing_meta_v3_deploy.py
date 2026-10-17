@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 from pathlib import Path
+import re
 import unittest
 
 
@@ -15,7 +17,82 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
 
+def workflow_job(name: str) -> str:
+    match = re.search(
+        rf"^  {re.escape(name)}:\n(.*?)(?=^  [\w-]+:|\Z)",
+        WORKFLOW.read_text(),
+        re.MULTILINE | re.DOTALL,
+    )
+    assert match, f"missing workflow job: {name}"
+    return match.group(1)
+
+
+def job_admits(name: str, event: str, *, user="NSPG13", issue=527,
+               body="/agent-bounty deploy-v3-policy", pull_request=None) -> bool:
+    """Evaluate only the checked-in job's simple boolean authorization syntax."""
+    match = re.search(r"^    if: >-\n((?:      .*\n)+)", workflow_job(name), re.MULTILINE)
+    assert match, f"missing folded job condition: {name}"
+    expression = " ".join(match.group(1).splitlines()).strip()
+    expression = expression.replace("&&", " and ").replace("||", " or ")
+    context = {"github": {"event_name": event, "event": {
+        "issue": {"number": issue, "pull_request": pull_request},
+        "comment": {"user": {"login": user}, "body": body},
+    }}, "null": None}
+
+    def evaluate(node):
+        if isinstance(node, ast.Constant):
+            return node.value
+        if isinstance(node, ast.Name):
+            return context[node.id]
+        if isinstance(node, ast.Attribute):
+            return evaluate(node.value)[node.attr]
+        if isinstance(node, ast.BoolOp) and isinstance(node.op, (ast.And, ast.Or)):
+            values = (evaluate(value) for value in node.values)
+            return all(values) if isinstance(node.op, ast.And) else any(values)
+        if isinstance(node, ast.Compare) and len(node.ops) == 1:
+            left, right = evaluate(node.left), evaluate(node.comparators[0])
+            if isinstance(node.ops[0], ast.Eq):
+                return left == right
+            if isinstance(node.ops[0], ast.NotEq):
+                return left != right
+        raise AssertionError(f"unsupported workflow authorization syntax: {ast.dump(node)}")
+
+    return bool(evaluate(ast.parse(expression, mode="eval").body))
+
+
 class StandingMetaV3DeployTests(unittest.TestCase):
+    def test_automatic_events_cannot_send_mainnet_transactions(self) -> None:
+        for event in ("push", "pull_request", "schedule", "workflow_run"):
+            with self.subTest(event=event):
+                self.assertFalse(job_admits("base-mainnet-deploy", event))
+        for event in ("push", "pull_request"):
+            with self.subTest(validation_event=event):
+                self.assertTrue(job_admits("deterministic-gates", event))
+
+    def test_existing_explicit_manual_authorization_is_preserved(self) -> None:
+        for job in ("base-mainnet-deploy", "deterministic-gates"):
+            self.assertTrue(job_admits(job, "workflow_dispatch"))
+            self.assertTrue(job_admits(job, "issue_comment"))
+            for changed in (
+                {"user": "another-user"},
+                {"issue": 528},
+                {"pull_request": {"url": "https://example.test/pr/527"}},
+                {"body": "please deploy"},
+                {"body": "/agent-bounty deploy-v3-policy extra"},
+            ):
+                with self.subTest(job=job, changed=changed):
+                    self.assertFalse(job_admits(job, "issue_comment", **changed))
+
+    def test_validation_remains_separate_from_the_guarded_sender(self) -> None:
+        validation = workflow_job("deterministic-gates")
+        sender = workflow_job("base-mainnet-deploy")
+        self.assertIn("python scripts/standing_meta_v3_deploy.py plan", validation)
+        self.assertNotIn("BASE_KEEPER_PRIVATE_KEY", validation)
+        self.assertNotIn("python scripts/standing_meta_v3_deploy.py deploy", validation)
+        self.assertIn("needs: deterministic-gates", sender)
+        self.assertIn("group: agent-bounties-shared-base-keeper", sender)
+        self.assertIn("cancel-in-progress: false", sender)
+
     def test_deployment_notices_do_not_depend_on_checkout(self) -> None:
         issue_comment_commands = [
             line.strip()

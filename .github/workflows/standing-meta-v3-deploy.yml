@@ -106,9 +106,9 @@ jobs:
           if-no-files-found: error
 
   base-mainnet-deploy:
+    # Pushes and pull requests validate only; sending requires an explicit manual action.
     if: >-
-      github.event_name == 'push'
-      || github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch'
       || (
         github.event_name == 'issue_comment'
         && github.event.issue.pull_request == null
