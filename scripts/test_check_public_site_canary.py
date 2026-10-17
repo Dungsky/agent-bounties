@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import shutil
 import tempfile
 import threading
@@ -140,6 +141,100 @@ class PublicSiteCanaryTests(unittest.TestCase):
             (site / "index.html").write_text(next_home, encoding="utf-8")
             self.overrides["index.html"] = next_home.encode()
             self.assertGreater(guard.check_deployed("https://agentbounties.app", site, "fixture", self.deployed), 10)
+
+    def beacon(self):
+        return json.loads(guard.EDGE_PROFILE.read_text(encoding="utf-8"))["script"]
+
+    def with_beacon(self, beacon=None):
+        return self.home.replace("</body>", (self.beacon() if beacon is None else beacon) + "</body>")
+
+    def test_reviewed_edge_beacon_or_eu_absence_preserves_all_23_assets(self):
+        for home in (self.home, self.with_beacon()):
+            with self.subTest(beacon_present=home != self.home):
+                self.overrides["index.html"] = home.encode()
+                self.assertEqual(self.run_canary(), 23)
+        self.assertTrue(all(urlsplit(url).netloc == "agentbounties.app" for url in self.requests))
+
+    def test_changed_edge_script_attributes_or_config_fail(self):
+        beacon = self.beacon()
+        changes = [
+            ("https://static.", "http://static."),
+            ("static.cloudflareinsights.com", "static.cloudflareinsights.com.evil.invalid"),
+            ("beacon.min.js/v", "beacon.min.js/changed-v"),
+            ('type="module"', 'type="text/javascript"'),
+            ('crossorigin="anonymous"', 'crossorigin="use-credentials"'),
+            ("sha512-UKNk", "sha512-XKNk"),
+            ("b08dca6d1045493aa5fbe203e02d345a", "00000000000000000000000000000000"),
+            ('"version":"2024.11.0"', '"version":"2025.11.0"'),
+            ('"r":1', '"r":0'), ('"spa":2', '"spa":1'),
+            ('"r":1', '"r":1,"r":1'),
+            ("<script ", '<script async '),
+            ("<script ", '<script onload="bad()" '),
+            ('type="module"', 'type="module" type="module"'),
+            ("</script>", "bad()</script>"),
+            ("></script>", "/>"),
+        ]
+        for old, new in changes:
+            with self.subTest(old=old, new=new):
+                self.assertIn(old, beacon)
+                self.overrides["index.html"] = self.with_beacon(beacon.replace(old, new, 1)).encode()
+                with self.assertRaises(ValueError):
+                    self.run_canary()
+
+    def test_duplicate_edge_beacon_fails(self):
+        self.overrides["index.html"] = self.with_beacon(self.beacon() * 2).encode()
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            self.run_canary()
+
+    def test_edge_beacon_must_be_last_direct_body_child(self):
+        cases = [
+            self.home.replace("</head>", self.beacon() + "</head>"),
+            self.home.replace("<footer", self.beacon() + "<footer", 1),
+            self.with_beacon("<div>" + self.beacon()),
+            self.with_beacon("<body>" + self.beacon()),
+            self.home.replace("</body>", "</body>" + self.beacon()),
+            self.with_beacon(self.beacon() + "<p>after</p>"),
+            self.with_beacon(self.beacon() + "<!-- after -->"),
+        ]
+        for index, home in enumerate(cases):
+            with self.subTest(index=index):
+                self.overrides["index.html"] = home.encode()
+                with self.assertRaises(ValueError):
+                    self.run_canary()
+
+    def test_valid_beacon_does_not_allow_extra_external_or_inline_script(self):
+        for extra in ('<script src="https://evil.invalid/extra.js"></script>',
+                      '<script>bad()</script>'):
+            with self.subTest(extra=extra):
+                self.overrides["index.html"] = self.with_beacon(extra + self.beacon()).encode()
+                with self.assertRaises(ValueError):
+                    self.run_canary()
+
+    def test_valid_beacon_preserves_original_asset_order_and_bytes(self):
+        home = self.with_beacon()
+        reordered = home.replace("forest-theme.js?v=1", "__swap__").replace(
+            "site-navigation.js?v=4", "forest-theme.js?v=1").replace("__swap__", "site-navigation.js?v=4")
+        self.overrides["index.html"] = reordered.encode()
+        with self.assertRaisesRegex(ValueError, "scripts/styles differ"):
+            self.run_canary()
+        self.overrides = {"index.html": home.encode(), "forest-theme.js": b"/* wrong version */"}
+        with self.assertRaisesRegex(ValueError, "stale or incorrect deployed asset"):
+            self.run_canary()
+
+    def test_valid_beacon_preserves_original_script_attributes_and_inline_content(self):
+        home = self.with_beacon()
+        mutations = [home.replace('src="forest-theme.js?v=1"', 'src="forest-theme.js?v=1" onload="bad()"'),
+                     home.replace('"@context": "https://schema.org"', '"@context": "https://evil.invalid"')]
+        for changed in mutations:
+            self.assertNotEqual(changed, home)
+            self.overrides["index.html"] = changed.encode()
+            with self.assertRaisesRegex(ValueError, "script attributes/content differ"):
+                self.run_canary()
+
+    def test_beacon_profile_does_not_apply_to_other_origins(self):
+        self.overrides["index.html"] = self.with_beacon().encode()
+        with self.assertRaisesRegex(ValueError, "scripts/styles differ"):
+            guard.check_deployed("https://d4191097.agent-bounties.pages.dev", SITE, "fixture", self.deployed)
 
     def test_unavailable_asset_fails(self):
         def unavailable(url):
