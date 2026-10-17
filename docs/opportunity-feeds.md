@@ -42,6 +42,13 @@ it does not start a scheduler or infer that absent work was completed.
 
 ## Partial source coverage
 
+This client release consumes the separately deployed hosted API. Older servers,
+including the API source bundled in this public repository, may omit the coverage
+fields below. Clients keep their existing strict behavior for those responses:
+healthy legacy results remain usable, but degraded legacy results are unavailable.
+They cannot safely infer which protocol succeeded. Deploy and verify the matching
+API response before expecting partial listings from an updated client.
+
 The earning feeds select `source_type=canonical_base` and `view=ready_to_earn`.
 A failed protocol does not erase checked results from another protocol. The
 existing privacy, funded-state, verifier-readiness and positive-margin filters
