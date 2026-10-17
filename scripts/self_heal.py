@@ -20,9 +20,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 if __package__:
-    from .marketplace_readiness import enabled_for_release, observe as observe_marketplace
+    from .marketplace_readiness import UNAVAILABLE_REASONS, enabled_for_release, observe as observe_marketplace
 else:
-    from marketplace_readiness import enabled_for_release, observe as observe_marketplace
+    from marketplace_readiness import UNAVAILABLE_REASONS, enabled_for_release, observe as observe_marketplace
 
 POLICY_SCHEMA = "agent-bounties/self-healing-policy-v1"
 SNAPSHOT_SCHEMA = "agent-bounties/operations-snapshot-v1"
@@ -346,7 +346,26 @@ def evaluate(policy: dict[str, Any], snapshot: dict[str, Any]) -> dict[str, Any]
         )
 
     indexer = _component(snapshot, "indexer")
-    if indexer:
+    if (indexer and indexer["state"] == "unavailable"
+            and indexer.get("restartable") is False
+            and isinstance(indexer.get("blocker"), str)
+            and indexer.get("blocker") in UNAVAILABLE_REASONS):
+        reason = UNAVAILABLE_REASONS[indexer["blocker"]]
+        reasons.append(reason)
+        _add_action(
+            manual,
+            manual_action(
+                "indexer",
+                "investigate_marketplace_readiness",
+                reason,
+                [
+                    "inspect the fixed blocker code and bounded probe evidence",
+                    "restore a valid current head observation and inspect each reader report",
+                    "repeat the same readiness check; this report grants no restart or replay authority",
+                ],
+            ),
+        )
+    elif indexer:
         heartbeat_age = indexer.get("heartbeat_age_seconds")
         lag_blocks = indexer.get("lag_blocks")
         stale = indexer["state"] in {"degraded", "unavailable", "stale"}
@@ -361,7 +380,8 @@ def evaluate(policy: dict[str, Any], snapshot: dict[str, Any]) -> dict[str, Any]
         if stale:
             reasons.append("indexer heartbeat or confirmed cursor is stale")
             cursor_safe = (
-                indexer.get("cursor_monotonic") is True
+                indexer.get("restartable") is not False
+                and indexer.get("cursor_monotonic") is True
                 and invariants.get("canonical_event_integrity") is True
                 and invariants.get("cursor_not_regressed") is True
             )

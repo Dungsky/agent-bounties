@@ -25,7 +25,8 @@ from marketplace_readiness import PROTOCOLS
 
 
 @contextmanager
-def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a' * 40, ahead_cursor=None):
+def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a' * 40,
+                           ahead_cursor=None, missing_heads=False, partial_head=None):
     requests = []
 
     class Handler(BaseHTTPRequestHandler):
@@ -45,7 +46,8 @@ def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a'
                     'checked_at': datetime.now(timezone.utc).isoformat(),
                     'ready': reader_ready, 'safe_block': 1000, 'latest_block': 1010,
                     'readers': [
-                        {'protocol': protocol, 'ready': reader_ready, 'blocker': None,
+                        {'protocol': protocol, 'ready': reader_ready,
+                         'blocker': None if reader_ready else 'reader_stale_or_behind',
                          'heartbeat_age_seconds': 1 if reader_ready else 91,
                          'cursor_block': 999, 'lag_blocks': 1}
                         for protocol in sorted(PROTOCOLS)
@@ -53,6 +55,18 @@ def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a'
                 }
                 if ahead_cursor is not None:
                     body['readers'][0].update(cursor_block=ahead_cursor, lag_blocks=0)
+                if missing_heads:
+                    body.update(ready=False, safe_block=None, latest_block=None)
+                    for reader in body['readers']:
+                        reader.update(ready=False, blocker='safe_head_unavailable', lag_blocks=None)
+                if partial_head is not None:
+                    body.update(ready=False)
+                    body['latest_block' if partial_head == 'safe' else 'safe_block'] = None
+                    for reader in body['readers']:
+                        reader.update(ready=False,
+                                      blocker='latest_head_unavailable' if partial_head == 'safe'
+                                      else 'safe_head_unavailable',
+                                      lag_blocks=1 if partial_head == 'safe' else None)
                 self.wfile.write(json.dumps(body).encode())
             else:
                 self.send_response(404)
@@ -171,7 +185,8 @@ class SelfHealingContractTests(unittest.TestCase):
             self.assertEqual(plan['automatic_actions'], [])
             self.assertEqual(
                 {action['action_id'] for action in plan['manual_actions']},
-                {'indexer:investigate_indexer_integrity'},
+                {'indexer:investigate_marketplace_readiness'} if status == 404
+                else {'indexer:investigate_indexer_integrity'},
             )
             # Staleness must not weaken an independently reported integrity failure.
             snapshot['invariants']['canonical_event_integrity'] = False
@@ -195,7 +210,61 @@ class SelfHealingContractTests(unittest.TestCase):
         plan = self_heal.evaluate(self.policy, snapshot)
         self.assertEqual(plan['decision'], 'escalation_required')
         self.assertEqual(plan['automatic_actions'], [])
-        self.assertEqual({a['action_id'] for a in plan['manual_actions']}, {'indexer:investigate_indexer_integrity'})
+        self.assertEqual({a['action_id'] for a in plan['manual_actions']}, {'indexer:investigate_marketplace_readiness'})
+        self.assertNotIn('indexer heartbeat or confirmed cursor is stale', plan['reasons'])
+
+    def test_head_unavailable_is_manual_readiness_investigation_not_stale_reader(self):
+        with hosted_monitor_fixture(readiness_status=503, missing_heads=True) as (url, requests):
+            snapshot = self_heal.build_public_snapshot(self.policy, url, url, 'a' * 40, 'a' * 40)
+        indexer = snapshot['components']['indexer']
+        self.assertEqual(requests.count('/readiness/marketplace'), 1)
+        self.assertEqual(indexer['blocker'], 'marketplace_head_unavailable')
+        self.assertEqual(indexer['probe_evidence']['http_status'], 503)
+        self.assertEqual(len(indexer['readers']), 3)
+        for trusted in (False, True):
+            if trusted:
+                snapshot['invariants'] = {name: True for name in self_heal.CRITICAL_INVARIANTS}
+                indexer['cursor_monotonic'] = True
+            plan = self_heal.evaluate(self.policy, snapshot)
+            self.assertEqual(plan['decision'], 'escalation_required')
+            self.assertEqual(plan['automatic_actions'], [])
+            self.assertEqual({a['action_id'] for a in plan['manual_actions']},
+                             {'indexer:investigate_marketplace_readiness'})
+            self.assertEqual(plan['reasons'], [
+                'A required chain head is unavailable; reader readiness cannot be established.'])
+        snapshot['invariants']['canonical_event_integrity'] = False
+        self.assertEqual(self_heal.evaluate(self.policy, snapshot)['decision'], 'contained')
+
+    def test_partial_heads_remain_manual_even_with_trusted_invariants(self):
+        for head in ('safe', 'latest'):
+            with hosted_monitor_fixture(readiness_status=503, partial_head=head) as (url, requests):
+                snapshot = self_heal.build_public_snapshot(self.policy, url, url, 'a' * 40, 'a' * 40)
+            indexer = snapshot['components']['indexer']
+            self.assertEqual(requests.count('/readiness/marketplace'), 1)
+            self.assertEqual(indexer['state'], 'unavailable')
+            self.assertEqual(indexer['blocker'], 'marketplace_head_unavailable')
+            self.assertFalse(indexer['restartable'])
+            self.assertEqual(len(indexer['readers']), 3)
+            for reader in indexer['readers']:
+                self.assertFalse(reader['ready'])
+                self.assertEqual(reader['lag_blocks'], 1 if head == 'safe' else None)
+            snapshot['invariants'] = {name: True for name in self_heal.CRITICAL_INVARIANTS}
+            indexer['cursor_monotonic'] = True
+            plan = self_heal.evaluate(self.policy, snapshot)
+            self.assertEqual(plan['decision'], 'escalation_required')
+            self.assertEqual(plan['automatic_actions'], [])
+            self.assertEqual({a['action_id'] for a in plan['manual_actions']},
+                             {'indexer:investigate_marketplace_readiness'})
+
+    def test_public_stale_report_never_grants_replay_even_with_trusted_invariants(self):
+        with hosted_monitor_fixture(reader_ready=False, readiness_status=503) as (url, _):
+            snapshot = self_heal.build_public_snapshot(self.policy, url, url, 'a' * 40, 'a' * 40)
+        snapshot['components']['indexer']['cursor_monotonic'] = True
+        snapshot['invariants'] = {name: True for name in self_heal.CRITICAL_INVARIANTS}
+        plan = self_heal.evaluate(self.policy, snapshot)
+        self.assertEqual(plan['automatic_actions'], [])
+        self.assertEqual({a['action_id'] for a in plan['manual_actions']},
+                         {'indexer:investigate_indexer_integrity'})
 
     def test_readiness_activation_waits_for_deployed_revision_confirmation(self):
         with hosted_monitor_fixture(readiness_status=404) as (url, requests):
