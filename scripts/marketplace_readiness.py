@@ -22,7 +22,7 @@ READER_BLOCKERS = {
     'reader_stale_or_behind', 'cursor_ahead_of_observed_head',
 }
 UNAVAILABLE_REASONS = {
-    'marketplace_head_unavailable': 'Current chain head is unavailable; reader lag cannot be established.',
+    'marketplace_head_unavailable': 'A required chain head is unavailable; reader readiness cannot be established.',
     'marketplace_reader_unavailable': 'A reader reported unavailable or inconsistent evidence; staleness is not established.',
     'marketplace_readiness_invalid': 'The marketplace readiness report is malformed or inconsistent.',
     'marketplace_readiness_stale': 'The marketplace readiness report is too old to assess current readers.',
@@ -86,8 +86,10 @@ def inspect(payload, now=None):
                 or type(payload.get('ready')) is not bool):
             return invalid('readers_invalid')
         safe, latest = payload['safe_block'], payload['latest_block']
-        missing_heads = safe is None and latest is None
-        if not missing_heads and not (bounded_integer(safe) and bounded_integer(latest) and safe <= latest):
+        missing_heads = safe is None or latest is None
+        if ((safe is not None and not bounded_integer(safe))
+                or (latest is not None and not bounded_integer(latest))
+                or (not missing_heads and safe > latest)):
             return invalid('head_order_invalid')
         if missing_heads and payload['ready']:
             return invalid('head_readiness_inconsistent')
@@ -103,10 +105,11 @@ def inspect(payload, now=None):
                 return invalid('reader_fields_invalid')
             if r['ready'] != (blocker is None):
                 return invalid('reader_readiness_inconsistent')
-            if missing_heads and (r['ready'] or blocker is None or lag is not None):
+            if missing_heads and (r['ready'] or blocker is None
+                                  or (safe is None and lag is not None)):
                 return invalid('head_readiness_inconsistent')
             if ((cursor is None and lag is not None)
-                    or (not missing_heads and cursor is not None
+                    or (safe is not None and cursor is not None
                         and (lag is None or lag != max(0, safe - cursor)))):
                 return invalid('reader_lag_inconsistent')
             healthy = (not missing_heads and r['ready'] and blocker is None

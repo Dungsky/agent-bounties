@@ -143,6 +143,10 @@ manual `investigate_marketplace_readiness` plan. Failed or inconsistent reader
 evidence uses `marketplace_reader_unavailable`; demonstrated heartbeat or lag
 staleness remains `marketplace_reader_not_ready`.
 
+If only one head is available, it must still be a bounded integer. The report
+stays unavailable with all readers blocked. Lag is checked only when both the
+safe head and reader cursor are present; without the safe head, lag must be null.
+
 Malformed reports, old reports, future timestamps and transport failures have
 separate fixed blocker codes: `marketplace_readiness_invalid`,
 `marketplace_readiness_stale`, `marketplace_readiness_clock_skew` and

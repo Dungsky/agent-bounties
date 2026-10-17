@@ -124,6 +124,53 @@ class MarketplaceReadinessTests(unittest.TestCase):
             self.assertEqual(result['blocker'], 'marketplace_readiness_invalid')
             self.assertNotIn('secret-', json.dumps(result))
 
+    def test_partial_heads_preserve_validated_unavailable_diagnostics(self):
+        for safe, latest, cursor, lag, blocker in [
+                (1000, None, 999, 1, 'latest_head_unavailable'),
+                (1000, None, 979, 21, 'latest_head_unavailable'),
+                (None, 1010, 999, None, 'safe_head_unavailable'),
+                (1000, None, None, None, 'durable_cursor_unavailable'),
+                (None, 1010, None, None, 'durable_cursor_unavailable'),
+                (2**64 - 1, None, 2**64 - 1, 0, 'latest_head_unavailable')]:
+            with self.subTest(safe=safe, latest=latest, cursor=cursor):
+                payload = self.head_unavailable()
+                payload.update(safe_block=safe, latest_block=latest)
+                for reader in payload['readers']:
+                    reader.update(blocker=blocker, cursor_block=cursor, lag_blocks=lag)
+                result = inspect(payload, self.now)
+                self.assertEqual(result['state'], 'unavailable')
+                self.assertEqual(result['blocker'], 'marketplace_head_unavailable')
+                self.assertEqual(result['readers'], payload['readers'])
+                self.assertFalse(result['restartable'])
+
+    def test_partial_heads_reject_malformed_or_inconsistent_evidence(self):
+        for present in ('safe_block', 'latest_block'):
+            payload = self.head_unavailable()
+            payload[present] = 1000
+            if present == 'safe_block':
+                for reader in payload['readers']:
+                    reader.update(blocker='latest_head_unavailable', lag_blocks=1)
+            for value in (True, -1, 2**64, 1000.0, 'secret-head'):
+                result = inspect(dict(payload, **{present: value}), self.now)
+                self.assertEqual(result['validation_reason'], 'head_order_invalid')
+                self.assertFalse(result['restartable'])
+                self.assertNotIn('secret-head', json.dumps(result))
+            result = inspect(dict(payload, ready=True), self.now)
+            self.assertEqual(result['validation_reason'], 'head_readiness_inconsistent')
+            updates = [{'ready': True, 'blocker': None}, {'blocker': None},
+                       {'blocker': 'secret-blocker'}, {'lag_blocks': 0},
+                       {'cursor_block': None, 'lag_blocks': 0}]
+            if present == 'safe_block':
+                updates.append({'lag_blocks': None})
+            for position in range(3):
+                for update in updates:
+                    malformed = copy.deepcopy(payload)
+                    malformed['readers'][position].update(update)
+                    result = inspect(malformed, self.now)
+                    self.assertEqual(result['blocker'], 'marketplace_readiness_invalid')
+                    self.assertFalse(result['restartable'])
+                    self.assertNotIn('secret-', json.dumps(result))
+
     def test_clock_boundaries_have_distinct_codes_without_tolerance(self):
         for age, blocker in [(0, None), (90, None),
                              (90.000001, 'marketplace_readiness_stale'),
@@ -196,6 +243,18 @@ class MarketplaceReadinessTests(unittest.TestCase):
                 self.assertEqual(receipt['response_sha256_scope'], 'complete_body')
                 self.assertLessEqual(datetime.fromisoformat(receipt['started_at']),
                                      datetime.fromisoformat(receipt['finished_at']))
+                for safe, latest, lag, blocker in [
+                        (1000, None, 1, 'latest_head_unavailable'),
+                        (None, 1010, None, 'safe_head_unavailable')]:
+                    partial = self.head_unavailable()
+                    partial.update(safe_block=safe, latest_block=latest)
+                    for reader in partial['readers']:
+                        reader.update(lag_blocks=lag, blocker=blocker)
+                    response[:] = [503, json.dumps(partial).encode()]
+                    result = observe(url)
+                    self.assertEqual(result['blocker'], 'marketplace_head_unavailable')
+                    self.assertEqual(result['readers'], partial['readers'])
+                    self.assertFalse(result['restartable'])
                 for status, body, code in [(503, b'{bad-secret-json', 'json_invalid'),
                                            (503, b'x' * 70000, 'response_too_large'),
                                            (404, b'secret-error-page', 'http_status_unavailable')]:
