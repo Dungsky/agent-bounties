@@ -136,6 +136,27 @@ restart, cursor change, payment or inventory publication. Public observations
 leave canonical integrity unknown. Existing containment and revision checks
 still apply.
 
+An unavailable chain head is different from a stale reader. A valid HTTP 503
+report with missing head evidence keeps its three reader diagnostics and uses
+`marketplace_head_unavailable`. It fails the readiness check and produces a
+manual `investigate_marketplace_readiness` plan. Failed or inconsistent reader
+evidence uses `marketplace_reader_unavailable`; demonstrated heartbeat or lag
+staleness remains `marketplace_reader_not_ready`.
+
+Malformed reports, old reports, future timestamps and transport failures have
+separate fixed blocker codes: `marketplace_readiness_invalid`,
+`marketplace_readiness_stale`, `marketplace_readiness_clock_skew` and
+`marketplace_probe_unavailable`. A healthy body delivered with HTTP 503 uses
+`marketplace_readiness_http_inconsistent`. None is healthy, and none grants
+restart or replay authority. The existing 90-second report/heartbeat limit,
+20-block lag limit and strict future-time rejection remain unchanged.
+
+Probe artifacts include local start/end UTC, HTTP status, bounded response size
+and a response hash. Hashes of oversized responses are labeled `bounded_prefix`,
+so they cannot be mistaken for a complete-body hash. Parsed reports retain only
+known protocol/blocker codes, typed reader diagnostics and normalized timing. Raw response bodies, provider
+URLs and exception messages are not copied into public recovery artifacts.
+
 The existing Production Smoke and Operational Control Loop workflows include
 this probe, but it stays inactive until the endpoint has been deployed and
 verified. After checking both live service revisions and the endpoint, set
