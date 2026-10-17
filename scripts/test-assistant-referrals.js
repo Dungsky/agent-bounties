@@ -17,25 +17,153 @@ function storage() {
 
 function page(url, options = {}) {
   const events = [];
+  const windowListeners = new Map();
+  const local = options.local || storage();
   const window = {
     agentBountiesAnalyticsConfig: { googleMeasurementId: options.measurementId || "" },
-    location: new URL(url), localStorage: options.local || storage(), sessionStorage: storage(),
+    location: new URL(url), localStorage: local, sessionStorage: storage(),
     crypto: crypto.webcrypto,
+    addEventListener(name, callback) {
+      const callbacks = windowListeners.get(name) || [];
+      callbacks.push(callback);
+      windowListeners.set(name, callbacks);
+    },
     fetch(endpoint, request) {
       assert.equal(endpoint, "https://api.agentbounties.app/v1/analytics/events");
       events.push(JSON.parse(request.body));
       return Promise.resolve({ ok: true });
     },
   };
+  if (options.noLocalStorage) {
+    Object.defineProperty(window, "localStorage", { get() { throw new Error("Storage unavailable"); } });
+  }
   vm.runInNewContext(source, {
     window, navigator: options.privacy || {}, URL, URLSearchParams, Date, Uint8Array,
     document: options.document || { referrer: "", addEventListener() {} },
   });
-  return { analytics: window.agentBountiesAnalytics, local: window.localStorage, events };
+  return { analytics: window.agentBountiesAnalytics, local, events,
+    emit(name, event = {}) { for (const callback of windowListeners.get(name) || []) callback(event); } };
 }
 
 const landing = "https://agentbounties.app/?utm_source=example-source&utm_campaign=example-campaign&secret=never-forward&gclid=not-collected";
 const review = "https://agentbounties.app/post.html?from=webmcp";
+
+function privacyControls({ mounted = true, loading = false } = {}) {
+  const listeners = new Map();
+  const control = { textContent: "Disable analytics on this browser", disabled: true,
+    attributes: new Map([["aria-pressed", "false"]]),
+    setAttribute(name, value) { this.attributes.set(name, value); } };
+  const document = { referrer: "", readyState: loading ? "loading" : "complete",
+    querySelector(selector) { return mounted && selector === "[data-analytics-opt-out]" ? control : null; },
+    addEventListener(name, callback) {
+      const callbacks = listeners.get(name) || [];
+      callbacks.push(callback);
+      listeners.set(name, callbacks);
+    } };
+  return { document, control,
+    click() {
+      assert.equal(control.disabled, false, "only an enabled control can be clicked");
+      const event = { target: { closest(selector) { return selector === "[data-analytics-opt-out]" ? control : null; } } };
+      for (const callback of listeners.get("click") || []) callback(event);
+    },
+    ready() {
+      mounted = true; document.readyState = "complete";
+      for (const callback of listeners.get("DOMContentLoaded") || []) callback();
+    } };
+}
+
+test("privacy control reflects a saved opt-out without changing consent or sending events", () => {
+  const local = storage(), ui = privacyControls();
+  local.setItem("bountyboard.analytics.disabled.v1", "true");
+  local.setItem("agent-bounties.analytics.google-consent.v1", "granted");
+  const result = page("https://agentbounties.app/privacy.html", { local, document: ui.document });
+  assert.equal(ui.control.textContent, "Analytics disabled on this browser");
+  assert.equal(ui.control.attributes.get("aria-pressed"), "true");
+  assert.equal(ui.control.disabled, true);
+  assert.equal(local.getItem("bountyboard.analytics.disabled.v1"), "true");
+  assert.equal(local.getItem("agent-bounties.analytics.google-consent.v1"), "granted");
+  assert.equal(result.events.length, 0);
+});
+
+test("browser privacy signals show why collection is off and never save a new choice", () => {
+  for (const privacy of [{ globalPrivacyControl: true }, { doNotTrack: "1" }, { doNotTrack: "yes" }, { msDoNotTrack: "1" }]) {
+    for (const query of ["", "?analytics=off"]) {
+      const local = storage(), ui = privacyControls();
+      const result = page("https://agentbounties.app/privacy.html" + query, { privacy, local, document: ui.document });
+      assert.equal(ui.control.textContent, "Analytics is off because of your browser settings");
+      assert.equal(ui.control.attributes.get("aria-pressed"), "true");
+      assert.equal(ui.control.disabled, true);
+      assert.equal(local.getItem("bountyboard.analytics.disabled.v1"), null, "display must not persist a choice");
+      assert.equal(local.getItem("agent-bounties.analytics.google-consent.v1"), null);
+      assert.equal(result.events.length, 0);
+    }
+  }
+});
+
+test("an allowed visitor can opt out and the saved disabled state returns on the next page", () => {
+  const ui = privacyControls();
+  const result = page("https://agentbounties.app/privacy.html", { document: ui.document });
+  assert.equal(ui.control.textContent, "Disable analytics on this browser");
+  assert.equal(ui.control.attributes.get("aria-pressed"), "false");
+  assert.equal(ui.control.disabled, false);
+  assert.equal(result.events.length, 1, "existing page-view behavior stays unchanged");
+  ui.click();
+  assert.equal(ui.control.textContent, "Analytics disabled on this browser");
+  assert.equal(ui.control.attributes.get("aria-pressed"), "true");
+  assert.equal(ui.control.disabled, true);
+  assert.equal(result.local.getItem("bountyboard.analytics.disabled.v1"), "true");
+  assert.equal(result.local.getItem("agent-bounties.analytics.google-consent.v1"), "denied");
+  assert.equal(result.events.length, 1, "updating the control must not send an event");
+  assert.equal(result.analytics.track("market_view"), false);
+  const nextUi = privacyControls();
+  const next = page("https://agentbounties.app/privacy.html", { local: result.local, document: nextUi.document });
+  assert.equal(nextUi.control.disabled, true);
+  assert.equal(nextUi.control.attributes.get("aria-pressed"), "true");
+  assert.equal(next.events.length, 0);
+});
+
+test("head-loaded controls initialize after DOM readiness without opting in", () => {
+  const ui = privacyControls({ mounted: false, loading: true }), local = storage();
+  local.setItem("bountyboard.analytics.disabled.v1", "true");
+  const result = page("https://agentbounties.app/privacy.html", { local, document: ui.document });
+  ui.ready();
+  assert.equal(ui.control.textContent, "Analytics disabled on this browser");
+  assert.equal(ui.control.attributes.get("aria-pressed"), "true");
+  assert.equal(ui.control.disabled, true);
+  assert.equal(result.events.length, 0);
+});
+
+test("focus, restored pages and other-tab preferences refresh only the displayed state", () => {
+  const privacy = {}, ui = privacyControls();
+  const result = page("https://agentbounties.app/privacy.html", { privacy, document: ui.document });
+  privacy.globalPrivacyControl = true;
+  result.emit("focus");
+  assert.equal(ui.control.textContent, "Analytics is off because of your browser settings");
+  assert.equal(ui.control.disabled, true);
+  assert.equal(result.local.getItem("bountyboard.analytics.disabled.v1"), null);
+  privacy.globalPrivacyControl = false;
+  result.emit("pageshow");
+  assert.equal(ui.control.disabled, false);
+  result.local.setItem("bountyboard.analytics.disabled.v1", "true");
+  result.emit("storage", { key: "bountyboard.analytics.disabled.v1" });
+  assert.equal(ui.control.textContent, "Analytics disabled on this browser");
+  assert.equal(ui.control.disabled, true);
+  result.local.removeItem("bountyboard.analytics.disabled.v1");
+  result.emit("storage", { key: null });
+  assert.equal(ui.control.disabled, false);
+  assert.equal(ui.control.attributes.get("aria-pressed"), "false");
+  assert.equal(result.events.length, 1, "none of the UI refreshes starts collection");
+  assert.equal(result.local.getItem("agent-bounties.analytics.google-consent.v1"), null);
+});
+
+test("unavailable local storage leaves the privacy control unavailable and collection off", () => {
+  const ui = privacyControls();
+  const result = page("https://agentbounties.app/privacy.html", { document: ui.document, noLocalStorage: true });
+  assert.equal(ui.control.textContent, "Analytics controls are unavailable");
+  assert.equal(ui.control.disabled, true);
+  assert.equal(result.events.length, 0);
+});
+
 
 test("a new desktop browser receives referral tags without the original browser identity", () => {
   const first = page(landing);

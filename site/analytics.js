@@ -398,6 +398,31 @@
   window.agentBountiesAnalytics = analytics;
   window.bountyBoardAnalytics = analytics;
 
+  function refreshOptOutControl() {
+    const control = document.querySelector?.("[data-analytics-opt-out]");
+    if (!control) return;
+    const privacy = privacySignalEnabled();
+    let optedOut = new URLSearchParams(window.location.search).get("analytics") === "off";
+    let unavailable = false;
+    try {
+      const local = storage("local");
+      unavailable = !local;
+      optedOut = optedOut || local?.getItem(OPT_OUT_KEY) === "true";
+    } catch (_error) {
+      unavailable = true;
+    }
+    // Read the choice without changing consent or starting collection.
+    control.textContent = privacy
+      ? "Analytics is off because of your browser settings"
+      : unavailable
+        ? "Analytics controls are unavailable"
+        : optedOut
+          ? "Analytics disabled on this browser"
+          : "Disable analytics on this browser";
+    control.setAttribute("aria-pressed", String(privacy || optedOut));
+    control.disabled = privacy || optedOut || unavailable;
+  }
+
   document.addEventListener("click", function (event) {
     const target = event.target.closest("[data-analytics-event]");
     if (!target) return;
@@ -428,10 +453,18 @@
     if (!optOutControl) return;
     optOut();
     document.querySelector("[data-google-analytics-consent]")?.remove();
-    optOutControl.textContent = "Analytics disabled on this browser";
-    optOutControl.setAttribute("aria-pressed", "true");
+    refreshOptOutControl();
   });
 
+  refreshOptOutControl();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", refreshOptOutControl, { once: true });
+  }
+  window.addEventListener?.("pageshow", refreshOptOutControl);
+  window.addEventListener?.("focus", refreshOptOutControl);
+  window.addEventListener?.("storage", function (event) {
+    if (event.key === OPT_OUT_KEY || event.key === null) refreshOptOutControl();
+  });
   offerGoogleAnalytics();
   track("page_view");
 })();
