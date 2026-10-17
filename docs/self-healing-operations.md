@@ -126,6 +126,43 @@ and final decision.
 
 ## SLOs And Error Budgets
 
+### Marketplace readiness monitoring
+
+`/health` remains a process check. The separate API endpoint
+`/readiness/marketplace` reports each required reader's heartbeat and cursor
+against a current safe block. A green process with a stale, failed, missing or
+malformed reader report requires investigation; it does not authorize a service
+restart, cursor change, payment or inventory publication. Public observations
+leave canonical integrity unknown. Existing containment and revision checks
+still apply.
+
+The existing Production Smoke and Operational Control Loop workflows include
+this probe, but it stays inactive until the endpoint has been deployed and
+verified. After checking both live service revisions and the endpoint, set
+`MARKETPLACE_READINESS_VERIFIED_REVISION` to the exact 40-character release SHA,
+matching `PRODUCTION_EXPECTED_REVISION`. Until then, reports explicitly say
+readiness is not monitored. Once configured, a malformed or different revision
+fails closed rather than silently skipping the check. Reverify the endpoint and
+update both pins together for later releases.
+
+The same activation gate applies to a local run:
+
+```bash
+python scripts/self_heal.py observe \
+  --policy ops/self-healing-policy.json \
+  --api-url https://api.agentbounties.app \
+  --mcp-url https://mcp.agentbounties.app \
+  --expected-revision "$VERIFIED_RELEASE" \
+  --marketplace-readiness-verified-revision "$VERIFIED_RELEASE" \
+  --snapshot-out target/operations/snapshot.json \
+  --plan-out target/operations/recovery-plan.json
+```
+
+The probe uses one bounded HTTP read, no build or paid provider call. Existing
+workflow schedules and deployment holds are unchanged. The daily bounty
+inventory alert remains separate; readiness failures do not send additional
+inventory alerts. No GitHub billing or spending limit is changed.
+
 Initial public-beta objectives:
 
 | Signal | Objective | Window | Failure response |

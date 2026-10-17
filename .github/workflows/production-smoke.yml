@@ -46,6 +46,7 @@ jobs:
       PRODUCTION_API_BASE_URL: ${{ inputs.api_base_url || vars.PRODUCTION_API_BASE_URL || 'https://api.agentbounties.app' }}
       PRODUCTION_MCP_BASE_URL: ${{ inputs.mcp_base_url || vars.PRODUCTION_MCP_BASE_URL || 'https://mcp.agentbounties.app' }}
       PRODUCTION_EXPECTED_REVISION: ${{ inputs.expected_revision || vars.PRODUCTION_EXPECTED_REVISION || github.sha }}
+      MARKETPLACE_READINESS_VERIFIED_REVISION: ${{ vars.MARKETPLACE_READINESS_VERIFIED_REVISION }}
       REQUIRE_EVAL_HISTORY_INPUT: ${{ inputs.require_eval_history || 'false' }}
       REQUIRE_EVAL_HISTORY_VAR: ${{ vars.PRODUCTION_SMOKE_REQUIRE_EVAL_HISTORY || 'false' }}
     steps:
@@ -91,3 +92,25 @@ jobs:
             args+=(--require-eval-history)
           fi
           bash scripts/check-production-smoke.sh "${args[@]}"
+
+      - name: Check marketplace readiness separately from process health
+        if: always() && steps.config.outcome == 'success'
+        shell: bash
+        run: |
+          readiness_status=0
+          python scripts/marketplace_readiness.py \
+            --api-base-url "${PRODUCTION_API_BASE_URL}" \
+            --expected-revision "${PRODUCTION_EXPECTED_REVISION}" \
+            --verified-revision "${MARKETPLACE_READINESS_VERIFIED_REVISION}" \
+            --output target/operations/marketplace-readiness.json || readiness_status=$?
+          {
+            echo '## Marketplace readiness (read-only; never authorizes restart)'
+            echo '```json'
+            if [[ -f target/operations/marketplace-readiness.json ]]; then
+              cat target/operations/marketplace-readiness.json
+            else
+              echo 'Readiness configuration failed; inspect the workflow log.'
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$readiness_status"

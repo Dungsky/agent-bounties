@@ -25,6 +25,7 @@ jobs:
       - name: Validate bounded self-healing contract
         run: |
           python scripts/test_self_heal.py -v
+          python scripts/test_marketplace_readiness.py -v
           python scripts/self_heal.py validate-policy \
             --policy ops/self-healing-policy.json
           python scripts/self_heal.py bench \
