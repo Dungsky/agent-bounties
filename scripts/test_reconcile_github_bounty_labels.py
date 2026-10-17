@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import tempfile
+import urllib.parse
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -120,7 +122,7 @@ def item(
         "categories": ["engineering"],
         "skills": ["testing"],
         "difficulty": difficulty,
-        "public_url": f"https://agentbounties.app/{'competition' if mode == 'first_valid_submission' else 'earn'}.html?bountyContract={contract}",
+        "public_url": f"https://agentbounties.app/{'competition' if mode == 'first_valid_submission' else 'earn'}.html?bountyContract={contract}&network={NETWORK}",
         "source_url": source_url,
         "competition_mode": mode,
         "lifecycle_state": state,
@@ -341,6 +343,82 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
         self.assertTrue(plan.desired_body.startswith("Keep this human section."))
         self.assertNotIn("Claim before starting work.", plan.desired_body)
         self.assertIn("Follow the reviewed safe start above", plan.desired_body)
+
+    def test_browser_actions_open_exact_pages_and_keep_machine_metadata_separate(self) -> None:
+        for mode in ("exclusive_claim", "first_valid_submission"):
+            with self.subTest(mode=mode):
+                record = item(90, mode=mode)
+                body = build_plans(projection(record), [], policy(), REPOSITORY,
+                                   landing_entries=landing(record, issue_number=None))[0].desired_body
+                next_section = body.split("### Next action\n", 1)[1]
+                link = next_section.split("](", 1)[1].split(")", 1)[0]
+                parsed = urllib.parse.urlsplit(link)
+                query = urllib.parse.parse_qs(parsed.query)
+                self.assertEqual(parsed.netloc, "agentbounties.app")
+                self.assertEqual(parsed.path, "/participate.html" if mode == "exclusive_claim" else "/competition.html")
+                self.assertEqual(query["bountyContract"], [record["bounty_contract"]])
+                self.assertEqual(query["network"], [NETWORK])
+                self.assertIn('"method": "POST"', next_section)
+                self.assertIn('"url": "' + record["next_action"]["url"] + '"', next_section)
+                self.assertIn("This is not a complete request.", next_section)
+                self.assertNotIn("](https://api.agentbounties.app/", next_section)
+
+    def test_browser_action_rejects_wrong_page_identity_or_host(self) -> None:
+        baseline = item(90)
+        contract = baseline["bounty_contract"]
+        for url in (
+            baseline["public_url"].replace("agentbounties.app", "example.com"),
+            baseline["public_url"].replace("/earn.html", "/competition.html"),
+            baseline["public_url"].replace(contract, "0x" + "f" * 40),
+            baseline["public_url"].replace(NETWORK, "base-sepolia"),
+            baseline["public_url"] + "&bountyContract=" + contract,
+            baseline["public_url"].replace("&network=" + NETWORK, ""),
+        ):
+            with self.subTest(url=url):
+                record = copy.deepcopy(baseline)
+                record["public_url"] = url
+                with self.assertRaisesRegex(LabelReconciliationError, "browser bounty URL"):
+                    build_plans(projection(record), [], policy(), REPOSITORY,
+                                landing_entries=landing(record, issue_number=None))
+
+    def test_creator_review_label_requires_reviewed_method_binding(self) -> None:
+        record = item(90)
+        record["verifier"].update(display_name="signed_quorum", method="signed_quorum")
+        entries = landing(record, issue_number=None)
+        generic = build_plans(projection(record), [], policy(), REPOSITORY,
+                              landing_entries=entries)[0].desired_body
+        self.assertNotIn("Creator review", generic)
+        self.assertIn("**Verification method:** signed_quorum", generic)
+        entries[record["discovery_id"]]["review_summary"] = {
+            "label": "Creator review (human verdict)", "verification_method": "signed_quorum",
+        }
+        body = build_plans(projection(record), [], policy(), REPOSITORY,
+                           landing_entries=entries)[0].desired_body
+        self.assertIn("**Review:** Creator review (human verdict)", body)
+        self.assertIn("**Verification method:** `signed_quorum`", body)
+        self.assertNotIn("**Verifier:** signed_quorum", body)
+        record["verifier"]["method"] = "deterministic"
+        with self.assertRaisesRegex(LabelReconciliationError, "verification method drifted"):
+            build_plans(projection(record), [], policy(), REPOSITORY, landing_entries=entries)
+
+    def test_invalid_review_summary_or_action_method_is_rejected(self) -> None:
+        record = item(90)
+        for value in ("creator", {}, {"label": "Creator review", "verification_method": ""},
+                      {"label": "Creator\nreview", "verification_method": "signed_quorum"}):
+            with self.subTest(summary=value), tempfile.TemporaryDirectory() as directory:
+                entries = landing(record, issue_number=None)
+                entries[record["discovery_id"]]["review_summary"] = value
+                path = Path(directory, "landing.json")
+                path.write_text(json.dumps({"schema_version": "agent-bounties/github-bounty-landing-copy-v1",
+                                            "repository": REPOSITORY, "entries": entries}))
+                with self.assertRaisesRegex(LabelReconciliationError, "review summary"):
+                    load_landing_copy(path, REPOSITORY)
+        for method in (None, "DELETE", "post"):
+            with self.subTest(method=method):
+                record["next_action"]["method"] = method
+                with self.assertRaisesRegex(LabelReconciliationError, "next action method"):
+                    build_plans(projection(record), [], policy(), REPOSITORY,
+                                landing_entries=landing(record, issue_number=None))
 
     def test_artifact_landing_allows_explicit_null_without_overriding_source_identity(self) -> None:
         record = item(93)

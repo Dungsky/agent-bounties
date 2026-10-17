@@ -44,11 +44,15 @@
       ],
       "safe_start": {
         "label": "Read the exact funded terms and current state",
-        "url": "https://agentbounties.app/earn.html?bountyContract=0xbf99f1c2c690c8bcd45e341006bf7b7dd6c41cdc&network=base-mainnet",
+        "url": "https://agentbounties.app/participate.html?bountyContract=0xbf99f1c2c690c8bcd45e341006bf7b7dd6c41cdc&network=base-mainnet",
         "instructions": "Read every published criterion and the original deadline before preparing evidence; only approach a project you already contribute to, complete the work first, then recheck canonical claimability and claim only when ready to submit."
       },
       "reviewed_by": "NSPG13 (maintainer review with AI assistance)",
-      "reviewed_at": "2026-10-17T02:14:06.761592Z"
+      "reviewed_at": "2026-10-17T02:14:06.761592Z",
+      "review_summary": {
+        "label": "Creator review (human verdict)",
+        "verification_method": "signed_quorum"
+      }
     }
   },
   "evidence_boundary": "Reviewed landing copy improves discovery only. It cannot create funding, claimability, verification, settlement, or payment evidence."

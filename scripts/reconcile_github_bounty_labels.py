@@ -410,6 +410,9 @@ def load_landing_copy(path: Path, repository: str) -> dict[str, dict[str, Any]]:
             if not isinstance(value, str) or not value.strip() or len(value) > 300:
                 raise LabelReconciliationError(f"landing safe start {key} is malformed: {identity}")
         require_public_https_url(safe_start.get("url"), f"{identity}.safe_start.url")
+        review_summary = raw.get("review_summary")
+        if review_summary is not None:
+            validate_review_summary(review_summary, identity)
         issue_number = raw.get("issue_number")
         if "issue_number" not in raw or (
             issue_number is not None
@@ -509,6 +512,17 @@ def attach_landing_copy(
                     raise LabelReconciliationError(
                         f"artifact-backed landing copy must not preassign an issue: {identity}"
                     )
+                review_summary = landing.get("review_summary")
+                if review_summary is not None:
+                    validate_review_summary(review_summary, identity)
+                    verifier = item.get("verifier")
+                    if (
+                        not isinstance(verifier, dict)
+                        or verifier.get("method") != review_summary["verification_method"]
+                    ):
+                        raise LabelReconciliationError(
+                            f"reviewed verification method drifted from projection: {identity}"
+                        )
                 item["_landing"] = dict(landing)
         attached.append(item)
     return attached
@@ -1480,6 +1494,41 @@ def require_public_https_url(value: Any, field: str) -> str:
     return str(value)
 
 
+def validate_review_summary(value: Any, identity: str) -> None:
+    if (
+        not isinstance(value, dict)
+        or not isinstance(value.get("label"), str)
+        or not value["label"].strip()
+        or len(value["label"]) > 120
+        or any(character in value["label"] for character in ("\n", "\r", "`"))
+        or not re.fullmatch(r"[a-z][a-z0-9_]*", str(value.get("verification_method") or ""))
+    ):
+        raise LabelReconciliationError(f"reviewed review summary is malformed: {identity}")
+
+
+def require_browser_bounty_url(item: Mapping[str, Any]) -> str:
+    """Keep human actions on the exact first-party page, never a bare POST route."""
+    identity = str(item["discovery_id"])
+    url = require_public_https_url(item.get("public_url"), f"{identity}.public_url")
+    parsed = urllib.parse.urlsplit(url)
+    query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+    page = "/earn.html" if item["protocol_version"] == "agent-bounties/autonomous-v1" else "/competition.html"
+    contract = str(item["bounty_contract"])
+    if (
+        parsed.netloc != "agentbounties.app"
+        or parsed.path != page
+        or query.get("bountyContract") != [contract]
+        or query.get("network") != [item["network"]]
+        or identity != f"eip155:{item['chain_id']}:{item['protocol_version']}:{contract}"
+    ):
+        raise LabelReconciliationError(f"browser bounty URL does not match canonical identity: {identity}")
+    if item["protocol_version"] == "agent-bounties/autonomous-v1":
+        return urllib.parse.urlunsplit(
+            (parsed.scheme, parsed.netloc, "/participate.html", parsed.query, parsed.fragment)
+        )
+    return url
+
+
 def format_usdc(amount: Any) -> str:
     value = require_unsigned(amount, "USDC amount")
     whole, fraction = divmod(value, 1_000_000)
@@ -1490,14 +1539,23 @@ def format_usdc(amount: Any) -> str:
 def render_managed_block(item: Mapping[str, Any]) -> str:
     identity = str(item["discovery_id"])
     marker = json.dumps({"discovery_id": identity}, separators=(",", ":"), sort_keys=True)
+    browser_url = require_browser_bounty_url(item)
     canonical_public_url = str(item["public_url"])
-    public_url = add_attribution(canonical_public_url, identity)
+    public_url = add_attribution(browser_url, identity)
     landing = item.get("_landing")
     action_required = item.get("_landing_action_required")
     next_action = item.get("next_action")
     if not isinstance(next_action, dict) or not isinstance(next_action.get("label"), str):
         raise LabelReconciliationError(f"next action is malformed: {identity}")
-    action_url = add_attribution(str(next_action.get("url")), identity)
+    action_method = next_action.get("method")
+    if not isinstance(action_method, str) or action_method not in {"GET", "POST"}:
+        raise LabelReconciliationError(f"next action method is malformed: {identity}")
+    machine_url = require_public_https_url(next_action.get("url"), f"{identity}.next_action.url")
+    action_label = (
+        "Open bounty to prepare a claim"
+        if next_action.get("kind") == "claim"
+        else next_action["label"]
+    )
     action_instructions = (
         "Follow the reviewed safe start above and recheck canonical state before preparing this action."
         if isinstance(landing, dict)
@@ -1525,10 +1583,18 @@ def render_managed_block(item: Mapping[str, Any]) -> str:
     ]
     verifier = item.get("verifier")
     if isinstance(verifier, dict):
-        lines.append(
-            f"- **Verifier:** {verifier.get('display_name', 'Unspecified')} "
-            f"(`{verifier.get('method', 'unknown')}`; ready: `{str(verifier.get('ready') is True).lower()}`)"
-        )
+        review_summary = landing.get("review_summary") if isinstance(landing, dict) else None
+        if isinstance(review_summary, dict):
+            lines.append(f"- **Review:** {review_summary['label']}")
+            lines.append(
+                f"- **Verification method:** `{verifier.get('method', 'unknown')}`; "
+                f"ready: `{str(verifier.get('ready') is True).lower()}`"
+            )
+        else:
+            lines.append(
+                f"- **Verification method:** {verifier.get('display_name', 'Unspecified')} "
+                f"(`{verifier.get('method', 'unknown')}`; ready: `{str(verifier.get('ready') is True).lower()}`)"
+            )
     if item.get("max_entries") is not None:
         lines.append(f"- **Capacity:** {item.get('entry_count', 0)} / {item['max_entries']} entries")
     elif item.get("entry_count") is not None:
@@ -1621,7 +1687,22 @@ def render_managed_block(item: Mapping[str, Any]) -> str:
             "",
             "### Next action",
             "",
-            f"**[{next_action['label']}]({action_url})** — {action_instructions}",
+            f"**[{action_label}]({public_url})** — {action_instructions}",
+            "",
+            "<details><summary>For agents: machine action metadata</summary>",
+            "",
+            "This is not a complete request. Use the API request schema and required permissions before submitting an action.",
+            "",
+            "```json",
+            json.dumps({
+                "method": action_method,
+                "url": machine_url,
+                "network": item["network"],
+                "bounty_contract": item["bounty_contract"],
+            }, indent=2, sort_keys=True),
+            "```",
+            "",
+            "</details>",
             "",
             f"[Open the public bounty page]({public_url})",
         ]
