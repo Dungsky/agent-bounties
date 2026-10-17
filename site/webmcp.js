@@ -213,8 +213,8 @@
   }
 
   async function readyWork() {
-    const { payload, items } = await client.inventory();
-    return { url: `${flow.apiBase(window.location)}/v1/opportunities?network=${NETWORK}&view=ready_to_earn&source_type=canonical_base&limit=300`, generated_at: payload.generated_at, items };
+    const { payload, items, coverage } = await client.inventory();
+    return { coverage, coverage_scope: payload.coverage_scope || "inventory_page", source_statuses: payload.source_statuses, url: `${flow.apiBase(window.location)}/v1/opportunities?network=${NETWORK}&view=ready_to_earn&source_type=canonical_base&limit=300`, generated_at: payload.generated_at, items };
   }
 
   function safeOpportunity(item) {
@@ -425,7 +425,7 @@
     },
     annotations: { readOnlyHint: true, untrustedContentHint: true },
     async execute(input) {
-      const { url, generated_at, items } = await readyWork();
+      const { url, generated_at, items, coverage, coverage_scope, source_statuses } = await readyWork();
       const needle = String(input?.search || "").trim().toLowerCase();
       const timed = input?.timing && input.timing !== "all" ? items.filter((item) => flow.phase(item) === input.timing) : items;
       const filtered = needle
@@ -435,7 +435,14 @@
       return {
         source: url,
         generated_at,
-        total_ready: items.length,
+        total_ready: coverage.state === "complete" && !coverage.limited ? items.length : null,
+        known_ready_count: items.length,
+        coverage: coverage.state,
+        coverage_scope,
+        source_statuses,
+        has_more: coverage.limited || filtered.length > limit,
+        source_has_more: coverage.limited,
+        coverage_notice: coverage.message || null,
         matched: filtered.length,
         items: filtered.slice(0, limit).map(safeOpportunity),
       };

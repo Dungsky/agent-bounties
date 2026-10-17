@@ -686,11 +686,19 @@
           `;
         }
 
+        function coverageNotice(projection) {
+          const state = projection?.coverage;
+          if (state === "partial") return "Showing checked listings. Some sources are unavailable; the full count is unknown.";
+          if (state === "unavailable" || (state === undefined && projection?.degraded === true)) return "Listings are unavailable or incomplete. The number of bounties is unknown; refresh later.";
+          if (projection?.has_more === true) return "Showing a limited page of checked listings; the full count is unknown.";
+          return "";
+        }
+
         function render() {
           const feed = $("#feed");
           feed.innerHTML = state.items.length
             ? state.items.map(renderCard).join("")
-            : `<div class="empty">No funded, verification-ready bounties are open right now.</div>`;
+            : `<div class="empty">${esc(coverageNotice(state.projection) || "No funded, verification-ready bounties are open in this checked page.")}</div>`;
           feed.querySelectorAll("[data-fallback-image]").forEach((image) => {
             image.addEventListener("error", () => {
               image.removeAttribute("data-fallback-image");
@@ -700,8 +708,8 @@
           feed.setAttribute("aria-busy", "false");
           $("#feed-count").textContent = state.preview
             ? "Preview data · no writes"
-            : `${state.items.length} open ${state.items.length === 1 ? "bounty" : "bounties"}`;
-          setNotice(state.notice);
+            : `${state.items.length} checked listings${coverageNotice(state.projection) ? " · incomplete" : ""}`;
+          setNotice(coverageNotice(state.projection) || state.notice);
           queueMicrotask(() => openai()?.notifyIntrinsicHeight?.());
         }
 
@@ -722,7 +730,7 @@
             });
             const projection = outputOf(result);
             if (projection?.items) applyProjection(projection);
-            setNotice("");
+            setNotice(coverageNotice(projection));
           } catch (error) {
             if (!state.items.length) {
               state.preview = true;

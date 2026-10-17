@@ -343,3 +343,23 @@ For each incident:
 AI may summarize logs, cluster incidents, propose hypotheses, or rank repair
 candidates. It cannot fabricate missing telemetry, waive a prerequisite, or
 authorize an R3-R4 action.
+
+## Reader cursor upper bound
+
+Readiness samples each saved heartbeat before its durable cursor, then reads the
+configured chain's safe and latest heads under one 12-second observation limit.
+Both heads must be recent and ordered. Every durable cursor must be at or below
+the independently observed `latest_block`; an impossible cursor is unavailable
+and requires investigation, never an automatic restart. Missing head evidence
+also fails closed.
+
+A cursor may legitimately lead the sampled safe tag: autonomous/V1 readers use
+confirmed latest blocks, and a Beta3 reader's prior safe checkpoint can be newer
+than another provider's current safe tag. Do not require `cursor <= safe_block`.
+The public data boundary stays capped to the lesser of safe and cursor, and
+existing heartbeat, chain, agreement and integrity checks remain required.
+
+Deploy and verify the API's additive `latest_block` response before updating the
+public probe. The probe deliberately treats a missing or invalid latest bound as
+unavailable. Existing activation, alert deduplication and schedule rules stay in
+place; this change adds no schedule, restart authority or paid build.

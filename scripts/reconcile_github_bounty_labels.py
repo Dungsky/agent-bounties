@@ -410,7 +410,11 @@ def load_landing_copy(path: Path, repository: str) -> dict[str, dict[str, Any]]:
             if not isinstance(value, str) or not value.strip() or len(value) > 300:
                 raise LabelReconciliationError(f"landing safe start {key} is malformed: {identity}")
         require_public_https_url(safe_start.get("url"), f"{identity}.safe_start.url")
-        if not isinstance(raw.get("issue_number"), int) or raw["issue_number"] <= 0:
+        issue_number = raw.get("issue_number")
+        if "issue_number" not in raw or (
+            issue_number is not None
+            and (type(issue_number) is not int or issue_number <= 0)
+        ):
             raise LabelReconciliationError(f"landing issue number is invalid: {identity}")
         parse_instant(raw.get("reviewed_at"), f"{identity}.reviewed_at")
         if not isinstance(raw.get("reviewed_by"), str) or not raw["reviewed_by"].strip():
@@ -1155,11 +1159,57 @@ def validate_autonomous_state_evidence(
         raise LabelReconciliationError(f"canonical {status} item lacks confirmed event evidence")
 
 
+def claim_record_source(
+    item: Mapping[str, Any], repository: str, registered_mirror: Mapping[str, Any] | None,
+) -> str | None:
+    source = source_issue_url(item, repository)
+    if registered_mirror is None or str(item.get("bounty_contract") or "").lower() != registered_mirror["bounty_contract"]:
+        return source
+    terms = item.get("terms")
+    document = terms.get("document") if isinstance(terms, dict) else None
+    contract_terms = document.get("contract_terms") if isinstance(document, dict) else None
+    if (
+        not isinstance(document, dict) or not isinstance(contract_terms, dict)
+        or document.get("source_url") is not None
+        or item.get("terms_valid") is not True
+        or item.get("terms_hash") != registered_mirror["terms_hash"]
+        or terms.get("terms_hash") != registered_mirror["terms_hash"]
+        or contract_terms.get("network") != registered_mirror["network"]
+        or contract_terms.get("protocol_version") != registered_mirror["protocol_version"]
+        or any(value.get("visibility", "public") != "public" for value in (item, document))
+    ):
+        raise LabelReconciliationError("registered claim-mirror canonical terms drift")
+    events = item.get("events")
+    if not isinstance(events, list):
+        raise LabelReconciliationError("registered claim-mirror creation evidence is missing")
+    created = [
+        event for event in events
+        if isinstance(event, dict) and event.get("kind") == "canonical_bounty_created"
+    ]
+    if len(created) != 1 or not (
+        created[0].get("tx_hash") == registered_mirror["creation_transaction_hash"]
+        and str(created[0].get("contract_address") or "").lower() == registered_mirror["factory_contract"]
+        and isinstance(created[0].get("data"), dict)
+        and created[0]["data"].get("bounty_contract") == registered_mirror["bounty_contract"]
+        and created[0]["data"].get("terms_hash") == registered_mirror["terms_hash"]
+    ):
+        raise LabelReconciliationError("registered claim-mirror creation evidence mismatch")
+    return str(registered_mirror["issue_url"])
+
+
 def canonical_records(
     full_feed: list[dict[str, Any]],
     claimable_feed: list[dict[str, Any]],
     repository: str,
+    *,
+    requested_issue_url: str | None = None,
+    registered_mirror: Mapping[str, Any] | None = None,
 ) -> tuple[dict[str, dict[str, Any]], set[tuple[str, str]]]:
+    if registered_mirror is not None and (
+        registered_mirror.get("repository") != repository
+        or registered_mirror.get("issue_url") != requested_issue_url
+    ):
+        raise LabelReconciliationError("registered claim-mirror request scope mismatch")
     by_contract: dict[str, dict[str, Any]] = {}
     candidates: dict[str, list[dict[str, Any]]] = {}
     for item in full_feed:
@@ -1176,7 +1226,7 @@ def canonical_records(
         if status in {"claimable", "claimed", "submitted", "paid"} and funded != target:
             raise LabelReconciliationError(f"canonical {status} item is not fully funded: {contract}")
         validate_autonomous_state_evidence(item, status, contract)
-        source = source_issue_url(item, repository)
+        source = claim_record_source(item, repository, registered_mirror)
         normalized = dict(item)
         normalized.update(
             {"bounty_contract": contract, "status": status, "_source_issue_url": source}
@@ -1185,8 +1235,13 @@ def canonical_records(
         if source:
             candidates.setdefault(source, []).append(normalized)
 
+    if registered_mirror is not None and registered_mirror["bounty_contract"] not in by_contract:
+        raise LabelReconciliationError("registered claim-mirror contract is absent from the canonical feed")
     by_issue: dict[str, dict[str, Any]] = {}
+    ambiguous_sources: set[str] = set()
     for source, records in candidates.items():
+        if registered_mirror is not None and source == registered_mirror["issue_url"] and len(records) != 1:
+            raise LabelReconciliationError("registered claim-mirror target has conflicting canonical contracts")
         if len(records) == 1:
             by_issue[source] = records[0]
             continue
@@ -1198,6 +1253,12 @@ def canonical_records(
             and record.get("verification_ready") is True
         ]
         if len(ready) != 1:
+            # An unrelated historical issue must not decide this claim. Omit
+            # its ambiguous candidates from recovery suggestions, while keeping
+            # all feed validation and the requested issue's ambiguity guard.
+            if requested_issue_url is not None and source != requested_issue_url:
+                ambiguous_sources.add(source)
+                continue
             raise LabelReconciliationError(
                 f"multiple canonical contracts reference {source} without one unique ready record"
             )
@@ -1206,7 +1267,7 @@ def canonical_records(
     earning: set[tuple[str, str]] = set()
     for item in claimable_feed:
         contract = str(item.get("bounty_contract") or "").lower()
-        source = source_issue_url(item, repository)
+        source = claim_record_source(item, repository, registered_mirror)
         counterpart = by_contract.get(contract)
         pair = (source or "", contract)
         if counterpart is None or not (
@@ -1224,7 +1285,7 @@ def canonical_records(
         if pair in earning:
             raise LabelReconciliationError(f"duplicate earning feed item: {contract}")
         earning.add(pair)
-    return by_issue, earning
+    return by_issue, {pair for pair in earning if pair[0] not in ambiguous_sources}
 
 
 def next_page(headers: Mapping[str, str]) -> str | None:
@@ -1437,6 +1498,11 @@ def render_managed_block(item: Mapping[str, Any]) -> str:
     if not isinstance(next_action, dict) or not isinstance(next_action.get("label"), str):
         raise LabelReconciliationError(f"next action is malformed: {identity}")
     action_url = add_attribution(str(next_action.get("url")), identity)
+    action_instructions = (
+        "Follow the reviewed safe start above and recheck canonical state before preparing this action."
+        if isinstance(landing, dict)
+        else str(next_action.get("instructions", ""))
+    )
     competition_mode = str(item["competition_mode"])
     competition_state = competition_mode
     if competition_mode == "first_valid_submission" and item["lifecycle_state"] == "ready_to_earn":
@@ -1555,7 +1621,7 @@ def render_managed_block(item: Mapping[str, Any]) -> str:
             "",
             "### Next action",
             "",
-            f"**[{next_action['label']}]({action_url})** — {next_action.get('instructions', '')}",
+            f"**[{next_action['label']}]({action_url})** — {action_instructions}",
             "",
             f"[Open the public bounty page]({public_url})",
         ]

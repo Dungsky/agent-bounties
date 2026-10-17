@@ -24,6 +24,7 @@ on:
       - "scripts/test-ai-bounty-handoff.js"
       - "scripts/test-metrics-dashboard.js"
       - "scripts/test-marketplace-ui.js"
+      - "scripts/test-opportunity-coverage.js"
       - "scripts/fixtures/opportunities-audit-20260916.json"
       - "scripts/test-webmcp.js"
       - "scripts/test-meta-child.js"
@@ -71,6 +72,7 @@ on:
       - "scripts/test-ai-bounty-handoff.js"
       - "scripts/test-metrics-dashboard.js"
       - "scripts/test-marketplace-ui.js"
+      - "scripts/test-opportunity-coverage.js"
       - "scripts/fixtures/opportunities-audit-20260916.json"
       - "scripts/test-webmcp.js"
       - "scripts/test-meta-child.js"
@@ -178,7 +180,7 @@ jobs:
       - name: Test the retained Metrics evidence engine
         run: node --test scripts/test-metrics-dashboard.js
       - name: Test unified marketplace readiness, timing, and economics
-        run: node --test scripts/test-marketplace-ui.js scripts/test-submissions.js scripts/test-funded.js scripts/test-webmcp.js scripts/test-meta-child.js scripts/test-competition-proof.js scripts/test-phone-wallet.js scripts/test-phone-wallet-network.cjs
+        run: node --test scripts/test-marketplace-ui.js scripts/test-opportunity-coverage.js scripts/test-submissions.js scripts/test-funded.js scripts/test-webmcp.js scripts/test-meta-child.js scripts/test-competition-proof.js scripts/test-phone-wallet.js scripts/test-phone-wallet-network.cjs
       - name: Test posting and wallet actions in real browser viewports
         working-directory: tools/browser-layout
         run: |

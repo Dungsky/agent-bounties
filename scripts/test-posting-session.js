@@ -19,7 +19,7 @@ class Server {
     this.requests.push({ owner: win.user, url, method, body, options });
     const reply = (value, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
     if (url.pathname.endsWith("/events")) return reply(this.events);
-    if (url.pathname.endsWith("/opportunities")) return reply({ schema_version: "agent-bounties/opportunity-projection-v1", items: this.inventory });
+    if (url.pathname.endsWith("/opportunities")) return reply({ schema_version: "agent-bounties/opportunity-projection-v1", network: "base-mainnet", degraded: false, source_statuses: [{ source_type: "canonical_base", available: true }], items: this.inventory });
     const id = url.pathname.split("/").pop(), key = `${win.user}:${id}`, old = this.records.get(key);
     if (!win.user) return reply({ error: "authentication_required" }, 401);
     if (method === "GET") {

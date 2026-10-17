@@ -25,7 +25,7 @@ from marketplace_readiness import PROTOCOLS
 
 
 @contextmanager
-def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a' * 40):
+def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a' * 40, ahead_cursor=None):
     requests = []
 
     class Handler(BaseHTTPRequestHandler):
@@ -43,7 +43,7 @@ def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a'
                 body = {
                     'schema': 'agent-bounties/marketplace-readiness-v1',
                     'checked_at': datetime.now(timezone.utc).isoformat(),
-                    'ready': reader_ready, 'safe_block': 1000,
+                    'ready': reader_ready, 'safe_block': 1000, 'latest_block': 1010,
                     'readers': [
                         {'protocol': protocol, 'ready': reader_ready, 'blocker': None,
                          'heartbeat_age_seconds': 1 if reader_ready else 91,
@@ -51,6 +51,8 @@ def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a'
                         for protocol in sorted(PROTOCOLS)
                     ],
                 }
+                if ahead_cursor is not None:
+                    body['readers'][0].update(cursor_block=ahead_cursor, lag_blocks=0)
                 self.wfile.write(json.dumps(body).encode())
             else:
                 self.send_response(404)
@@ -186,6 +188,14 @@ class SelfHealingContractTests(unittest.TestCase):
             self.assertEqual(plan['decision'], 'healthy' if revision == 'a' * 40 else 'contained')
             if revision != 'a' * 40:
                 self.assertIn('release:block_rollout', {a['action_id'] for a in plan['manual_actions']})
+
+    def test_impossible_cursor_requires_investigation_without_restart(self):
+        with hosted_monitor_fixture(ahead_cursor=2000) as (url, _):
+            snapshot = self_heal.build_public_snapshot(self.policy, url, url, 'a' * 40, 'a' * 40)
+        plan = self_heal.evaluate(self.policy, snapshot)
+        self.assertEqual(plan['decision'], 'escalation_required')
+        self.assertEqual(plan['automatic_actions'], [])
+        self.assertEqual({a['action_id'] for a in plan['manual_actions']}, {'indexer:investigate_indexer_integrity'})
 
     def test_readiness_activation_waits_for_deployed_revision_confirmation(self):
         with hosted_monitor_fixture(readiness_status=404) as (url, requests):

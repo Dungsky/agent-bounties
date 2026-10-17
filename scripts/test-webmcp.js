@@ -30,7 +30,7 @@ function environment(path = "/", entries = [item()]) {
     setTimeout(fn) { fn(); }, setInterval() {},
     async fetch(url, options) {
       requests.push({ url, ...options });
-      const payload = url.includes("/opportunities?") ? { schema_version: "agent-bounties/opportunity-projection-v1", generated_at: "2026-09-05T23:00:00Z", items: entries }
+      const payload = url.includes("/opportunities?") ? { schema_version: "agent-bounties/opportunity-projection-v1", generated_at: "2026-09-05T23:00:00Z", network: "base-mainnet", degraded: false, source_statuses: [{ source_type: "canonical_base", available: true }], items: entries }
         : { intent_id: intentId, bounty_contract: contract, status: "review_required", network: "base-mainnet", action: "solve", details: {}, expected_canonical_events: ["bounty_claimed"] };
       if (options?.method === "POST" && url.endsWith("/action-intents")) Object.assign(payload, JSON.parse(options.body));
       return { ok: true, json: async () => payload };
@@ -210,6 +210,50 @@ test("UI and WebMCP share funding and verification readiness", async () => {
   assert.equal(result.total_ready, 1);
   for (const entry of invalid) assert.equal(market.isReadyToEarn(entry), false);
   assert.equal(env.requests[0].cache, "no-store");
+});
+test("browser discovery preserves partial, unavailable and limited-page coverage", async () => {
+  const protocols = ["autonomous-v1", "open-competition-v1", "open-competition-v2-beta3"];
+  for (const scenario of ["partial", "unavailable", "limited", "complete"]) {
+    const unavailable = scenario === "unavailable", partial = scenario === "partial";
+    const coverage = unavailable ? "unavailable" : partial ? "partial" : "complete";
+    const entries = unavailable ? [] : [item()];
+    const payload = { schema_version: "agent-bounties/opportunity-projection-v1", network: "base-mainnet",
+      generated_at: "2026-10-17T02:00:00Z", coverage, coverage_scope: "inventory_page",
+      has_more: scenario === "limited", degraded: unavailable || partial,
+      source_statuses: [{ source_type: "canonical_base", available: !unavailable && !partial, coverage,
+        item_count: entries.length, protocol_statuses: protocols.map((protocol, index) => {
+          const missing = unavailable || (partial && index === 2);
+          return { protocol, coverage: missing ? "unavailable" : "complete", item_count: missing ? null : index === 0 ? entries.length : 0, error: missing ? "reader_unavailable" : null };
+        }) }], items: entries };
+    const env = environment(); env.window.fetch = async () => ({ok:true, json:async()=>payload}); env.register();
+    const result = await env.tools.get("agent_bounties_list_ready_work").execute({ limit: 1 });
+    assert.equal(result.total_ready, scenario === "complete" ? 1 : null);
+    assert.equal(result.known_ready_count, entries.length);
+    assert.equal(result.matched, entries.length);
+    assert.equal(result.items.length, entries.length);
+    assert.equal(result.coverage, coverage);
+    assert.equal(result.coverage_scope, "inventory_page");
+    assert.equal(result.has_more, scenario === "limited");
+    assert.equal(result.source_has_more, scenario === "limited");
+    assert.equal(JSON.stringify(result.source_statuses), JSON.stringify(payload.source_statuses));
+    if (scenario !== "complete") assert.match(result.coverage_notice, /unknown/);
+    assert.equal(env.storage.size, 0);
+    assert.equal(env.navigations.length, 0);
+  }
+});
+test("browser result limit preserves known totals and reports remaining checked matches", async () => {
+  const env = environment("/", [item(), item({opportunity_id: `canonical:base-mainnet:${wallet}`, source_id: wallet})]); env.register();
+  const result = await env.tools.get("agent_bounties_list_ready_work").execute({limit:1});
+  assert.equal(result.total_ready, 2); assert.equal(result.known_ready_count, 2);
+  assert.equal(result.matched, 2); assert.equal(result.items.length, 1);
+  assert.equal(result.has_more, true); assert.equal(result.source_has_more, false);
+  assert.equal(result.coverage, "complete"); assert.equal(result.coverage_notice, null);
+});
+test("browser discovery rejects missing source evidence before action preparation", async () => {
+  const env = environment(); env.window.fetch = async () => ({ok:true, json:async()=>({schema_version:"agent-bounties/opportunity-projection-v1", items:[item()]})}); env.register();
+  await assert.rejects(env.tools.get("agent_bounties_list_ready_work").execute({}), /evidence is unavailable/);
+  assert.equal(env.storage.size, 0);
+  assert.equal(env.navigations.length, 0);
 });
 test("browser discovery and inspection preserve deadline meaning and public terms without writes", async () => {
   const source_url = "https://github.com/NSPG13/agent-bounties/issues/648";

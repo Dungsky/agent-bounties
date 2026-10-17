@@ -27,7 +27,7 @@ class MarketplaceReadinessTests(unittest.TestCase):
     def setUp(self):
         self.now = datetime.now(timezone.utc)
         self.payload = {'schema': 'agent-bounties/marketplace-readiness-v1', 'ready': True,
-                        'checked_at': self.now.isoformat(), 'safe_block': 1000,
+                        'checked_at': self.now.isoformat(), 'safe_block': 1000, 'latest_block': 1010,
                         'readers': [{'protocol': p, 'ready': True, 'blocker': None,
                                      'heartbeat_age_seconds': 1, 'cursor_block': 999, 'lag_blocks': 1}
                                     for p in sorted(PROTOCOLS)]}
@@ -49,6 +49,28 @@ class MarketplaceReadinessTests(unittest.TestCase):
                       {'checked_at': 'invalid'}, {'schema': 'other'}, {'readers': [None]*3}]:
             data = dict(self.payload, **patch)
             self.assertEqual(inspect(data, self.now)['state'], 'unavailable')
+
+    def test_cursor_upper_bound_respects_each_protocol_clock(self):
+        for protocol in PROTOCOLS:
+            for cursor, expected in [(1000, True), (1008, True), (2000, False)]:
+                data = copy.deepcopy(self.payload)
+                reader = next(r for r in data['readers'] if r['protocol'] == protocol)
+                reader.update(cursor_block=cursor, lag_blocks=0)
+                with self.subTest(protocol=protocol, cursor=cursor):
+                    result = inspect(data, self.now)
+                    self.assertEqual(result['state'] == 'healthy', expected)
+                    self.assertFalse(result['restartable'])
+        for latest in [None, True, -1, 999, '1010']:
+            self.assertEqual(inspect(dict(self.payload, latest_block=latest), self.now)['state'], 'unavailable')
+        missing = dict(self.payload); del missing['latest_block']
+        self.assertEqual(inspect(missing, self.now)['state'], 'unavailable')
+        # A different provider's recently sampled safe tag may lag even the
+        # Beta3 reader's previous safe checkpoint. Latest remains the upper bound.
+        data = copy.deepcopy(self.payload)
+        data.update(safe_block=52706877, latest_block=52706963)
+        for reader in data['readers']:
+            reader.update(cursor_block=52706913, lag_blocks=0)
+        self.assertEqual(inspect(data, self.now)['state'], 'healthy')
 
     def test_real_http_503_and_200_both_check_body(self):
         payload = self.payload

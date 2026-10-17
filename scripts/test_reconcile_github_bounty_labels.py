@@ -19,6 +19,7 @@ from reconcile_github_bounty_labels import (
     augment_projection_with_beta3,
     beta3_discovery_competition_mode,
     build_plans,
+    canonical_records,
     execute_plans,
     fetch_github_issues,
     issue_marker,
@@ -29,7 +30,12 @@ from reconcile_github_bounty_labels import (
     request_with_retry,
     validate_projection,
 )
-from github_claim_comment import open_competition_wrong_mode_plan
+from github_claim_comment import (
+    apply_canonical_claim_state,
+    open_competition_wrong_mode_plan,
+    reviewed_claim_mirror,
+    write_issue_files,
+)
 
 
 REPOSITORY = "NSPG13/agent-bounties"
@@ -313,6 +319,7 @@ class FakeGitHub:
 class GitHubDiscoveryReconciliationTests(unittest.TestCase):
     def test_reviewed_landing_copy_controls_title_skills_and_safe_start(self) -> None:
         record = item(90, source_url=f"https://github.com/{REPOSITORY}/issues/42")
+        record["next_action"]["instructions"] = "Claim before starting work."
         source = issue(42, body="Keep this human section.", labels=["bounty"])
         plan = build_plans(
             projection(record),
@@ -332,6 +339,42 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
         self.assertIn("Canonical opportunity URL", plan.desired_body)
         self.assertIn("utm_source=github", plan.desired_body)
         self.assertTrue(plan.desired_body.startswith("Keep this human section."))
+        self.assertNotIn("Claim before starting work.", plan.desired_body)
+        self.assertIn("Follow the reviewed safe start above", plan.desired_body)
+
+    def test_artifact_landing_allows_explicit_null_without_overriding_source_identity(self) -> None:
+        record = item(93)
+        manifest = {
+            "schema_version": "agent-bounties/github-bounty-landing-copy-v1",
+            "repository": REPOSITORY,
+            "entries": landing(record, issue_number=None),
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory, "landing.json")
+            path.write_text(json.dumps(manifest), encoding="utf-8")
+            entries = load_landing_copy(path, REPOSITORY)
+            plan = build_plans(projection(record), [], policy(), REPOSITORY, landing_entries=entries)[0]
+            self.assertIn("ready-to-earn", plan.desired_managed_labels)
+            self.assertIsNone(plan.issue_number)
+            record["source_url"] = f"https://github.com/{REPOSITORY}/issues/42"
+            with self.assertRaisesRegex(LabelReconciliationError, "wrong source issue"):
+                build_plans(projection(record), [], policy(), REPOSITORY, landing_entries=entries)
+
+    def test_landing_issue_number_requires_explicit_null_or_positive_integer(self) -> None:
+        record = item(93)
+        for value in [0, -1, "1632", True, False, 1.5, "missing"]:
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
+                manifest = {
+                    "schema_version": "agent-bounties/github-bounty-landing-copy-v1",
+                    "repository": REPOSITORY,
+                    "entries": landing(record, issue_number=value),
+                }
+                if value == "missing":
+                    del manifest["entries"][record["discovery_id"]]["issue_number"]
+                path = Path(directory, "landing.json")
+                path.write_text(json.dumps(manifest), encoding="utf-8")
+                with self.assertRaisesRegex(LabelReconciliationError, "issue number"):
+                    load_landing_copy(path, REPOSITORY)
 
     def test_missing_reviewed_copy_fails_closed_without_solver_invitation(self) -> None:
         record = item(91, source_url=f"https://github.com/{REPOSITORY}/issues/42")
@@ -1113,6 +1156,333 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
                             REPOSITORY,
                         ]
                     )
+
+
+class TargetedCanonicalClaimTests(unittest.TestCase):
+    target_url = f"https://github.com/{REPOSITORY}/issues/42"
+    unrelated_url = f"https://github.com/{REPOSITORY}/issues/590"
+
+    def record(self, number=1, *, source=None, status="claimable", ready=True):
+        contract = f"0x{number:040x}"
+        kinds = {
+            "claimed": ["bounty_claimed"],
+            "submitted": ["bounty_claimed", "submission_added"],
+            "paid": ["bounty_settled"],
+        }.get(status, [])
+        return {
+            "bounty_contract": contract,
+            "status": status,
+            "target_amount": "1010000",
+            "funded_amount": "1010000",
+            "solver_reward": "1000000",
+            "claim_bond": "10000",
+            "terms_valid": True,
+            "verification_ready": ready,
+            "terms": {"document": {"source_url": source or self.target_url}},
+            "events": [
+                {"kind": kind, "contract_address": contract, "tx_hash": TX}
+                for kind in kinds
+            ],
+        }
+
+    def unrelated_ambiguous(self):
+        return [
+            self.record(2, source=self.unrelated_url, status="cancelled", ready=False),
+            self.record(3, source=self.unrelated_url, status="claimed", ready=False),
+        ]
+
+    def plan(self, full, earning):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "feed.json"
+            fixture.write_text(json.dumps({"full_feed": full, "claimable_feed": earning}))
+            with patch("github_claim_comment.default_http_request") as transport:
+                with patch("github_claim_comment.load_native_claim_handoff") as handoff:
+                    result = apply_canonical_claim_state(
+                        {"AGENT_BOUNTIES_CLAIM_FEED_FILE": str(fixture)},
+                        {
+                            "repo": REPOSITORY,
+                            "url": self.target_url,
+                            "comment_id": "42",
+                            "contributor_login": "fixture",
+                            "labels": ["bounty", "funded-live"],
+                        },
+                        {"ready": False, "signal": {"decision": "OnChainClaimRequired"}},
+                    )
+            transport.assert_not_called()
+            handoff.assert_not_called()
+        return result
+
+    def assert_blocked(self, result, reason):
+        self.assertFalse(result["ready"])
+        self.assertEqual(result["signal"]["decision"], "CanonicalStateUnavailable")
+        self.assertIn(reason, result["check"]["text"])
+        self.assertNotIn("claim_plan_request", result["signal"])
+
+    def test_unrelated_ambiguous_issue_does_not_block_exact_ready_target(self):
+        target = self.record()
+        result = self.plan([*self.unrelated_ambiguous(), target], [target])
+        self.assertEqual(result["signal"]["decision"], "OnChainClaimRequired")
+        self.assertEqual(result["signal"]["bounty_contract"], target["bounty_contract"])
+        self.assertFalse(result["ready"])
+
+    def test_target_ambiguity_still_fails_closed(self):
+        for ready in (False, True):
+            with self.subTest(ready=ready):
+                records = [self.record(1, ready=ready), self.record(2, ready=ready)]
+                self.assert_blocked(self.plan(records, records if ready else []), self.target_url)
+
+    def test_one_ready_target_preserves_existing_replacement_selection(self):
+        ready = self.record()
+        old = self.record(5, status="cancelled", ready=False)
+        result = self.plan([old, ready, *self.unrelated_ambiguous()], [ready])
+        self.assertEqual(result["signal"]["bounty_contract"], ready["bounty_contract"])
+
+    def test_ambiguous_other_issues_cannot_be_recommended_as_alternatives(self):
+        target = self.record(status="claimed")
+        ambiguous = [self.record(n, source=self.unrelated_url) for n in (2, 3)]
+        alternative = self.record(4, source=f"https://github.com/{REPOSITORY}/issues/43")
+        result = self.plan([target, *ambiguous, alternative], [*ambiguous, alternative])
+        self.assert_blocked(result, "canonical status is claimed")
+        alternatives = result["signal"]["claim_recovery"]["alternatives"]
+        self.assertEqual([r["bounty_contract"] for r in alternatives], [alternative["bounty_contract"]])
+
+    def test_missing_target_is_not_replaced_with_an_unrelated_contract(self):
+        unlinked = self.record()
+        unlinked["terms"]["document"]["source_url"] = None
+        self.assert_blocked(
+            self.plan([unlinked, *self.unrelated_ambiguous()], [unlinked]),
+            "no exact source_url match",
+        )
+
+    def test_nonclaimable_target_stays_blocked_with_unrelated_ambiguity(self):
+        for status in ("claimed", "submitted", "paid", "cancelled"):
+            with self.subTest(status=status):
+                self.assert_blocked(
+                    self.plan([self.record(status=status), *self.unrelated_ambiguous()], []),
+                    f"canonical status is {status}",
+                )
+
+    def test_missing_earning_confirmation_still_blocks_target(self):
+        self.assert_blocked(
+            self.plan([self.record(), *self.unrelated_ambiguous()], []),
+            "absent from the executable earning feed",
+        )
+
+    def test_unapproved_target_stays_blocked(self):
+        self.assert_blocked(
+            self.plan([self.record(ready=False), *self.unrelated_ambiguous()], []),
+            "committed verification path is not executable",
+        )
+
+    def test_corrupt_unrelated_economics_still_fail_closed(self):
+        records = self.unrelated_ambiguous()
+        records[0]["funded_amount"] = "1010001"
+        self.assert_blocked(self.plan([self.record(), *records], []), "invalid canonical economics")
+
+    def test_missing_confirmed_event_in_unrelated_record_still_fails_closed(self):
+        records = self.unrelated_ambiguous()
+        records[1]["events"] = []
+        self.assert_blocked(self.plan([self.record(), *records], []), "lacks confirmed event evidence")
+
+    def test_duplicate_contract_still_fails_closed(self):
+        target = self.record()
+        self.assert_blocked(self.plan([target, target, *self.unrelated_ambiguous()], []), "duplicate canonical contract")
+
+    def test_mismatched_earning_record_is_not_hidden_by_unrelated_ambiguity(self):
+        target = self.record()
+        foreign = self.record(3, source=self.unrelated_url)
+        self.assert_blocked(
+            self.plan([target, *self.unrelated_ambiguous()], [target, foreign]),
+            "earning feed item is not an exact executable full-feed record",
+        )
+
+    def test_untargeted_reader_keeps_strict_ambiguity_error(self):
+        with self.assertRaisesRegex(LabelReconciliationError, "without one unique ready record"):
+            canonical_records([self.record(), *self.unrelated_ambiguous()], [], REPOSITORY)
+
+
+class ReviewedClaimMirrorTests(unittest.TestCase):
+    def setUp(self):
+        self.meta = {
+            "repo": REPOSITORY, "repository_id": 101, "issue_id": 202,
+            "number": 42, "url": f"https://github.com/{REPOSITORY}/issues/42",
+            "comment_id": "43", "contributor_login": "fixture",
+            "labels": ["bounty", "funded-live"],
+        }
+        self.entry = {
+            "repository": REPOSITORY, "repository_id": 101, "issue_id": 202,
+            "issue_number": 42, "network": "base-mainnet", "chain_id": 8453,
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "bounty_contract": "0x" + "1" * 40, "terms_hash": "0x" + "2" * 64,
+            "factory_contract": "0x" + "3" * 40,
+            "creation_transaction_hash": "0x" + "4" * 64,
+            "publication_evidence": {
+                "run_id": 10, "artifact_id": 20, "artifact_sha256": "5" * 64,
+                "source_commit": "6" * 40,
+            },
+        }
+        self.record = {
+            "bounty_contract": self.entry["bounty_contract"], "status": "claimable",
+            "target_amount": "1010000", "funded_amount": "1010000",
+            "solver_reward": "1000000", "claim_bond": "10000",
+            "terms_valid": True, "verification_ready": True,
+            "terms_hash": self.entry["terms_hash"],
+            "terms": {
+                "terms_hash": self.entry["terms_hash"],
+                "document": {
+                    "source_url": None,
+                    "contract_terms": {"network": "base-mainnet", "protocol_version": self.entry["protocol_version"]},
+                },
+            },
+            "events": [{
+                "kind": "canonical_bounty_created",
+                "contract_address": self.entry["factory_contract"],
+                "tx_hash": self.entry["creation_transaction_hash"],
+                "data": {"bounty_contract": self.entry["bounty_contract"], "terms_hash": self.entry["terms_hash"]},
+            }],
+        }
+
+    def plan(self, *, record=None, earning=None, additional=None, entries=None, meta=None):
+        record = self.record if record is None else record
+        full = [record, *(additional or [])]
+        earning = [record] if earning is None else earning
+        before = json.dumps([full, earning], sort_keys=True)
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "feed.json"
+            registry = Path(directory) / "registry.json"
+            fixture.write_text(json.dumps({"full_feed": full, "claimable_feed": earning}))
+            registry.write_text(json.dumps({"schema_version": "agent-bounties/github-claim-mirrors-v1", "entries": [self.entry] if entries is None else entries}))
+            with patch("github_claim_comment.CLAIM_MIRROR_REGISTRY", registry):
+                with patch("github_claim_comment.default_http_request") as transport:
+                    with patch("github_claim_comment.load_native_claim_handoff") as handoff:
+                        result = apply_canonical_claim_state(
+                            {"AGENT_BOUNTIES_CLAIM_FEED_FILE": str(fixture)},
+                            self.meta if meta is None else meta,
+                            {"ready": False, "signal": {"decision": "OnChainClaimRequired"}},
+                        )
+                transport.assert_not_called()
+                handoff.assert_not_called()
+        self.assertEqual(before, json.dumps([full, earning], sort_keys=True))
+        return result
+
+    def assert_blocked(self, result, reason):
+        self.assertEqual(result["signal"]["decision"], "CanonicalStateUnavailable")
+        self.assertIn(reason, result["check"]["text"])
+        self.assertNotIn("claim_plan_request", result["signal"])
+
+    def test_registered_mirror_resolves_without_rewriting_funded_terms(self):
+        others = TargetedCanonicalClaimTests().unrelated_ambiguous()
+        result = self.plan(additional=others)
+        self.assertEqual(result["signal"]["decision"], "OnChainClaimRequired")
+        self.assertEqual(result["signal"]["bounty_contract"], self.entry["bounty_contract"])
+        self.assertFalse(result["ready"])
+
+    def test_wrong_or_missing_immutable_github_identity_stays_blocked(self):
+        for key, value in (
+            ("repository_id", 102), ("issue_id", 203), ("number", 43),
+            ("repo", "someone/else"), ("url", self.meta["url"] + "?contract=other"),
+            ("repository_id", None), ("issue_id", None), ("number", True),
+        ):
+            with self.subTest(key=key, value=value):
+                self.assert_blocked(self.plan(meta={**self.meta, key: value}), "GitHub identity mismatch")
+
+    def test_edited_issue_text_cannot_register_a_contract(self):
+        meta = {**self.meta, "issue_body": f"<!-- discovery_id:{self.entry['bounty_contract']} -->"}
+        self.assert_blocked(self.plan(meta=meta, entries=[]), "no exact source_url match")
+
+    def test_event_reader_preserves_github_numeric_identity(self):
+        event = {
+            "repository": {"id": 101, "full_name": REPOSITORY},
+            "issue": {"id": 202, "number": 42, "html_url": self.meta["url"], "title": "Fixture", "body": "", "labels": [{"name": "bounty"}]},
+            "comment": {"id": 43, "body": "/claim", "user": {"login": "fixture"}},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            meta, _ = write_issue_files({}, event, Path(directory))
+        self.assertEqual((meta["repository_id"], meta["issue_id"], meta["number"]), (101, 202, 42))
+
+    def test_registry_has_no_environment_path_override(self):
+        import github_claim_comment as module
+        expected = Path(module.__file__).resolve().parents[1] / "ops/github-claim-mirrors.json"
+        with patch.dict(os.environ, {"AGENT_BOUNTIES_CLAIM_MIRRORS_FILE": "/untrusted/file", "GITHUB_WORKSPACE": "/untrusted"}):
+            self.assertEqual(module.CLAIM_MIRROR_REGISTRY, expected)
+            self.assertIsNone(reviewed_claim_mirror(self.meta))
+
+    def test_missing_or_symlinked_registry_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            registry = Path(directory) / "registry.json"
+            with patch("github_claim_comment.CLAIM_MIRROR_REGISTRY", registry):
+                with self.assertRaisesRegex(RuntimeError, "bounded regular file"):
+                    reviewed_claim_mirror(self.meta)
+            target = Path(directory) / "other.json"
+            target.write_text('{"schema_version":"agent-bounties/github-claim-mirrors-v1","entries":[]}')
+            registry.symlink_to(target)
+            with patch("github_claim_comment.CLAIM_MIRROR_REGISTRY", registry):
+                with self.assertRaisesRegex(RuntimeError, "bounded regular file"):
+                    reviewed_claim_mirror(self.meta)
+
+    def test_wrong_registered_contract_does_not_fall_back(self):
+        self.entry["bounty_contract"] = "0x" + "9" * 40
+        self.assert_blocked(self.plan(), "contract is absent")
+
+    def test_item_or_document_hash_drift_blocks_claim(self):
+        for location in ("item", "terms"):
+            with self.subTest(location=location):
+                record = json.loads(json.dumps(self.record))
+                (record if location == "item" else record["terms"])["terms_hash"] = "0x" + "9" * 64
+                self.assert_blocked(self.plan(record=record), "canonical terms drift")
+
+    def test_wrong_network_protocol_or_source_blocks_claim(self):
+        for key, value in (("network", "base-sepolia"), ("protocol_version", "other")):
+            with self.subTest(key=key):
+                record = json.loads(json.dumps(self.record))
+                record["terms"]["document"]["contract_terms"][key] = value
+                self.assert_blocked(self.plan(record=record), "canonical terms drift")
+        self.record["terms"]["document"]["source_url"] = "https://github.com/other/project/issues/42"
+        self.assert_blocked(self.plan(), "canonical terms drift")
+
+    def test_private_item_or_document_cannot_use_public_mirror(self):
+        for location in ("item", "document"):
+            with self.subTest(location=location):
+                record = json.loads(json.dumps(self.record))
+                (record if location == "item" else record["terms"]["document"])["visibility"] = "private"
+                self.assert_blocked(self.plan(record=record), "canonical terms drift")
+
+    def test_wrong_creation_event_or_missing_event_blocks_claim(self):
+        for key, value in (("tx_hash", "0x" + "9" * 64), ("contract_address", "0x" + "9" * 40), ("data", {})):
+            with self.subTest(key=key):
+                record = json.loads(json.dumps(self.record))
+                record["events"][0][key] = value
+                self.assert_blocked(self.plan(record=record), "creation evidence mismatch")
+        for events in ([], None, [*self.record["events"], *self.record["events"]]):
+            with self.subTest(events=events):
+                self.assert_blocked(self.plan(record={**self.record, "events": events}), "creation evidence")
+
+    def test_registry_cannot_hide_target_ambiguity_even_with_one_ready_record(self):
+        for ready in (False, True):
+            with self.subTest(ready=ready):
+                other = TargetedCanonicalClaimTests().record(5, ready=ready)
+                self.assert_blocked(self.plan(additional=[other]), "conflicting canonical contracts")
+
+    def test_duplicate_registered_identity_or_contract_is_rejected(self):
+        for change in ({}, {"issue_number": 45, "issue_id": 205}):
+            with self.subTest(change=change):
+                self.assert_blocked(self.plan(entries=[self.entry, {**self.entry, **change}]), "duplicate reviewed claim-mirror binding")
+
+    def test_earning_feed_terms_drift_is_not_hidden(self):
+        earning = json.loads(json.dumps(self.record))
+        earning["terms_hash"] = "0x" + "9" * 64
+        self.assert_blocked(self.plan(earning=[earning]), "canonical terms drift")
+
+    def test_registry_does_not_override_verification_or_earning_hold(self):
+        self.record["verification_ready"] = False
+        self.assert_blocked(self.plan(earning=[]), "committed verification path is not executable")
+        self.record["verification_ready"] = True
+        self.assert_blocked(self.plan(earning=[]), "absent from the executable earning feed")
+
+    def test_registered_claimed_round_stays_blocked(self):
+        self.record["status"] = "claimed"
+        self.record["events"].append({"kind": "bounty_claimed", "contract_address": self.entry["bounty_contract"], "tx_hash": TX})
+        self.assert_blocked(self.plan(earning=[]), "canonical status is claimed")
 
 
 if __name__ == "__main__":
