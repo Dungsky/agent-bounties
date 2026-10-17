@@ -398,6 +398,38 @@
   window.agentBountiesAnalytics = analytics;
   window.bountyBoardAnalytics = analytics;
 
+  function refreshAnalyticsPrivacy() {
+    const privacy = privacySignalEnabled();
+    let optedOut = new URLSearchParams(window.location.search).get("analytics") === "off";
+    let unavailable = false;
+    let googleAllowed = false;
+    try {
+      const local = storage("local");
+      unavailable = !local;
+      optedOut = optedOut || local?.getItem(OPT_OUT_KEY) === "true";
+      googleAllowed = local?.getItem(GOOGLE_CONSENT_KEY) === "granted";
+    } catch (_error) {
+      unavailable = true;
+    }
+    // Stop an already loaded tag in this window too, even without a privacy control.
+    // Refreshes never grant consent, write preferences or re-enable a stopped tag.
+    const measurementId = googleMeasurementId();
+    if (measurementId && (privacy || optedOut || unavailable || (window.gtag && !googleAllowed))) {
+      window[`ga-disable-${measurementId}`] = true;
+    }
+    const control = document.querySelector?.("[data-analytics-opt-out]");
+    if (!control) return;
+    control.textContent = privacy
+      ? "Analytics is off because of your browser settings"
+      : unavailable
+        ? "Analytics controls are unavailable"
+        : optedOut
+          ? "Analytics disabled on this browser"
+          : "Disable analytics on this browser";
+    control.setAttribute("aria-pressed", String(privacy || optedOut));
+    control.disabled = privacy || optedOut || unavailable;
+  }
+
   document.addEventListener("click", function (event) {
     const target = event.target.closest("[data-analytics-event]");
     if (!target) return;
@@ -428,10 +460,20 @@
     if (!optOutControl) return;
     optOut();
     document.querySelector("[data-google-analytics-consent]")?.remove();
-    optOutControl.textContent = "Analytics disabled on this browser";
-    optOutControl.setAttribute("aria-pressed", "true");
+    refreshAnalyticsPrivacy();
   });
 
+  refreshAnalyticsPrivacy();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", refreshAnalyticsPrivacy, { once: true });
+  }
+  window.addEventListener?.("pageshow", refreshAnalyticsPrivacy);
+  window.addEventListener?.("focus", refreshAnalyticsPrivacy);
+  window.addEventListener?.("storage", function (event) {
+    if (event.key === OPT_OUT_KEY || event.key === GOOGLE_CONSENT_KEY || event.key === null) {
+      refreshAnalyticsPrivacy();
+    }
+  });
   offerGoogleAnalytics();
   track("page_view");
 })();

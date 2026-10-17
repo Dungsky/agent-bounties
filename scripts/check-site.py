@@ -1459,7 +1459,7 @@ def main() -> int:
         path = site_dir / relative
         text = path.read_text(encoding="utf-8")
         prefix = "../" * (len(PurePosixPath(relative).parts) - 1)
-        analytics_version = 5 if relative in {"leaderboard.html", "index.html", "post.html", "bug-fix.html", "api-integration.html", "app-testing.html"} else 4
+        analytics_version = 6
         parser = PageParser()
         parser.feed(text)
         if parser.h1_count != 1:
