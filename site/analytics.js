@@ -398,20 +398,27 @@
   window.agentBountiesAnalytics = analytics;
   window.bountyBoardAnalytics = analytics;
 
-  function refreshOptOutControl() {
-    const control = document.querySelector?.("[data-analytics-opt-out]");
-    if (!control) return;
+  function refreshAnalyticsPrivacy() {
     const privacy = privacySignalEnabled();
     let optedOut = new URLSearchParams(window.location.search).get("analytics") === "off";
     let unavailable = false;
+    let googleAllowed = false;
     try {
       const local = storage("local");
       unavailable = !local;
       optedOut = optedOut || local?.getItem(OPT_OUT_KEY) === "true";
+      googleAllowed = local?.getItem(GOOGLE_CONSENT_KEY) === "granted";
     } catch (_error) {
       unavailable = true;
     }
-    // Read the choice without changing consent or starting collection.
+    // Stop an already loaded tag in this window too, even without a privacy control.
+    // Refreshes never grant consent, write preferences or re-enable a stopped tag.
+    const measurementId = googleMeasurementId();
+    if (measurementId && (privacy || optedOut || unavailable || (window.gtag && !googleAllowed))) {
+      window[`ga-disable-${measurementId}`] = true;
+    }
+    const control = document.querySelector?.("[data-analytics-opt-out]");
+    if (!control) return;
     control.textContent = privacy
       ? "Analytics is off because of your browser settings"
       : unavailable
@@ -453,17 +460,19 @@
     if (!optOutControl) return;
     optOut();
     document.querySelector("[data-google-analytics-consent]")?.remove();
-    refreshOptOutControl();
+    refreshAnalyticsPrivacy();
   });
 
-  refreshOptOutControl();
+  refreshAnalyticsPrivacy();
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", refreshOptOutControl, { once: true });
+    document.addEventListener("DOMContentLoaded", refreshAnalyticsPrivacy, { once: true });
   }
-  window.addEventListener?.("pageshow", refreshOptOutControl);
-  window.addEventListener?.("focus", refreshOptOutControl);
+  window.addEventListener?.("pageshow", refreshAnalyticsPrivacy);
+  window.addEventListener?.("focus", refreshAnalyticsPrivacy);
   window.addEventListener?.("storage", function (event) {
-    if (event.key === OPT_OUT_KEY || event.key === null) refreshOptOutControl();
+    if (event.key === OPT_OUT_KEY || event.key === GOOGLE_CONSENT_KEY || event.key === null) {
+      refreshAnalyticsPrivacy();
+    }
   });
   offerGoogleAnalytics();
   track("page_view");

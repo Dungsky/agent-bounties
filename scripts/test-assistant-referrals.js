@@ -11,8 +11,10 @@ const postingPrompt = require("../site/posting-prompt.js");
 const source = fs.readFileSync(path.join(__dirname, "../site/analytics.js"), "utf8");
 
 function storage() {
-  const values = new Map();
-  return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, String(value)), removeItem: key => values.delete(key) };
+  const values = new Map(), writes = [];
+  return { writes, getItem: key => values.get(key) ?? null,
+    setItem(key, value) { writes.push(["set", key, String(value)]); values.set(key, String(value)); },
+    removeItem(key) { writes.push(["remove", key]); values.delete(key); } };
 }
 
 function page(url, options = {}) {
@@ -41,7 +43,7 @@ function page(url, options = {}) {
     window, navigator: options.privacy || {}, URL, URLSearchParams, Date, Uint8Array,
     document: options.document || { referrer: "", addEventListener() {} },
   });
-  return { analytics: window.agentBountiesAnalytics, local, events,
+  return { analytics: window.agentBountiesAnalytics, window, local, events,
     emit(name, event = {}) { for (const callback of windowListeners.get(name) || []) callback(event); } };
 }
 
@@ -133,7 +135,7 @@ test("head-loaded controls initialize after DOM readiness without opting in", ()
   assert.equal(result.events.length, 0);
 });
 
-test("focus, restored pages and other-tab preferences refresh only the displayed state", () => {
+test("focus, restored pages and other-tab preferences refresh without writing choices or sending events", () => {
   const privacy = {}, ui = privacyControls();
   const result = page("https://agentbounties.app/privacy.html", { privacy, document: ui.document });
   privacy.globalPrivacyControl = true;
@@ -164,6 +166,103 @@ test("unavailable local storage leaves the privacy control unavailable and colle
   assert.equal(result.events.length, 0);
 });
 
+
+const optOutKey = "bountyboard.analytics.disabled.v1";
+const googleConsentKey = "agent-bounties.analytics.google-consent.v1";
+const measurementId = "G-TEST123";
+
+function activeGooglePage({ controls = false, privacy = {} } = {}) {
+  const ui = privacyControls({ mounted: controls }), local = storage(), scripts = [];
+  local.setItem(googleConsentKey, "granted");
+  const query = ui.document.querySelector;
+  ui.document.querySelector = function (selector) {
+    if (selector === `script[data-google-tag="${measurementId}"]`) return scripts[0] || null;
+    return query(selector);
+  };
+  ui.document.head = { appendChild(script) { scripts.push(script); } };
+  ui.document.createElement = function (tag) {
+    assert.equal(tag, "script");
+    return { dataset: {} };
+  };
+  const result = page(`https://agentbounties.app/${controls ? "privacy" : "market"}.html`, {
+    document: ui.document, local, privacy, measurementId,
+  });
+  assert.equal(scripts.length, 1, "saved permission actually loads Google before revocation");
+  assert.match(scripts[0].src, /googletagmanager\.com\/gtag\/js\?id=G-TEST123$/);
+  assert.equal(typeof result.window.gtag, "function");
+  assert.equal(result.window.dataLayer[1][0], "config");
+  assert.equal(result.window[`ga-disable-${measurementId}`], undefined);
+  return { ...result, ui, scripts };
+}
+
+test("another tab opting out stops already loaded Google on pages with or without privacy controls", () => {
+  for (const controls of [false, true]) {
+    const result = activeGooglePage({ controls });
+    const sender = page("https://agentbounties.app/privacy.html", { local: result.local });
+    sender.analytics.optOut();
+    const writes = result.local.writes.length, googleCommands = result.window.dataLayer.length;
+    result.emit("storage", { key: optOutKey });
+    result.emit("storage", { key: googleConsentKey });
+    assert.equal(result.window[`ga-disable-${measurementId}`], true, "set Google's per-window automatic-event stop flag in the receiving tab");
+    assert.equal(result.analytics.track("market_view"), false);
+    assert.equal(result.events.length, 1, "no new first-party event after revocation");
+    assert.equal(result.window.dataLayer.length, googleCommands, "no new Google event or consent command");
+    assert.equal(result.local.writes.length, writes, "receiving tab must not rewrite preferences or browser identifiers");
+    assert.equal(result.scripts.length, 1);
+    if (controls) assert.equal(result.ui.control.disabled, true);
+  }
+});
+
+test("Google consent revocation or removal stops the loaded tag without granting permission later", () => {
+  for (const consent of ["denied", null]) {
+    const result = activeGooglePage();
+    if (consent === null) result.local.removeItem(googleConsentKey);
+    else result.local.setItem(googleConsentKey, consent);
+    const writes = result.local.writes.length, commands = result.window.dataLayer.length;
+    result.emit("storage", { key: consent === null ? null : googleConsentKey });
+    assert.equal(result.window[`ga-disable-${measurementId}`], true);
+    assert.equal(result.local.writes.length, writes);
+    assert.equal(result.local.getItem(optOutKey), null, "Google-only revocation does not rewrite the first-party choice");
+    assert.equal(result.events.length, 1);
+    result.local.setItem(googleConsentKey, "granted");
+    result.emit("storage", { key: googleConsentKey });
+    result.emit("focus");
+    result.emit("pageshow");
+    assert.equal(result.window[`ga-disable-${measurementId}`], true, "a notification never re-enables Google in this window");
+    assert.equal(result.window.dataLayer.length, commands);
+    assert.equal(result.scripts.length, 1);
+    assert.equal(result.events.length, 1);
+  }
+});
+
+test("new browser privacy signals stop active Google on focus or restored pages without saving a choice", () => {
+  for (const signal of [{ globalPrivacyControl: true }, { doNotTrack: "1" }, { msDoNotTrack: "1" }]) {
+    for (const event of ["focus", "pageshow"]) {
+      const privacy = {}, result = activeGooglePage({ privacy });
+      const writes = result.local.writes.length, commands = result.window.dataLayer.length;
+      Object.assign(privacy, signal);
+      result.emit(event);
+      assert.equal(result.window[`ga-disable-${measurementId}`], true);
+      assert.equal(result.analytics.track("market_view"), false);
+      assert.equal(result.events.length, 1);
+      assert.equal(result.local.writes.length, writes);
+      assert.equal(result.local.getItem(googleConsentKey), "granted", "browser policy does not rewrite saved permission");
+      for (const key of Object.keys(signal)) delete privacy[key];
+      result.emit(event);
+      assert.equal(result.window[`ga-disable-${measurementId}`], true, "refresh never silently enables a stopped tag");
+      assert.equal(result.window.dataLayer.length, commands);
+    }
+  }
+});
+
+test("losing storage access stops an active Google tag even on a page with no privacy controls", () => {
+  const result = activeGooglePage(), writes = result.local.writes.length;
+  Object.defineProperty(result.window, "localStorage", { get() { throw new Error("Storage unavailable"); } });
+  result.emit("focus");
+  assert.equal(result.window[`ga-disable-${measurementId}`], true);
+  assert.equal(result.events.length, 1);
+  assert.equal(result.local.writes.length, writes);
+});
 
 test("a new desktop browser receives referral tags without the original browser identity", () => {
   const first = page(landing);
