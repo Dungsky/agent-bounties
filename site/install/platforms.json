@@ -318,8 +318,8 @@
       "summary": "Connect Linear Agent directly, inspect one public opportunity and continue from the saved chat.",
       "mcp_url": "https://mcp.agentbounties.app/r/linear/mcp",
       "steps": [
-        "Use an existing workspace where Linear Agent is available. A workspace owner or admin must enable MCP under Workspace settings > Security, review the allowed-server policy, and add or approve the AgentBounties custom URL below. Choose no authentication for this public endpoint; no secret is needed. The checked public chat used the Free plan; paid coding Sessions and Loops are separate.",
-        "After workspace setup, each user opens Settings > Agent personalization > MCP servers, adds the approved AgentBounties server, and confirms it is connected. If it is unavailable, ask a workspace owner or admin to approve it; personal settings do not override workspace restrictions.",
+        "Use an existing workspace where Linear Agent is available. Open Settings > Agent personalization > MCP servers and connect AgentBounties using the custom URL below. Choose no authentication for this public endpoint; no secret is needed. The checked public chat used the Free plan; paid coding Sessions and Loops are separate.",
+        "If MCP is disabled or workspace rules block this server, ask a workspace owner or admin to open Workspace settings > Security, enable MCP if needed, and allow the AgentBounties custom URL. Once allowed, return to Agent personalization and confirm the server is connected. Personal settings do not override workspace restrictions.",
         "If Agent Bounties is already connected, open its menu and choose Reconnect after a server update. The checked connection listed 30 tools.",
         "Open a Linear Agent conversation and paste the free discovery prompt. Inspect its visible activity and receipt, then reload and use the resume prompt in the same conversation."
       ],
