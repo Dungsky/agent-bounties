@@ -84,6 +84,7 @@ def compile_python(platform: str) -> None:
         "scripts/bounded_agent_create.py", "scripts/plan_bounded_agent_budget.py",
         "scripts/test_bounded_agent_budget.py", "scripts/local_delegate_wallet.py",
         "scripts/test_local_delegate_wallet.py", "scripts/self_heal.py", "scripts/test_self_heal.py",
+        "scripts/marketplace_readiness.py", "scripts/test_marketplace_readiness.py",
         "scripts/leaderboard_reward_pipeline.py", "scripts/test_leaderboard_reward_pipeline.py",
         "scripts/standing_meta_v3_deploy.py", "scripts/test_standing_meta_v3_deploy.py",
         "scripts/activate_standing_meta_v3_replacements.py",
@@ -156,6 +157,7 @@ scripts/relay_autonomous_action.py scripts/test_relay_autonomous_action.py scrip
 scripts/relay_bounded_wallet_action.py scripts/test_relay_bounded_wallet_action.py
 scripts/bounded_agent_create.py scripts/plan_bounded_agent_budget.py scripts/test_bounded_agent_budget.py
 scripts/local_delegate_wallet.py scripts/test_local_delegate_wallet.py scripts/self_heal.py scripts/test_self_heal.py
+scripts/marketplace_readiness.py scripts/test_marketplace_readiness.py
 scripts/leaderboard_reward_pipeline.py scripts/test_leaderboard_reward_pipeline.py
 scripts/standing_meta_v3_deploy.py scripts/test_standing_meta_v3_deploy.py
 scripts/activate_standing_meta_v3_replacements.py scripts/test_activate_standing_meta_v3_replacements.py
@@ -291,7 +293,7 @@ def main() -> int:
     )
     py("scripts/rehearse_immutable_watchdog.py")
     py("-m", "pip", "install", "-r", "scripts/requirements-wallet.txt")
-    for name in ("local_delegate_wallet", "self_heal", "leaderboard_reward_pipeline"):
+    for name in ("local_delegate_wallet", "self_heal", "marketplace_readiness", "leaderboard_reward_pipeline"):
         py(f"scripts/test_{name}.py", "-v")
     py("scripts/self_heal.py", "bench", "--policy", "ops/self-healing-policy.json", "--fixtures", "ops/fixtures/recovery-cases.json", "--output", "target/tmp/recovery-bench.json")
     run_many([

@@ -3,18 +3,70 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import importlib.util
+import json
 import sys
+import threading
 import unittest
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
 REPO_ROOT = SCRIPT_DIR.parent
 SPEC = importlib.util.spec_from_file_location("self_heal", SCRIPT_DIR / "self_heal.py")
 assert SPEC and SPEC.loader
 self_heal = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = self_heal
 SPEC.loader.exec_module(self_heal)
+from marketplace_readiness import PROTOCOLS
+
+
+@contextmanager
+def hosted_monitor_fixture(reader_ready=True, readiness_status=200, revision='a' * 40):
+    requests = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            requests.append(self.path)
+            if self.path == '/health':
+                self.send_response(200)
+                self.send_header('x-agent-bounties-revision', revision)
+                self.send_header('x-agent-bounties-protocol', 'agent-bounties/v1')
+                self.end_headers()
+                self.wfile.write(b'ok')
+            elif self.path == '/readiness/marketplace':
+                self.send_response(readiness_status)
+                self.end_headers()
+                body = {
+                    'schema': 'agent-bounties/marketplace-readiness-v1',
+                    'checked_at': datetime.now(timezone.utc).isoformat(),
+                    'ready': reader_ready, 'safe_block': 1000,
+                    'readers': [
+                        {'protocol': protocol, 'ready': reader_ready, 'blocker': None,
+                         'heartbeat_age_seconds': 1 if reader_ready else 91,
+                         'cursor_block': 999, 'lag_blocks': 1}
+                        for protocol in sorted(PROTOCOLS)
+                    ],
+                }
+                self.wfile.write(json.dumps(body).encode())
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    with HTTPServer(('127.0.0.1', 0), Handler) as server:
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            yield 'http://127.0.0.1:' + str(server.server_port), requests
+        finally:
+            server.shutdown()
+            thread.join()
 
 
 class SelfHealingContractTests(unittest.TestCase):
@@ -99,6 +151,52 @@ class SelfHealingContractTests(unittest.TestCase):
 
         with self.assertRaisesRegex(self_heal.ContractError, "non-negative integer"):
             self_heal.validate_snapshot(snapshot)
+
+    def test_green_health_and_stale_or_unavailable_reader_require_manual_investigation(self):
+        for status in (200, 503, 404):
+            with self.subTest(status=status), hosted_monitor_fixture(False, status) as (url, requests):
+                snapshot = self_heal.build_public_snapshot(
+                    self.policy, url, url, 'a' * 40, 'a' * 40,
+                )
+            self.assertEqual(requests.count('/health'), 2)
+            self.assertEqual(requests.count('/readiness/marketplace'), 1)
+            self.assertEqual(snapshot['components']['api']['state'], 'healthy')
+            self.assertEqual(snapshot['components']['mcp']['state'], 'healthy')
+            self.assertFalse(snapshot['components']['indexer']['restartable'])
+            self.assertTrue(all(value is None for value in snapshot['invariants'].values()))
+            plan = self_heal.evaluate(self.policy, snapshot)
+            self.assertEqual(plan['decision'], 'escalation_required')
+            self.assertEqual(plan['automatic_actions'], [])
+            self.assertEqual(
+                {action['action_id'] for action in plan['manual_actions']},
+                {'indexer:investigate_indexer_integrity'},
+            )
+            # Staleness must not weaken an independently reported integrity failure.
+            snapshot['invariants']['canonical_event_integrity'] = False
+            contained = self_heal.evaluate(self.policy, snapshot)
+            self.assertEqual(contained['decision'], 'contained')
+            self.assertEqual(contained['automatic_actions'], [])
+
+    def test_ready_readers_do_not_hide_actual_release_skew(self):
+        for revision in ('a' * 40, 'b' * 40):
+            with hosted_monitor_fixture(revision=revision) as (url, _):
+                snapshot = self_heal.build_public_snapshot(self.policy, url, url, 'a' * 40, 'a' * 40)
+            plan = self_heal.evaluate(self.policy, snapshot)
+            self.assertEqual(plan['automatic_actions'], [])
+            self.assertEqual(plan['decision'], 'healthy' if revision == 'a' * 40 else 'contained')
+            if revision != 'a' * 40:
+                self.assertIn('release:block_rollout', {a['action_id'] for a in plan['manual_actions']})
+
+    def test_readiness_activation_waits_for_deployed_revision_confirmation(self):
+        with hosted_monitor_fixture(readiness_status=404) as (url, requests):
+            snapshot = self_heal.build_public_snapshot(self.policy, url, url, 'a' * 40)
+        self.assertNotIn('/readiness/marketplace', requests)
+        self.assertNotIn('indexer', snapshot['components'])
+        self.assertFalse(snapshot['probe_evidence']['marketplace_readiness_enabled'])
+        self.assertIn('NOT monitored', snapshot['coverage_note'])
+        with self.assertRaises(self_heal.ContractError):
+            self_heal.build_public_snapshot(self.policy, 'https://example.invalid',
+                                            'https://example.invalid', 'a' * 40, 'b' * 40)
 
 
 if __name__ == "__main__":

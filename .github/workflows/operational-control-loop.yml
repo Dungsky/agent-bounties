@@ -41,6 +41,7 @@ jobs:
       PRODUCTION_API_BASE_URL: ${{ inputs.api_base_url || vars.PRODUCTION_API_BASE_URL || 'https://api.agentbounties.app' }}
       PRODUCTION_MCP_BASE_URL: ${{ inputs.mcp_base_url || vars.PRODUCTION_MCP_BASE_URL || 'https://mcp.agentbounties.app' }}
       PRODUCTION_EXPECTED_REVISION: ${{ inputs.expected_revision || vars.PRODUCTION_EXPECTED_REVISION || github.sha }}
+      MARKETPLACE_READINESS_VERIFIED_REVISION: ${{ vars.MARKETPLACE_READINESS_VERIFIED_REVISION }}
     steps:
       - uses: actions/checkout@v4
 
@@ -66,6 +67,7 @@ jobs:
             --api-url "${PRODUCTION_API_BASE_URL}" \
             --mcp-url "${PRODUCTION_MCP_BASE_URL}" \
             --expected-revision "${PRODUCTION_EXPECTED_REVISION}" \
+            --marketplace-readiness-verified-revision "${MARKETPLACE_READINESS_VERIFIED_REVISION}" \
             --snapshot-out target/operations/snapshot.json \
             --plan-out target/operations/recovery-plan.json
 
@@ -86,6 +88,7 @@ jobs:
               )
               raise SystemExit(0)
           plan = json.loads(plan_path.read_text(encoding="utf-8"))
+          snapshot = json.loads(Path("target/operations/snapshot.json").read_text(encoding="utf-8"))
           lines = [
               "# Operational control loop",
               "",
@@ -93,8 +96,10 @@ jobs:
               f"- Severity: `{plan['severity']}`",
               f"- Automatic actions: `{len(plan['automatic_actions'])}`",
               f"- Manual actions: `{len(plan['manual_actions'])}`",
+              f"- Marketplace readiness monitored: `{snapshot['probe_evidence']['marketplace_readiness_enabled']}`",
               "",
               "Automatic actions are restricted to R0-R2 availability/read-model recovery. No wallet, contract, verification, or settlement authority is present.",
+              "Reader staleness requires investigation; it is not a service restart instruction. This workflow does not emit inventory alerts.",
           ]
           if plan["reasons"]:
               lines.extend(["", "## Reasons", ""])

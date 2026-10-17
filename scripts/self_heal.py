@@ -19,6 +19,10 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+if __package__:
+    from .marketplace_readiness import enabled_for_release, observe as observe_marketplace
+else:
+    from marketplace_readiness import enabled_for_release, observe as observe_marketplace
 
 POLICY_SCHEMA = "agent-bounties/self-healing-policy-v1"
 SNAPSHOT_SCHEMA = "agent-bounties/operations-snapshot-v1"
@@ -617,8 +621,13 @@ def observe_health(
 
 
 def build_public_snapshot(
-    policy: dict[str, Any], api_url: str, mcp_url: str, expected_revision: str | None
+    policy: dict[str, Any], api_url: str, mcp_url: str, expected_revision: str | None,
+    marketplace_verified_revision: str | None = None,
 ) -> dict[str, Any]:
+    try:
+        marketplace_enabled = enabled_for_release(expected_revision, marketplace_verified_revision)
+    except ValueError as error:
+        raise ContractError(str(error)) from error
     probe = policy["probe"]
     api_base = normalize_base_url(api_url)
     mcp_base = normalize_base_url(mcp_url)
@@ -634,19 +643,29 @@ def build_public_snapshot(
         probe["interval_seconds"],
         probe["timeout_seconds"],
     )
+    components = {"api": api, "mcp": mcp}
+    if marketplace_enabled:
+        components["indexer"] = observe_marketplace(api_base, probe["timeout_seconds"])
     return {
         "schema": SNAPSHOT_SCHEMA,
         "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "expected_revision": expected_revision,
-        "components": {"api": api, "mcp": mcp},
+        "components": components,
         "invariants": {name: None for name in sorted(CRITICAL_INVARIANTS)},
         "probe_evidence": {
             "api_url": api_base,
             "mcp_url": mcp_base,
             "api_attempts": api_attempts,
             "mcp_attempts": mcp_attempts,
+            "marketplace_readiness_enabled": marketplace_enabled,
+            "marketplace_verified_revision": marketplace_verified_revision,
         },
-        "coverage_note": "Public probes cover availability and revision agreement. Durable DB, indexer, chain, verifier, webhook, and accounting signals require trusted runtime observations.",
+        "coverage_note": (
+            "Public probes cover service availability and revision agreement. "
+            + ("Marketplace reader heartbeat/progress is checked separately against a current safe head. "
+               if marketplace_enabled else "Marketplace readiness is NOT monitored until its deployed endpoint release is verified and activated. ")
+            + "Integrity, verifier, webhook and accounting signals still require trusted runtime observations. A stale reader alone never authorizes a restart."
+        ),
     }
 
 
@@ -743,6 +762,7 @@ def main(argv: list[str] | None = None) -> int:
     observe_parser.add_argument("--api-url", required=True)
     observe_parser.add_argument("--mcp-url", required=True)
     observe_parser.add_argument("--expected-revision")
+    observe_parser.add_argument("--marketplace-readiness-verified-revision")
     observe_parser.add_argument("--snapshot-out", type=Path, required=True)
     observe_parser.add_argument("--plan-out", type=Path, required=True)
 
@@ -764,7 +784,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if plan["decision"] in {"healthy", "recovering"} else 2
         if args.command == "observe":
             snapshot = build_public_snapshot(
-                policy, args.api_url, args.mcp_url, args.expected_revision
+                policy, args.api_url, args.mcp_url, args.expected_revision,
+                args.marketplace_readiness_verified_revision,
             )
             plan = evaluate(policy, snapshot)
             write_json(args.snapshot_out, snapshot)
