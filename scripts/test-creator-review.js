@@ -155,7 +155,7 @@ test("saved brief edits reach the shared journey and invalidate an older funding
   client.save({ ...client.load(), draft: { goal: goal.value, solver_reward_usdc: "18", verifier_reward_usdc: "2" }, brief: { ...client.load().brief, deadline_at: cutoff } });
   assert.notEqual(deadline.value, "", "AI staging updates the deadline even while another field has focus");
   budget.value = "25"; budget.handlers.input();
-  assert.equal(client.load().brief.budget_usdc, "25"); assert.equal(client.load().draft_stale, true); assert.equal(invalidations, 1);
+  assert.equal(client.load().brief.solver_reward_usdc, "25"); assert.equal(client.load().draft_stale, true); assert.equal(invalidations, 1);
   assert.ok(client.load().brief.deadline_at, "editing the budget must not erase the deadline");
   const timezone = elements.get("[data-brief-timezone]");
   document.activeElement = timezone; timezone.value = "America/Mexico_City"; timezone.handlers.input();
