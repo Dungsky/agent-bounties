@@ -377,6 +377,18 @@ async function rewardInputRegression(browser, origin) {
       assert.match(costs, /Solver reward: 100(?:\.00)? USDC/);
       assert.match(costs, /verification: 10(?:\.00)? USDC/);
       assert.match(costs, /Total funding: 110(?:\.00)? USDC/); // Existing v1 has no platform fee.
+      const changedReward = await page.evaluate(async () => {
+        const client = window.AgentBountiesWorkflow.createClient(window), before = client.load();
+        try {
+          await window.AgentBountiesComposer.stage({ ...before.draft, solver_reward_usdc: "90.00", posting_operation_id: crypto.randomUUID() });
+          return { rejected: false };
+        } catch (error) {
+          return { rejected: true, message: error.message, unchanged: JSON.stringify(client.load()) === JSON.stringify(before) };
+        }
+      });
+      assert.equal(changedReward.rejected, true);
+      assert.match(changedReward.message, /entered reward/);
+      assert.equal(changedReward.unchanged, true, "A new operation ID must not silently replace the entered reward");
       await page.evaluate(() => window.AgentBountiesPostingSession.create(window).flush({requireServer:true}));
       await page.reload(); await awaitPosting(page);
       await page.waitForFunction(() => document.querySelector("[data-brief-budget]").value === "100");

@@ -673,7 +673,7 @@
       : value;
     if (!prepared || typeof prepared !== "object") throw new Error("The prepared bounty draft is invalid.");
     const savedJourney = window.AgentBountiesWorkflow.createClient(window).load();
-    if (!restoring && (!prepared.posting_operation_id || prepared.posting_operation_id === savedJourney?.id)) window.AgentBountiesWorkflow.assertSolverReward(savedJourney?.brief, prepared);
+    if (!restoring) window.AgentBountiesWorkflow.assertSolverReward(savedJourney?.brief, prepared);
     prepared.reference_attachment ||= window.AgentBountiesWorkflow.createClient(window).load()?.reference_attachment || null;
 
     prepared = window.AgentBountiesCreatorReview[restoring ? "display" : "prepare"](prepared);
