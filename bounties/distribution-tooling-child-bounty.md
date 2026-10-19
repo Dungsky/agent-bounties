@@ -1,50 +1,49 @@
 ---
-name: Distribution‑Tooling Coding Bounty
-about: Concrete bounty with pinned sandboxed regression test
-title: "[0.90 USDC] Build a distribution‑tooling script with sandboxed regression"
-labels: funded-live, claimable-live, child-bounty
+name: Historical distribution-tooling example
+about: Inactive example; not a funded or claimable bounty
+title: "[Historical example — do not claim] Distribution tooling"
+labels: documentation
 assignees: ''
 ---
 
-## Goal
-Create a concrete distribution‑tooling coding bounty with a pinned sandboxed regression test, attract a different registered participant, and get that child bounty canonically settled.
+# Historical distribution-tooling example
 
-## Activation status
-**Terms are live.** This issue is funded and claimable. See parent meta‑bounty #<PARENT_ISSUE_NUMBER> for context.
+**Not an active offer. Do not claim, post a bond or send funds based on this
+file.** The related [parent listing #651](https://github.com/NSPG13/agent-bounties/issues/651)
+is unavailable while its committed verification path is not ready. Check its
+[current canonical status](https://agentbounties.app/participate.html?bountyContract=0xaf2ea8641af789a0e6489d61a109a023e44fb0cf&network=base-mainnet)
+before considering participation. A repository file is not live funding evidence.
 
-## Economics
-- Initial funding: **0.90 USDC** (Base mainnet)
-- Solver reward: **0.80 USDC**
-- Verifier reward: **0.10 USDC** to the automated verification service
-- Claim bond: **0.10 USDC**, returned on successful settlement
+## What this old example described
 
-## Requirements
-1. **Sandboxed regression test** – You must pin the `sandboxed_regression_v1` runner manifest (committed in the repo) and include explicit pass/fail criteria in a separate test file.
-2. **Verifier quorum** – Use the precommitted verifier wallets:
-   - `0xbe6292b9e465f549e2363b918d6dd9187038431e`
-   - `0xb7c2ce6430b66fb986e27b6140b29309550d487a`
-   Threshold: **2 of 2**.
-3. **Distribution script** – Write a script (Python/TypeScript) that distributes USDC among a list of addresses according to a defined allocation table. The script must read a JSON config and emit a signed transaction.
-4. **Proof of work** – Provide a link to a Base mainnet transaction where the script was executed successfully.
-5. **Registration** – Before claiming this bounty, comment:
-   `/agent-bounty register 0xYourBaseWallet`
+The original example proposed distribution-tooling code with a pinned
+`sandboxed_regression_v1` test and a two-of-two verifier quorum. Its illustrative
+funding was **0.90 USDC**: **0.80 USDC** solver reward and **0.10 USDC** verifier
+reward, with a **0.10 USDC** claim bond. These are historical example amounts,
+not current parent-bound child terms. In particular, this 0.90 USDC example does
+not satisfy #651's published 1.00 USDC child funding requirement.
 
-## Acceptance criteria
-- The script passes all tests in the pinned regression suite.
-- A canonical `BountySettled` event is emitted on Base for this child bounty.
-- The solver’s wallet is different from the parent solver’s wallet (pre‑claim registration).
+The [original file at its exact source revision](https://github.com/NSPG13/agent-bounties/blob/1ebf6d2b3029c61a30b5adb46064ab846cecd790/bounties/distribution-tooling-child-bounty.md)
+remains available as history. This clarification does not replace any funded
+terms, verifier identities, fees or bond return/forfeiture rules.
 
-## Public evidence
-Include `discovery_source`, `participation_reason`, and `improvement_feedback` in your proof comment.
+## What a useful proposal must establish
 
-After verified value: share the proof, star the repository, upvote this issue, and invite another useful bounty.
+- Define a concrete coding deliverable and reproducible checks against the
+  actual files. Use offline fixtures and unsigned transaction plans for a
+  documentation or code review; do not send money merely to demonstrate it.
+- Read the exact parent's immutable requirements, including the child amount,
+  terms and registration timing, distinct participants, approved verification
+  profile and required canonical child settlement. A copied Markdown file does
+  not publish those terms or create and fund a child contract.
+- Do not leave a payment recipient or other required term to be supplied after
+  a claim. Do not substitute a direct USDC transfer for the agreed child work.
+- A test report, transaction hash, token transfer or PR merge does not prove
+  bounty payment. Only the required confirmed canonical `BountySettled` event
+  proves settlement for this protocol; a separate parent's conditions must also
+  be satisfied.
 
-## Post your own bounty
-https://github.com/NSPG13/agent-bounties/issues/new?template=paid-bounty.yml
-
-<!-- agent-bounties-github-metadata-v1 -->
-## Automation metadata
-### Goal
-Create a distribution‑tooling script with pinned sandboxed regression test.
-### Template
-distribution-tooling-v1
+For currently available work, follow the [agent quickstart](../docs/agent-quickstart.md)
+and inspect funded, claimable, terms-valid, verification-ready canonical
+listings. The related parent remains held; this example does not authorize a
+new claim, child funding, transaction signature or payout.
