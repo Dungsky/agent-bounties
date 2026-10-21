@@ -72,7 +72,9 @@
       const match = /^(\d+)(?:\.(\d{1,6}))?$/.exec(String(value ?? ""));
       return match ? BigInt(match[1]) * 1000000n + BigInt((match[2] || "").padEnd(6, "0")) : null;
     };
-    const total = units(brief.budget_usdc), reserve = units(brief.review_reward_usdc || draft?.verifier_reward_usdc);
+    // A staged draft owns the allocation; the brief may retain a hidden form default.
+    // Missing or invalid staged values must not fall back to a guessed split.
+    const total = units(brief.budget_usdc), reserve = units(draft ? draft.verifier_reward_usdc : brief.review_reward_usdc);
     if (total === null || reserve === null || reserve <= 0n || total <= reserve) return "";
     const solver = total - reserve;
     return `${solver / 1000000n}.${String(solver % 1000000n).padStart(6, "0")}`.replace(/0+$/, "").replace(/\.$/, "");

@@ -81,3 +81,16 @@ test("entered reward is never reduced by verification and legacy budgets are not
   assert.throws(() => brief.manualDraft({...input,solver_reward_usdc:undefined,budget_usdc:"100.00"},now));
   for (const reserve of ["-1", "0", "NaN", "9000000000"]) assert.throws(() => brief.manualDraft({...input,review_reward_usdc:reserve},now));
 });
+
+
+test("legacy restoration uses the staged allocation instead of a hidden manual default", () => {
+  const legacy = { budget_usdc: "20.00", review_reward_usdc: "0.10" };
+  const staged = Object.freeze({ solver_reward_usdc: "18.00", verifier_reward_usdc: "2.00" });
+  assert.equal(brief.restoredSolverReward(legacy, staged), "18");
+  assert.equal(brief.restoredSolverReward(legacy), "19.9", "an unstaged legacy brief keeps its own allocation");
+  assert.equal(brief.restoredSolverReward({ ...legacy, solver_reward_usdc: "17.00" }, staged), "17.00", "an explicit edited reward remains an explicit edit");
+  assert.equal(brief.restoredSolverReward({ budget_usdc: "1.000003", review_reward_usdc: "0.10" }, { verifier_reward_usdc: "0.000002" }), "1.000001");
+  for (const verifier_reward_usdc of [undefined, null, "", "0", "-1", "NaN", "20", "21"]) {
+    assert.equal(brief.restoredSolverReward(legacy, { verifier_reward_usdc }), "", "an invalid staged allocation must not fall back to the hidden default");
+  }
+});
