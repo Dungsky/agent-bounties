@@ -140,9 +140,10 @@ validated before they are placed in a URL path:
   The low-level planner also supports accounting for an external repayment,
   but the hosted refund endpoint rejects `out_of_band` until verified external
   repayment evidence is implemented.
-- `GET /v1/credit_notes/{id}` and `GET /v1/refunds/{id}`: read the credit note's
-  complete refund allocation and current repayment status. Reconciliation
-  never issues another refund.
+- Stripe's [retrieve a credit note](https://docs.stripe.com/api/credit_notes/retrieve)
+  and [retrieve a refund](https://docs.stripe.com/api/refunds/retrieve) GET requests
+  read the complete refund allocation and current repayment status.
+  Reconciliation never issues another refund.
 
 An interrupted run is resumed by reading the stored invoice back before
 anything is added to it.
