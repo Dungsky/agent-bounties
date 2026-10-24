@@ -163,13 +163,19 @@
   }
   const when = seconds => new Date(seconds * 1000).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
   function appealText(r, deposit) {
-    const forfeit = deposit ? 'your ' + core.money(deposit.amount_minor, deposit.currency) + ' review deposit goes to them' : 'your review deposit goes to them';
+    const forfeit = deposit ? 'your ' + core.money(deposit.amount_minor, deposit.currency) + ' review deposit is owed to them' : 'your review deposit is owed to them';
     switch (r.appeal && r.appeal.status) {
       case 'window_open': return 'You rejected attempt ' + r.round + '. The solver can appeal until ' + when(r.appeal.window_ends_at) + '. If they don’t, the rejection becomes final and the bounty reopens for another solver.';
       case 'appealed': return 'The solver appealed your rejection of attempt ' + r.round + '. Agent Bounties is checking the delivery against your published criteria. If your rejection is upheld, the bounty reopens; if it is reversed, the solver is paid and ' + forfeit + '.';
-      case 'reversed': return 'On appeal, attempt ' + r.round + ' was found to meet your published criteria. The solver is being paid, and ' + forfeit + '. Only Base confirmation completes the payment.';
+      case 'reversed': return 'On appeal, attempt ' + r.round + ' was found to meet your published criteria. The solver is paid when the bounty settles on Base, and ' + forfeit + '.';
       default: return 'Your rejection of attempt ' + r.round + ' is final. The bounty stays funded and open for another solver; only Base confirmation reopens it.';
     }
+  }
+  // What silence until decide_by does. Only an explicit true from the API promises acceptance.
+  function silenceText(p) {
+    if (p.auto_accept === true) return 'If you don’t decide by then, it is accepted automatically and the solver is paid.';
+    if (p.auto_accept === false) return 'It was published too late for automatic acceptance: if you don’t decide by then, nothing is accepted, the attempt expires on ' + when(p.expires_at) + ' and the bounty reopens.';
+    return 'Decide before then.';
   }
   function depositText(d) {
     if (!d) return '';
@@ -179,7 +185,7 @@
       refund_pending: 'Your ' + amount + ' review deposit refund is being sent to your card.',
       refunded: 'Stripe confirms your ' + amount + ' review deposit refund was sent.',
       refund_failed: 'Stripe could not complete your ' + amount + ' review deposit refund. Agent Bounties will contact you to send it another way.',
-      forfeited_to_solver: 'Your ' + amount + ' review deposit went to the solver after an appeal reversed your rejection.'
+      forfeited_to_solver: 'Your ' + amount + ' review deposit is owed to the solver because an appeal reversed your rejection. Agent Bounties pays it to them in USDC.'
     }[d.status];
   }
   function drawReview(v) {
@@ -200,7 +206,7 @@
       el('review-info').textContent = 'A solver submitted attempt ' + v.pending.round + ', but its artifact is not published yet. Refresh later; you can review it once it is.';
     } else {
       pending = v.pending; el('review-form').hidden = false;
-      el('review-info').textContent = 'A solver submitted attempt ' + pending.round + '. Inspect it against every published criterion and accept or reject it by ' + when(pending.decide_by) + '. If you don’t decide by then, it is accepted automatically and the solver is paid.';
+      el('review-info').textContent = 'A solver submitted attempt ' + pending.round + '. Inspect it against every published criterion and accept or reject it by ' + when(pending.decide_by) + '. ' + silenceText(pending);
       el('review-reference').textContent = 'Submitted reference: ' + pending.reference;
       if (pending.artifact) { el('review-artifact').href = pending.artifact; el('review-artifact-row').hidden = false; }
       el('verdict-reject').disabled = el('verdict-pass').disabled = Date.now() / 1000 >= pending.decide_by;

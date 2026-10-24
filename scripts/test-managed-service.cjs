@@ -125,6 +125,14 @@ test('review replies must name the committed bounty and verdicts must be exact a
   }
   assert.throws(() => core.review({ ...reply, deposit: { amount_minor: 935, currency: 'mxn', status: 'kept' } }, bounty));
   assert.throws(() => core.review({ ...reply, pending_submission: { ...reply.pending_submission, decide_by: 1900000001 } }, bounty));
+  // Older replies carry no schedule fields: eligibility is unknown, never assumed.
+  assert.equal(view.pending.auto_accept, null);
+  const scheduled = { ...reply.pending_submission, auto_accept: false, sign_by: 1899996400 };
+  assert.deepEqual([core.review({ ...reply, pending_submission: scheduled }, bounty).pending.auto_accept, core.review({ ...reply, pending_submission: scheduled }, bounty).pending.sign_by], [false, 1899996400]);
+  for (const bad of [{ auto_accept: false }, { sign_by: 1899996400 }, { auto_accept: 1, sign_by: 1899996400 }, { auto_accept: true, sign_by: 1899740800 },
+    { auto_accept: true, sign_by: 1900000000 }, { auto_accept: true, sign_by: 1899996400, extra: 1 }]) {
+    assert.throws(() => core.review({ ...reply, pending_submission: { ...reply.pending_submission, ...bad } }, bounty));
+  }
 });
 
 test('a review deposit line must be exactly 10% of the solver reward at the quoted rate', async () => {

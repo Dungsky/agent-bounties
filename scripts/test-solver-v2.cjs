@@ -95,17 +95,27 @@ test('only the pending solver may appeal, inside the window, and other bounties 
     { reviews: [{ ...publicState().reviews[0], appeal: { status: 'granted', window_ends_at: 1 } }] },
     { deposit_payout: { status: 'paid', amount_micro_usdc: 1_000_000, solver: SOLVER, tx_hash: null } },
   ]) assert.throws(() => card.cardReview(publicState(bad), BOUNTY, 'base-sepolia'));
-  assert.match(card.summary(model), /accepted automatically/);
+  // Silence accepts only when the API says so; an older response promises nothing.
+  assert.doesNotMatch(card.summary(model), /automatic/);
+  const scheduled = (auto) => card.cardReview(publicState({ pending_submission: { ...publicState().pending_submission,
+    auto_accept: auto, sign_by: 1_999_996_400 } }), BOUNTY, 'base-sepolia');
+  assert.match(card.summary(scheduled(true)), /If they don't decide by then, it is accepted automatically\.$/);
+  assert.match(card.summary(scheduled(false)), /published too late for automatic acceptance: .*nothing is accepted/);
+  assert.doesNotMatch(card.summary(scheduled(false)), /it is accepted automatically/);
+  for (const bad of [{ auto_accept: true }, { sign_by: 1_999_996_400 }, { auto_accept: 'yes', sign_by: 1_999_996_400 },
+    { auto_accept: true, sign_by: 1_899_999_999 }, { auto_accept: true, sign_by: 2_000_000_000 }]) {
+    assert.throws(() => card.cardReview(publicState({ pending_submission: { ...publicState().pending_submission, ...bad } }), BOUNTY, 'base-sepolia'));
+  }
   const reversed = card.cardReview(publicState({
     pending_submission: null, bounty_status: 'paid',
     reviews: [{ ...publicState().reviews[0], appeal: { status: 'reversed', window_ends_at: 1_950_000_000 },
       ruling: { document: { passed: true, reason: 'Section 3 contains the benchmark.' } } }],
     deposit_payout: { status: 'paid', amount_micro_usdc: 1_000_000, solver: SOLVER, tx_hash: word('a1') } }), BOUNTY, 'base-sepolia');
-  assert.match(card.roundText(reversed.reviews[0], reversed), /reversed: Section 3 contains the benchmark\. The bounty settled and paid the solver\..*1 USDC, sent/);
+  assert.match(card.roundText(reversed.reviews[0], reversed), /reversed: Section 3 contains the benchmark\. The bounty settled and paid the solver\. The customer's review deposit \(1 USDC\) was sent to the solver; the transfer is verified on chain\./);
   // A ruling is not payment: until a confirmed BountySettled, nothing reads as paid or transferred.
   const ruled = { ...reversed, status: 'submitted', payout: { ...reversed.payout, status: 'owed', tx_hash: null } };
   const pendingText = card.roundText(reversed.reviews[0], ruled);
-  assert.match(pendingText, /The solver is paid when the bounty settles on chain\..*1 USDC, owed/);
+  assert.match(pendingText, /The solver is paid when the bounty settles on chain\. The customer's review deposit \(1 USDC\) is owed to the solver\./);
   assert.doesNotMatch(pendingText, /settled and paid|sent/);
   for (const status of ['upheld', undefined]) {
     const text = card.roundText({ ...reversed.reviews[0], appeal: status && { status, window_ends_at: 1 } }, ruled);

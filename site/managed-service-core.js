@@ -12,6 +12,12 @@
     requireValue(v && typeof v === 'object' && !Array.isArray(v));
     requireValue(Object.keys(v).sort().join(',') === names.slice().sort().join(','));
   }
+  // Exact keys, plus `optional` keys that older responses omit.
+  function fieldsAllowing(v, names, optional) {
+    requireValue(v && typeof v === 'object' && !Array.isArray(v));
+    const keys = Object.keys(v);
+    requireValue(names.every(n => keys.includes(n)) && keys.every(k => names.includes(k) || optional.includes(k)));
+  }
   function integer(v, positive = true) { requireValue(Number.isSafeInteger(v) && v >= (positive ? 1 : 0)); return BigInt(v); }
   function key(v) { requireValue(typeof v === 'string' && /^[a-zA-Z0-9_.:-]{1,200}$/.test(v)); }
   function text(v, max) {
@@ -155,13 +161,20 @@
     let pending = null;
     if (v.pending_submission !== null) {
       const p = v.pending_submission;
-      fields(p, ['round', 'solver', 'submission_hash', 'evidence_hash', 'verification_expires_at', 'decide_by', 'evidence']);
+      fieldsAllowing(p, ['round', 'solver', 'submission_hash', 'evidence_hash', 'verification_expires_at', 'decide_by', 'evidence'], ['auto_accept', 'sign_by']);
       integer(p.round); integer(p.verification_expires_at); integer(p.decide_by, false);
       requireValue(WORD.test(p.submission_hash) && WORD.test(p.evidence_hash) && p.decide_by <= p.verification_expires_at);
+      // Older responses carry neither schedule field; the page then promises nothing about silence.
+      const scheduled = 'auto_accept' in p || 'sign_by' in p;
+      if (scheduled) {
+        requireValue(typeof p.auto_accept === 'boolean'); integer(p.sign_by);
+        requireValue(p.decide_by < p.sign_by && p.sign_by < p.verification_expires_at);
+      }
       requireValue(p.evidence === null || (p.evidence && typeof p.evidence.artifact_reference === 'string'));
       pending = {
         round: p.round, submission_hash: p.submission_hash, evidence_hash: p.evidence_hash, expires_at: p.verification_expires_at,
-        decide_by: p.decide_by, published: p.evidence !== null, reference: p.evidence ? p.evidence.artifact_reference : null,
+        decide_by: p.decide_by, auto_accept: scheduled ? p.auto_accept : null, sign_by: scheduled ? p.sign_by : null,
+        published: p.evidence !== null, reference: p.evidence ? p.evidence.artifact_reference : null,
         artifact: p.evidence ? artifactURL(p.evidence.artifact_reference) : null
       };
     }

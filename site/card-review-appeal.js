@@ -24,7 +24,12 @@
       const p = v.pending_submission;
       check(p && integer(p.round) && ADDRESS.test(lower(p.solver)) && WORD.test(p.submission_hash) && integer(p.verification_expires_at)
         && integer(p.decide_by) && p.decide_by <= p.verification_expires_at);
-      pending = { round: p.round, solver: lower(p.solver), submission_hash: p.submission_hash, decide_by: p.decide_by, published: Boolean(p.evidence) };
+      // Older responses carry neither schedule field; the panel then promises nothing about silence.
+      const scheduled = "auto_accept" in p || "sign_by" in p;
+      check(!scheduled || (typeof p.auto_accept === "boolean" && integer(p.sign_by)
+        && p.decide_by < p.sign_by && p.sign_by < p.verification_expires_at));
+      pending = { round: p.round, solver: lower(p.solver), submission_hash: p.submission_hash, decide_by: p.decide_by,
+        expires_at: p.verification_expires_at, auto_accept: scheduled ? p.auto_accept : null, published: Boolean(p.evidence) };
     }
     const reviews = v.reviews.map((r) => {
       const d = r?.document;
@@ -100,15 +105,25 @@
           ? "The bounty settled and paid the solver."
           : "The solver is paid when the bounty settles on chain.";
         const payout = model.payout;
-        return `${base} On appeal the rejection was reversed: ${r.ruling?.reason || ""} ${paid} The customer's review deposit goes to the solver${payout ? ` (${usdc(payout.amount)}, ${payout.status === "paid" ? "sent" : "owed"})` : ""}.`;
+        const deposit = payout?.status === "paid"
+          ? `The customer's review deposit (${usdc(payout.amount)}) was sent to the solver; the transfer is verified on chain.`
+          : `The customer's review deposit${payout ? ` (${usdc(payout.amount)})` : ""} is owed to the solver.`;
+        return `${base} On appeal the rejection was reversed: ${r.ruling?.reason || ""} ${paid} ${deposit}`;
       }
       default: return `${base} The rejection is final. ${reopens}`;
     }
   }
 
+  // What the customer's silence until decide_by does. Only an explicit true promises acceptance.
+  function silence(pending) {
+    if (pending.auto_accept === true) return "If they don't decide by then, it is accepted automatically.";
+    if (pending.auto_accept === false) return `It was published too late for automatic acceptance: if they don't decide by then, nothing is accepted and the attempt expires on ${when(pending.expires_at)}, returning the solver's bond.`;
+    return "";
+  }
+
   function summary(model) {
     if (model.pending) return model.pending.published
-      ? `The customer who paid by card reviews this delivery against the published criteria. They decide by ${when(model.pending.decide_by)}. If they don't decide by then, it is accepted automatically.`
+      ? [`The customer who paid by card reviews this delivery against the published criteria. They decide by ${when(model.pending.decide_by)}.`, silence(model.pending)].filter(Boolean).join(" ")
       : "The customer who paid by card reviews each delivery. Their 3-day decision period starts when the delivery's evidence is published.";
     return "The customer who paid by card reviews each delivery against the published criteria. A rejection can be appealed within 48 hours.";
   }

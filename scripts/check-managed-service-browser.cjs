@@ -325,6 +325,32 @@ test('a funded order reviews only its committed submission and sends an exact, r
   assert.match(await f.page.locator('#managed-review-deposit').innerText(), /Refundable review deposit: MXN 9\.35/);
   assert.equal(await f.page.locator('#managed-review-form').isVisible(), false); await f.close();
 });
+test('the order page promises automatic acceptance only when the API confirms it', async () => {
+  const info = page => page.locator('#managed-review-info').innerText();
+  for (const [schedule, expected, absent] of [
+    [{ auto_accept: true }, /If you don’t decide by then, it is accepted automatically and the solver is paid\./, /too late/],
+    [{ auto_accept: false }, /published too late for automatic acceptance: if you don’t decide by then, nothing is accepted/, /accepted automatically/],
+    [null, /accept or reject it by .*\. Decide before then\.$/, /automatic/],
+  ]) {
+    const f = await setup({ status: 'funded' });
+    if (schedule) Object.assign(f.state.review.pending_submission, schedule, { sign_by: f.state.review.pending_submission.verification_expires_at - 3600 });
+    await f.go('managed_order'); await f.page.waitForSelector('#managed-review-form', { state: 'visible' });
+    assert.match(await info(f.page), expected); assert.doesNotMatch(await info(f.page), absent); await f.close();
+  }
+});
+
+test('a forfeited deposit and a reversed rejection read as owed and pending, never as sent or paid', async () => {
+  const f = await setup({ status: 'funded' });
+  Object.assign(f.state.review, { pending_submission: null, deposit: { amount_minor: 935, currency: 'mxn', status: 'forfeited_to_solver' },
+    reviews: [{ document: { schema: 'agent-bounties/customer-review-v1', bounty_contract: f.state.review.bounty_contract, round: 1, submission_hash: '0x' + '1'.repeat(64),
+      evidence_hash: '0x' + '2'.repeat(64), passed: false, reason: 'The delivery omits the requested benchmark table.' }, appeal: { status: 'reversed', window_ends_at: 1900000000 } }] });
+  await f.go('managed_order'); await f.page.waitForFunction(() => document.getElementById('managed-review-info').textContent.includes('was found to meet'));
+  const text = (await f.page.locator('#managed-review-info').innerText()) + ' ' + (await f.page.locator('#managed-review-deposit').innerText());
+  assert.match(text, /The solver is paid when the bounty settles on Base, and your MXN 9\.35 review deposit is owed to them\./);
+  assert.match(text, /review deposit is owed to the solver because an appeal reversed your rejection/);
+  assert.doesNotMatch(text, /went to|being paid|was sent/); await f.close();
+});
+
 test('unpublished or non-HTTPS evidence is never offered as a reviewable link, and another bounty fails closed', async () => {
   let f = await setup({ status: 'funded' }); f.state.review.pending_submission.evidence = null;
   await f.go('managed_order'); await f.page.waitForFunction(() => document.getElementById('managed-review-info').textContent.includes('not published yet'));
