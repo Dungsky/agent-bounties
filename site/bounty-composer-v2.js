@@ -1711,6 +1711,7 @@
       });
       if (!response.ok) {
         throw new Error(response.status === 401 ? "Sign in again to pay by card. Your draft is saved."
+          : response.status === 422 ? "This bounty is above the current card payment limit. Lower the reward or fund with a wallet."
           : response.status === 503 ? "Card payment isn't available right now. You can still fund with a wallet."
           : "This proposal can't be paid by card. The deadline must be at least a day after the quote and within 30 days, with public artifact evidence.");
       }
