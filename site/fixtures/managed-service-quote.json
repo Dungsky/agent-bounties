@@ -1,0 +1,78 @@
+{
+  "quote": {
+    "schema": "agent-bounties/managed-service-quote-v2",
+    "input": {
+      "quote_id": "11111111-1111-4111-8111-111111111111",
+      "buyer_principal": "account:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "stripe_account_id": "acct_fixture",
+      "livemode": false,
+      "issued_at": 1800000000,
+      "expires_at": 1800007200,
+      "terms": {
+        "deliverable": "Build the café dashboard 🧭\nInclude the agreed report.",
+        "acceptance_criteria": "The delivered dashboard passes the agreed checks.",
+        "delivery_deadline": 1800086400,
+        "terms_version": "service-v1",
+        "remedies": "Request a correction or a refund under the agreed service terms."
+      },
+      "currency": "mxn",
+      "price_basis": {
+        "reference": "fixture-mxn-offer",
+        "minor_units_per_usdc_numerator": 1930,
+        "minor_units_per_usdc_denominator": 1,
+        "valid_until": 1800007200
+      },
+      "solver_reward_micro_usdc": 100000000,
+      "verifier_reserve_micro_usdc": 5000000,
+      "additional_costs": [
+        {
+          "code": "processing",
+          "label": "Payment processing",
+          "amount_minor": 250
+        }
+      ],
+      "bounty": {
+        "network": "base-sepolia",
+        "factory": "0xc3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+        "funding_wallet": "0xf0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0",
+        "creation_nonce": "0x6666666666666666666666666666666666666666666666666666666666666666",
+        "terms_hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "verification_setup": "customer_review_v1",
+        "funding_deadline": 1800086400,
+        "predicted_bounty": "0xb0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0",
+        "create_call_keccak256": "0xcacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacaca"
+      }
+    },
+    "platform_fee_bps": 750,
+    "platform_fee_micro_usdc": 7500000,
+    "bounty_target_micro_usdc": 112500000,
+    "lines": [
+      {
+        "code": "solver_reward",
+        "label": "Solver reward",
+        "amount_minor": 193000,
+        "amount_micro_usdc": 100000000
+      },
+      {
+        "code": "verification",
+        "label": "Verification reserve",
+        "amount_minor": 9650,
+        "amount_micro_usdc": 5000000
+      },
+      {
+        "code": "platform_fee",
+        "label": "Platform fee (7.5% of solver reward)",
+        "amount_minor": 14475,
+        "amount_micro_usdc": 7500000
+      },
+      {
+        "code": "processing",
+        "label": "Payment processing",
+        "amount_minor": 250,
+        "amount_micro_usdc": null
+      }
+    ],
+    "total_minor": 217375
+  },
+  "quote_digest": "037784b0bdb5465ca5159db3a51f8ef64aa2154db59f5adbe5072c7ac76f3525"
+}

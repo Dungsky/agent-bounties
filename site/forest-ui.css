@@ -482,3 +482,9 @@ body.competition-page :is(.competition-instructions, .economics) h2 { font-size:
 @media (max-width: 860px) {
   body.competition-page .competition-head { grid-template-columns: minmax(0, 1fr); gap: 32px; }
 }
+/* Customer review and appeal of a card-paid bounty in the solver workspace. */
+.card-review-rounds { display: grid; gap: 10px; padding-left: 1.2em; }
+.card-appeal { display: grid; gap: 10px; margin-top: 14px; }
+.card-appeal label { font-weight: 600; }
+.card-appeal textarea { width: 100%; min-height: 120px; padding: 14px; border: 1px solid var(--ab-line); border-radius: 12px; font: 500 16px/1.5 var(--ab-body); resize: vertical; }
+.card-review output { display: block; margin-top: 8px; }
