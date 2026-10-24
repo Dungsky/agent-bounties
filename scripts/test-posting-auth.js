@@ -121,7 +121,7 @@ function postingController(fetchImpl) {
   const timers = new Map(); let timerId = 0;
   const context = { ui, state, API: 'https://api.agentbounties.app', AbortController,
     fetch: fetchImpl, postingAccountStatus: composer.postingAccountStatus, postingPrimaryAction: composer.postingPrimaryAction,
-    expiredDeliveryDeadline: () => false, supportedVerificationPolicy: () => {},
+    expiredDeliveryDeadline: () => false, supportedVerificationPolicy: () => {}, syncCardPayment: () => {},
     postingJournal: { load: () => null }, postingSession: { canContinue: () => false, invalidate: () => {}, hydrate: async () => {}, approved: async () => false, snapshot: () => ({ status: "saved", conflict: false }) },
     restoration: Promise.resolve(), restorationError: null,
     setStatus(message) { context.message = message; }, updatePostingTracker: () => {},

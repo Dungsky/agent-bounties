@@ -101,5 +101,15 @@ test('only the pending solver may appeal, inside the window, and other bounties 
     reviews: [{ ...publicState().reviews[0], appeal: { status: 'reversed', window_ends_at: 1_950_000_000 },
       ruling: { document: { passed: true, reason: 'Section 3 contains the benchmark.' } } }],
     deposit_payout: { status: 'paid', amount_micro_usdc: 1_000_000, solver: SOLVER, tx_hash: word('a1') } }), BOUNTY, 'base-sepolia');
-  assert.match(card.roundText(reversed.reviews[0], reversed.payout), /reversed: Section 3 contains the benchmark\. .*1 USDC, sent/);
+  assert.match(card.roundText(reversed.reviews[0], reversed), /reversed: Section 3 contains the benchmark\. The bounty settled and paid the solver\..*1 USDC, sent/);
+  // A ruling is not payment: until a confirmed BountySettled, nothing reads as paid or transferred.
+  const ruled = { ...reversed, status: 'submitted', payout: { ...reversed.payout, status: 'owed', tx_hash: null } };
+  const pendingText = card.roundText(reversed.reviews[0], ruled);
+  assert.match(pendingText, /The solver is paid when the bounty settles on chain\..*1 USDC, owed/);
+  assert.doesNotMatch(pendingText, /settled and paid|sent/);
+  for (const status of ['upheld', undefined]) {
+    const text = card.roundText({ ...reversed.reviews[0], appeal: status && { status, window_ends_at: 1 } }, ruled);
+    assert.match(text, /Once the signed rejection is confirmed on chain, the solver's bond goes to the verifier/);
+    assert.doesNotMatch(text, /went to|reopened/);
+  }
 });

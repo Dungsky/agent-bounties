@@ -81,18 +81,28 @@
   const when = (seconds) => new Date(seconds * 1000).toLocaleString();
   const usdc = (micro) => `${(micro / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 })} USDC`;
 
-  // Plain-language lines for each round, latest first.
-  function roundText(r, payout) {
+  // Plain-language lines for each round, latest first. Payment and reopening are stated as done
+  // only on canonical evidence: bounty_status "paid" is a confirmed BountySettled, and a deposit
+  // payout is "paid" only after its transfer was verified on chain.
+  function roundText(r, model) {
     if (r.passed) return r.decided_by === "deadline"
       ? `Attempt ${r.round}: accepted automatically because the customer did not decide in time.`
       : `Attempt ${r.round}: accepted by the customer.`;
     const base = `Attempt ${r.round}: rejected. Reason: ${r.reason}`;
+    const reopens = "Once the signed rejection is confirmed on chain, the solver's bond goes to the verifier and the bounty reopens for another attempt.";
     switch (r.appeal?.status) {
       case "window_open": return `${base} The solver can appeal until ${when(r.appeal.window_ends_at)}. Without an appeal the rejection becomes final.`;
       case "appealed": return `${base} The solver appealed. Agent Bounties is checking the delivery against the published criteria.`;
-      case "upheld": return `${base} On appeal the rejection was upheld: ${r.ruling?.reason || ""} The solver's bond went to the verifier.`;
-      case "reversed": return `${base} On appeal the rejection was reversed: ${r.ruling?.reason || ""} The solver is paid, plus the customer's review deposit${payout ? ` (${usdc(payout.amount)}, ${payout.status === "paid" ? "sent" : "owed"})` : ""}.`;
-      default: return `${base} The rejection is final; the bounty reopened for another attempt.`;
+      case "upheld": return `${base} On appeal the rejection was upheld: ${r.ruling?.reason || ""} ${reopens}`;
+      case "reversed": {
+        const latest = r.round === Math.max(...model.reviews.map((x) => x.round));
+        const paid = model.status === "paid" && latest
+          ? "The bounty settled and paid the solver."
+          : "The solver is paid when the bounty settles on chain.";
+        const payout = model.payout;
+        return `${base} On appeal the rejection was reversed: ${r.ruling?.reason || ""} ${paid} The customer's review deposit goes to the solver${payout ? ` (${usdc(payout.amount)}, ${payout.status === "paid" ? "sent" : "owed"})` : ""}.`;
+      }
+      default: return `${base} The rejection is final. ${reopens}`;
     }
   }
 
@@ -119,7 +129,7 @@
       section.hidden = false;
       put("[data-card-review-summary]", summary(model));
       const list = find("[data-card-review-rounds]"); list.replaceChildren();
-      for (const r of model.reviews) { const li = doc.createElement("li"); li.textContent = roundText(r, model.payout); list.append(li); }
+      for (const r of model.reviews) { const li = doc.createElement("li"); li.textContent = roundText(r, model); list.append(li); }
       const payout = find("[data-card-payout]");
       payout.replaceChildren();
       if (model.payout) {
