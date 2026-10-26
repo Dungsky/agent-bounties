@@ -173,7 +173,7 @@
   }
   // What silence until decide_by does. Only an explicit true from the API promises acceptance.
   function silenceText(p) {
-    if (p.auto_accept === true) return 'If you don’t decide by then, it is accepted automatically and the solver is paid.';
+    if (p.auto_accept === true) return 'If you don’t decide by then, it is accepted automatically. The solver is paid only once Base confirms settlement.';
     if (p.auto_accept === false) return 'It was published too late for automatic acceptance: if you don’t decide by then, nothing is accepted, the attempt expires on ' + when(p.expires_at) + ' and the bounty reopens.';
     return 'Decide before then.';
   }

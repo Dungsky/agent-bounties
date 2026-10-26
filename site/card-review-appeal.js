@@ -124,7 +124,7 @@
   function summary(model) {
     if (model.pending) return model.pending.published
       ? [`The customer who paid by card reviews this delivery against the published criteria. They decide by ${when(model.pending.decide_by)}.`, silence(model.pending)].filter(Boolean).join(" ")
-      : "The customer who paid by card reviews each delivery. Their 3-day decision period starts when the delivery's evidence is published.";
+      : "The customer who paid by card reviews each delivery. Their review starts when the delivery's evidence is published and must end before the submission's on-chain deadline, so a late publication leaves less time.";
     return "The customer who paid by card reviews each delivery against the published criteria. A rejection can be appealed within 48 hours.";
   }
 

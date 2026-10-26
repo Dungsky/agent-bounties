@@ -95,6 +95,10 @@ test('only the pending solver may appeal, inside the window, and other bounties 
     { reviews: [{ ...publicState().reviews[0], appeal: { status: 'granted', window_ends_at: 1 } }] },
     { deposit_payout: { status: 'paid', amount_micro_usdc: 1_000_000, solver: SOLVER, tx_hash: null } },
   ]) assert.throws(() => card.cardReview(publicState(bad), BOUNTY, 'base-sepolia'));
+  // Before publication no fixed decision period is promised: a late publication leaves less time.
+  const unpublished = card.cardReview(publicState({ pending_submission: { ...publicState().pending_submission, evidence: null } }), BOUNTY, 'base-sepolia');
+  assert.match(card.summary(unpublished), /starts when the delivery's evidence is published and must end before the submission's on-chain deadline/);
+  assert.doesNotMatch(card.summary(unpublished), /3-day/);
   // Silence accepts only when the API says so; an older response promises nothing.
   assert.doesNotMatch(card.summary(model), /automatic/);
   const scheduled = (auto) => card.cardReview(publicState({ pending_submission: { ...publicState().pending_submission,

@@ -328,7 +328,7 @@ test('a funded order reviews only its committed submission and sends an exact, r
 test('the order page promises automatic acceptance only when the API confirms it', async () => {
   const info = page => page.locator('#managed-review-info').innerText();
   for (const [schedule, expected, absent] of [
-    [{ auto_accept: true }, /If you don’t decide by then, it is accepted automatically and the solver is paid\./, /too late/],
+    [{ auto_accept: true }, /If you don’t decide by then, it is accepted automatically\. The solver is paid only once Base confirms settlement\./, /too late|accepted automatically and the solver is paid/],
     [{ auto_accept: false }, /published too late for automatic acceptance: if you don’t decide by then, nothing is accepted/, /accepted automatically/],
     [null, /accept or reject it by .*\. Decide before then\.$/, /automatic/],
   ]) {
