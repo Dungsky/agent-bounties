@@ -1096,7 +1096,6 @@ mod tests {
         .is_err());
     }
 
-
     fn config(environment: MoonpayEnvironment) -> MoonpayConfig {
         MoonpayConfig {
             publishable_key: match environment {
@@ -1223,14 +1222,11 @@ mod tests {
 
     #[test]
     fn validation_rejects_wrong_origin_return_path_and_unknown_asset() {
-        assert!(validate_return_url(
-            "https://evil.example/onramp.html",
-            "https://agentizable.ai"
-        )
-        .is_err());
         assert!(
-            validate_return_url("https://agentizable.ai/", "https://agentizable.ai").is_err()
+            validate_return_url("https://evil.example/onramp.html", "https://agentizable.ai")
+                .is_err()
         );
+        assert!(validate_return_url("https://agentizable.ai/", "https://agentizable.ai").is_err());
         assert!(OnrampAsset::parse(Some("btc")).is_err());
     }
 

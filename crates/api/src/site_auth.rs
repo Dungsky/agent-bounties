@@ -159,9 +159,8 @@ impl SiteAuthService {
         validate_origin(&web_origin, "WEBSITE_BASE_URL")?;
         validate_origin(&api_origin, "PUBLIC_BASE_URL")?;
 
-        let configured_origins =
-            env::var("SITE_AUTH_ALLOWED_ORIGINS")
-                .unwrap_or_else(|_| default_site_auth_origins(&web_origin));
+        let configured_origins = env::var("SITE_AUTH_ALLOWED_ORIGINS")
+            .unwrap_or_else(|_| default_site_auth_origins(&web_origin));
         let mut allowed_origins = Vec::new();
         for value in configured_origins
             .split(',')

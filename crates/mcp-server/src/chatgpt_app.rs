@@ -4218,7 +4218,8 @@ fn safe_share_image_url(value: &str) -> Result<String, String> {
             || (matches!(host, "api.agentizable.ai" | "api.agentbounties.app")
                 && parsed.path().starts_with("/public/opportunities/")
                 && parsed.path().ends_with("/embed.svg"))
-            || (matches!(host, "agentizable.ai" | "agentbounties.app") && parsed.path().starts_with("/assets/")));
+            || (matches!(host, "agentizable.ai" | "agentbounties.app")
+                && parsed.path().starts_with("/assets/")));
     if !first_party_image {
         return Err("bounty_image_url must be a first-party Agentizable image URL".to_string());
     }
@@ -7204,10 +7205,7 @@ mod tests {
         };
         let bundle = build_share_bundle(&args, false).unwrap();
         assert_eq!(bundle["stage"], "verification");
-        assert!(bundle["caption"]
-            .as_str()
-            .unwrap()
-            .contains("#Agentizable"));
+        assert!(bundle["caption"].as_str().unwrap().contains("#Agentizable"));
         assert!(bundle["intents"]["x"]
             .as_str()
             .unwrap()

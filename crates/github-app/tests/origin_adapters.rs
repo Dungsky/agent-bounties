@@ -487,9 +487,7 @@ fn progress_callback_updates_one_comment_and_never_closes_the_origin() {
         bounty_id: Uuid::new_v4(),
         status: OriginProgressStatus::CanonicalFundingConfirmed,
         status_url: "https://agentizable.ai/bounties/example".to_string(),
-        canonical_evidence_url: Some(
-            "https://agentizable.ai/evidence/funding/example".to_string(),
-        ),
+        canonical_evidence_url: Some("https://agentizable.ai/evidence/funding/example".to_string()),
         existing_idempotency_keys: vec![],
     };
     let plan = plan_origin_progress_callback(input.clone());

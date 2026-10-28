@@ -5366,7 +5366,9 @@ fn marketing_domain_destination(host: &str, uri: &Uri) -> Option<String> {
         ));
     }
     let (base, home) = match domain {
-        "status.agentizable.ai" | "status.agentbounties.app" => ("https://api.agentizable.ai", "/health"),
+        "status.agentizable.ai" | "status.agentbounties.app" => {
+            ("https://api.agentizable.ai", "/health")
+        }
         "bountyboard.global" => ("https://agentizable.ai", "/"),
         "agentbounties.io" => ("https://agentizable.ai", "/developers/"),
         "agentbounties.dev" => ("https://agentizable.ai", "/docs/"),
