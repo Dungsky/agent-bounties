@@ -7,6 +7,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
+from prepare_site_metrics import validate as validate_participation
 from pathlib import Path, PurePosixPath
 from urllib.parse import urldefrag, urlparse
 
@@ -815,6 +816,7 @@ def check_metrics(site_dir: Path) -> None:
         ["@media (prefers-reduced-motion: reduce)", ".audit-table-shell:focus-visible"],
     )
     github = json_file(site_dir / "generated" / "github-participation.json")
+    validate_participation(github, site_dir.parent / "crates/api/fixtures/public-metrics-policy.json")
     if github.get("schema_version") != "agent-bounties/github-participation-v1":
         fail("GitHub participation artifact has the wrong schema")
     if github.get("coverage", {}).get("raw_identifiers_included") is not False:
@@ -1418,8 +1420,8 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
 def check_shared_script_versions(site_dir: Path) -> None:
     # These keys must be newer than every key used before the Agentizable cutover.
     # A per-page increment can collide with a key already cached by another page.
-    floors = {"marketplace.js": 10, "wallet-link.js": 14, "marketplace-workflow.js": 14,
-              "submissions.js": 5, "review-deadline.js": 4, "webmcp.js": 16, "analytics-config.js": 14}
+    floors = {"marketplace.js": 10, "wallet-link.js": 14, "marketplace-workflow.js": 15,
+              "submissions.js": 5, "review-deadline.js": 4, "webmcp.js": 17, "analytics-config.js": 15}
     versions = {name: set() for name in floors}
     for page in [*site_dir.rglob("*.html"), site_dir / "analytics-config.js"]:
         text = page.read_text(encoding="utf-8")

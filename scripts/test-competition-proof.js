@@ -23,7 +23,7 @@ function setup(storage = new Map(), server = {}) {
   server.projection ||= { competition: contract, bounty_id: hash("c"), state: "active", proof_deadline: Math.floor(Date.now() / 1000) + 3600,
     program_vkey: hash("1"), source_hash: hash("2"), elf_hash: hash("3"), journal_schema_hash: hash("4"), metric_program_hash: hash("5"), execution_policy_hash: hash("6"), verification_policy_hash: hash("7"), settlement_policy_hash: hash("8"), beta_risk_hash: hash("9") };
   server.events ||= [];
-  server.item ||= { opportunity_id: `open-competition-v2:base-mainnet:${contract}`, source_id: contract, network: "base-mainnet", verification_ready: true, evidence_requirements: { program_profile: "structured-artifact-metric-v1" } };
+  server.item ||= { opportunity_id: `open-competition-v2:base-mainnet:${contract}`, source_id: contract, source_type: "canonical_base", network: "base-mainnet", verification_ready: true, evidence_requirements: { program_profile: "structured-artifact-metric-v1" } };
   const provider = { async request(req) {
     calls.push(req);
     if (req.method === "eth_accounts") return [server.account || wallet];
@@ -44,7 +44,20 @@ function setup(storage = new Map(), server = {}) {
       const body = options.body && JSON.parse(options.body);
       let data;
       if (url.includes("/inventory?")) data = { network: "base-mainnet", competitions: [{ record: { projection: server.projection } }] };
-      else if (url.includes("/opportunities?")) data = { schema_version: "agent-bounties/opportunity-projection-v1", network: "base-mainnet", degraded: false, source_statuses: [{ source_type: "canonical_base", available: true }], items: [server.item] };
+      else if (url.includes("/opportunities?")) {
+        const query = new URL(url).searchParams;
+        assert.equal(query.get("opportunity_id"), `open-competition-v2:base-mainnet:${contract}`);
+        assert.equal(query.get("source_type"), "canonical_base");
+        assert.equal(query.get("limit"), "1");
+        assert.equal(query.get("view"), "recent");
+        assert.equal(options.credentials, "omit");
+        assert.equal(options.headers.Authorization, undefined);
+        data = { schema_version: "agent-bounties/opportunity-projection-v1", network: "base-mainnet", applied_view: "recent", degraded: false,
+          coverage: "complete", coverage_scope: "canonical_identity", requested_opportunity_id: `open-competition-v2:base-mainnet:${contract}`, has_more: false,
+          source_statuses: [{ source_type: "canonical_base", available: true, coverage: "complete", item_count: 1,
+            protocol_statuses: [{ protocol: "open-competition-v2-beta3", coverage: "complete", item_count: 1, error: null }] }], items: [server.item] };
+        server.alterOpportunity?.(data);
+      }
       else if (url.endsWith("/proof-quotes")) {
         server.quoteCount = (server.quoteCount || 0) + 1;
         data = responseQuote(body); server.quoted = clone(data);
@@ -247,4 +260,20 @@ test("a readiness hold blocks a fresh signature on an existing unpaid quote", as
   assert.match(e.elements.get("[data-proof-status]").textContent, /Verification is not ready/);
   assert.equal(sigs(e).length, 0);
   assert.equal(e.server.paymentCount || 0, 0);
+});
+
+test("unscoped or substituted competition evidence stops before wallet, quote or payment requests", async () => {
+  for (const alterOpportunity of [
+    data => { data.coverage_scope = "inventory_page"; },
+    data => { data.requested_opportunity_id = `open-competition-v2:base-mainnet:${broker}`; },
+    data => { data.items[0].source_id = broker; },
+    data => { data.source_statuses[0].protocol_statuses[0].protocol = "autonomous-v1"; },
+  ]) {
+    const e = setup(new Map(), { alterOpportunity });
+    await assert.rejects(e.start());
+    assert.equal(e.calls.length, 0);
+    assert.equal(e.requests.some(request => request.method === "POST"), false);
+    assert.equal(e.server.quoteCount, undefined);
+    assert.equal(e.requests.filter(request => request.url.includes("/opportunities?")).length, 1);
+  }
 });

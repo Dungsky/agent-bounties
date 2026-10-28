@@ -34,7 +34,7 @@ function parentFixture() {
 }
 test("a freshly resolved parent permits exact 1 USDC without lowering the ordinary floor", async () => {
   const f = parentFixture(), parent = await helper.resolve(f.context, f.client);
-  assert.equal(f.reads[0][1], true);
+  assert.deepEqual(f.reads[0], [f.item.opportunity_id, true]);
   assert.deepEqual(composer.parsePreparedRewardSplit("0.99", "0.01", parent), split);
   assert.equal(composer.parsePreparedRewardSplit("0.98", "0.02", parent).total, 1000000n);
   assert.deepEqual(composer.rewardSplitForTotal(1, null, parent), split);

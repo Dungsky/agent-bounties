@@ -30,7 +30,14 @@ function environment(path = "/", entries = [item()]) {
     setTimeout(fn) { fn(); }, setInterval() {},
     async fetch(url, options) {
       requests.push({ url, ...options });
-      const payload = url.includes("/opportunities?") ? { schema_version: "agent-bounties/opportunity-projection-v1", generated_at: "2026-09-05T23:00:00Z", network: "base-mainnet", degraded: false, source_statuses: [{ source_type: "canonical_base", available: true }], items: entries }
+      const query = new URL(url).searchParams, identity = query.get("opportunity_id");
+      const selected = identity ? entries.filter(entry => entry.opportunity_id === identity) : entries;
+      const protocol = id => id.startsWith("canonical:") ? "autonomous-v1" : id.startsWith("open-competition-v2:") ? "open-competition-v2-beta3" : "open-competition-v1";
+      const protocols = identity ? [protocol(identity)] : ["autonomous-v1", "open-competition-v1", "open-competition-v2-beta3"];
+      const payload = url.includes("/opportunities?") ? { schema_version: "agent-bounties/opportunity-projection-v1", generated_at: "2026-09-05T23:00:00Z", network: "base-mainnet", applied_view: query.get("view"), degraded: false,
+        coverage: "complete", coverage_scope: identity ? "canonical_identity" : "inventory_page", requested_opportunity_id: identity, has_more: false,
+        source_statuses: [{ source_type: "canonical_base", available: true, coverage: "complete", item_count: selected.length,
+          protocol_statuses: protocols.map(p => ({protocol:p, coverage:"complete", item_count:selected.filter(entry => protocol(entry.opportunity_id) === p).length, error:null})) }], items: selected }
         : { intent_id: intentId, bounty_contract: contract, status: "review_required", network: "base-mainnet", action: "solve", details: {}, expected_canonical_events: ["bounty_claimed"] };
       if (options?.method === "POST" && url.endsWith("/action-intents")) Object.assign(payload, JSON.parse(options.body));
       return { ok: true, json: async () => payload };
@@ -371,6 +378,17 @@ test("child handoff requires and preserves the exact parent", async () => {
   await assert.rejects(env.tools.get("agent_bounties_start_competition_child_bounty").execute(), /lost its competition/);
   href = `/post.html?parentCompetition=${contract}&network=base-mainnet`;
   await env.tools.get("agent_bounties_start_competition_child_bounty").execute();
+  assert.equal(flow.createClient(env.window).load().parent_competition.competition_contract, contract);
+});
+test("parent competition return selects its V2 identity without a full inventory scan", async () => {
+  const parent = item({opportunity_id:`open-competition-v2:base-mainnet:${contract}`, source_status:"active", competition_mode:"best_score",
+    evidence_requirements:{program_profile:"fixture",verification_policy_hash:"fixture",scoring_window:{starts_at:"2020-01-01T00:00:00Z",ends_at:"2099-01-01T00:00:00Z"}}});
+  const env = environment(`/post.html?parentCompetition=${contract}&network=base-mainnet`, [parent]);
+  env.register();
+  await new Promise(resolve => setImmediate(resolve));
+  const requests = env.requests.filter(request => request.url.includes("/opportunities?"));
+  assert.equal(requests.length, 1);
+  assert.equal(new URL(requests[0].url).searchParams.get("opportunity_id"), parent.opportunity_id);
   assert.equal(flow.createClient(env.window).load().parent_competition.competition_contract, contract);
 });
 test("funding review never approves an unapproved card", async () => {

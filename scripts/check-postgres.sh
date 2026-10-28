@@ -34,27 +34,29 @@ database_url="${DATABASE_URL:-postgres://agent_bounties:agent_bounties@localhost
 
 cargo build -p api -p mcp-server
 export AGENT_BOUNTIES_TEST_DATABASE_URL="$database_url"
-cargo test -p db tests::x402_relay_attempt_is_idempotent_and_lease_bounded -- --ignored --exact --nocapture
-cargo test -p db tests::claim_funnel_counts_direct_and_atomic_sponsored_confirmations -- --ignored --exact --nocapture
-cargo test -p db tests::opportunity_lifecycle_query_executes_against_migrated_postgres -- --ignored --exact --nocapture
-cargo test -p db tests::site_analytics_round_trip_executes_against_migrated_postgres -- --ignored --exact --nocapture
-cargo test -p db tests::platform_metrics_query_separates_history_from_identity_and_cohort_boundaries -- --ignored --exact --nocapture
-cargo test -p api platform_payouts::tests::platform_payout_http_replays_real_database_selection -- --ignored --exact --nocapture
-cargo test -p db tests::opportunity_comment_round_trip_is_durable_and_idempotent -- --ignored --exact --nocapture
-cargo test -p db tests::chatgpt_action_intent_replays_and_confirms_only_observed_transaction -- --ignored --exact --nocapture
-cargo test -p db site_posting_drafts -- --ignored --nocapture
-cargo test -p db tests::social_mention_ingestion_round_trip_executes_against_migrated_postgres -- --ignored --exact --nocapture
-cargo test -p db tests::discovery_webhook_round_trip_executes_against_migrated_postgres -- --ignored --exact --nocapture
-cargo test -p api open_competition_v2_api::tests::postgres_readiness_hold_blocks_new_payments_but_preserves_reconciliation -- --ignored --exact --test-threads=1 --nocapture
-cargo test -p api tests::audience_audit_persists_idempotently_across_processes -- --ignored --exact --nocapture
-cargo test -p api tests::github_issue_api_sync_postgres_rejects_stale_cross_process_activity -- --ignored --exact --nocapture
-cargo test -p db scoped_submission_history_reads_only_selected_bounty_postgres -- --ignored --nocapture
-cargo test -p db tests::autonomous_v2_events_round_trip_through_postgres -- --ignored --exact --nocapture
-cargo test -p db tests::invoice_order_events_are_sequenced_and_evidence_is_unique_postgres -- --ignored --exact --nocapture
-cargo test -p api tests::invoiced_seller_of_record_path_runs_end_to_end_postgres -- --ignored --exact --nocapture
-cargo test -p api tests::opportunity_exact_unfunded_lookup_crosses_list_window_postgres -- --ignored --exact --nocapture
-cargo test -p api tests::github_issue_api_sync_postgres_serializes_concurrent_initial_sync -- --ignored --exact --nocapture
-cargo test -p api tests::neynar_webhook_persists_one_short_draft_and_one_reply_across_retries -- --ignored --exact --nocapture
+python3 scripts/run-required-postgres-test.py -p db tests::x402_relay_attempt_is_idempotent_and_lease_bounded --exact
+python3 scripts/run-required-postgres-test.py -p db tests::claim_funnel_counts_direct_and_atomic_sponsored_confirmations --exact
+python3 scripts/run-required-postgres-test.py -p db tests::opportunity_lifecycle_query_executes_against_migrated_postgres --exact
+python3 scripts/run-required-postgres-test.py -p db tests::site_analytics_round_trip_executes_against_migrated_postgres --exact
+python3 scripts/run-required-postgres-test.py -p db tests::platform_metrics_query_separates_history_from_identity_and_cohort_boundaries --exact
+python3 scripts/run-required-postgres-test.py -p api platform_payouts::tests::platform_payout_http_replays_real_database_selection --exact
+python3 scripts/run-required-postgres-test.py -p db tests::opportunity_comment_round_trip_is_durable_and_idempotent --exact
+python3 scripts/run-required-postgres-test.py -p db tests::chatgpt_action_intent_replays_and_confirms_only_observed_transaction --exact
+python3 scripts/run-required-postgres-test.py -p db site_posting_drafts
+python3 scripts/run-required-postgres-test.py -p db tests::social_mention_ingestion_round_trip_executes_against_migrated_postgres --exact
+python3 scripts/run-required-postgres-test.py -p db tests::discovery_webhook_round_trip_executes_against_migrated_postgres --exact
+python3 scripts/run-required-postgres-test.py -p api open_competition_v2_api::tests::postgres_readiness_hold_blocks_new_payments_but_preserves_reconciliation --exact --test-threads=1
+python3 scripts/run-required-postgres-test.py -p api tests::audience_audit_persists_idempotently_across_processes --exact
+python3 scripts/run-required-postgres-test.py -p api tests::github_issue_api_sync_postgres_rejects_stale_cross_process_activity --exact
+python3 scripts/run-required-postgres-test.py -p db scoped_submission_history_reads_only_selected_bounty_postgres
+python3 scripts/run-required-postgres-test.py -p db tests::autonomous_v2_events_round_trip_through_postgres --exact
+python3 scripts/run-required-postgres-test.py -p db tests::invoice_order_events_are_sequenced_and_evidence_is_unique_postgres --exact
+python3 scripts/run-required-postgres-test.py -p api tests::invoiced_seller_of_record_path_runs_end_to_end_postgres --exact
+python3 scripts/run-required-postgres-test.py -p api tests::opportunity_exact_unfunded_lookup_crosses_list_window_postgres --exact
+python3 scripts/run-required-postgres-test.py -p api tests::github_issue_api_sync_postgres_serializes_concurrent_initial_sync --exact
+python3 scripts/run-required-postgres-test.py -p api tests::neynar_webhook_persists_one_short_draft_and_one_reply_across_retries --exact
+python3 scripts/run-required-postgres-test.py -p api tests::bounty_status_reads_scoped_postgres_after_cross_process_funding --exact
+python3 scripts/run-required-postgres-test.py -p mcp-server tests::mcp_bounty_status_reads_scoped_postgres_after_cross_process_funding --exact
 cargo run -p cli -- service-smoke-spawn \
   --api-base-url http://127.0.0.1:18180 \
   --mcp-base-url http://127.0.0.1:18190 \

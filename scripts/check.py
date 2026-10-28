@@ -109,6 +109,8 @@ def compile_python(platform: str) -> None:
         "scripts/standing_meta_v4_release_audit.py", "scripts/test_standing_meta_v4_release_audit.py",
         "scripts/standing_meta_v4_rehearsal_audit.py", "scripts/test_standing_meta_v4_rehearsal_audit.py",
         "scripts/check-site.py", "scripts/configure-wallet-providers.py",
+        "scripts/prepare_site_metrics.py", "scripts/test_prepare_site_metrics.py",
+        "scripts/refresh_site_metrics.py", "scripts/test_refresh_site_metrics.py",
         "scripts/check-public-site-canary.py", "scripts/test_check_public_site_canary.py",
         "scripts/serve_open_competition_v2_reserve_recovery.py",
         "scripts/test_serve_open_competition_v2_reserve_recovery.py",
@@ -270,7 +272,7 @@ def main() -> int:
         py(f"scripts/{name}.py", "--self-test")
     py("scripts/test_github_pr_claim_guard.py", "-v")
     py("scripts/test_opportunity_return.py", "-v")
-    for name in ("sync_hosted_bounty_inventory", "reconcile_github_bounty_labels", "diagnose_hosted_api", "github_audience_audit", "ruleset_drift_check", "code_size_report", "mcp_tool_registry", "shared_rpc", "relay_autonomous_action", "gas_sponsorship_budget", "relay_bounded_wallet_action", "bounded_agent_budget"):
+    for name in ("sync_hosted_bounty_inventory", "reconcile_github_bounty_labels", "diagnose_hosted_api", "github_audience_audit", "prepare_site_metrics", "refresh_site_metrics", "ruleset_drift_check", "code_size_report", "mcp_tool_registry", "shared_rpc", "relay_autonomous_action", "gas_sponsorship_budget", "relay_bounded_wallet_action", "bounded_agent_budget"):
         py(f"scripts/test_{name}.py", "-v")
     for name in ("standing_meta_v3_deploy", "activate_standing_meta_v3_replacements"):
         py(f"scripts/test_{name}.py", "-v")
@@ -318,6 +320,7 @@ def main() -> int:
         "-v",
     )
     py("scripts/test_check_agent_discovery_contract.py", "-v")
+    py("scripts/test_required_postgres_tests.py", "-v")
     py("scripts/check-agent-discovery-contract.py")
     run(npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", cwd=ROOT / "tools/phone-wallet")
     run(npm, "run", "check", cwd=ROOT / "tools/phone-wallet")
@@ -328,7 +331,7 @@ def main() -> int:
         ["scripts/test-autonomous-activation-console.js"], ["--check", "tools/canonical-child-verifier-deployment.js"],
         ["scripts/test-canonical-child-verifier-deployment-console.js"], ["--check", "tools/base-sepolia-sponsor-activation.js"],
         ["scripts/test-base-sepolia-sponsor-activation-console.js"],
-        ["--test", "scripts/test-metrics-dashboard.js", "scripts/test-creator-awards.js"],
+        ["--test", "scripts/test-metrics-dashboard.js", "scripts/test-creator-awards.js", "scripts/test-daily-site-refresh.mjs"],
         ["--test", "scripts/test-gmv-manifest-preflight.mjs", "scripts/test-marketplace-ui.js", "scripts/test-opportunity-coverage.js", "scripts/test_routed_inventory.mjs", "scripts/test-submissions.js", "scripts/test-funded.js"],
         ["--test", "scripts/test-managed-service.cjs"],
         ["--test", "scripts/test-assistant-referrals.js", "scripts/test-solarpunk-home.js", "scripts/test-ai-bounty-handoff.js"],

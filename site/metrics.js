@@ -460,8 +460,8 @@
     const githubPrevious = finiteNumber(githubPeriod?.previous_active_identities);
     const githubFirstMonth = finiteNumber(github?.first_month?.active_identities);
     const githubLifetime = finiteNumber(github?.periods?.lifetime?.active_identities);
-    const activeComplete = !["unavailable", "partial"].includes(platformStatus)
-      && !["unavailable", "partial"].includes(githubStatus);
+    const activeComplete = platformStatus === "ready" && githubStatus === "ready"
+      && Boolean(githubPeriod);
     const platformRoles = roleMap(platformIdentities.roles);
     const githubRoles = roleMap(githubPeriod?.roles);
     const roles = [
@@ -804,7 +804,7 @@
         ["Marketplace events", merged.platform_status, state.platform?.generated_at, "Confirmed canonical Base events with verified block time."],
         ["Payout proof ledger", audit.status, audit.generated_at, "Bounded historical proof pages share the headline window and policy; browser sums match components and daily totals. Chain freshness is separate."],
         ["External interface usage", interfaceUsage.status, state.acquisition?.generated_at, "Hourly external API, CLI, and MCP request aggregates; verified operator traffic is omitted."],
-        ["GitHub participation", merged.github_status, state.github?.generated_at, "Hourly aggregate of external issues, pull requests, comments, and reviews."],
+        ["GitHub participation", merged.github_status, state.github?.generated_at, "Reviewed daily snapshot of external issues, pull requests, comments, and reviews. The timestamp is the original observation time; a website build does not refresh it."],
         ["Repository acquisition", repositoryStatus, state.github?.repository_acquisition?.generated_at, "GitHub clone and page-view aggregates for its rolling 14-day traffic window."],
         ["Browser acquisition", acquisitionStatus, state.acquisition?.generated_at, "First-party browser/device IDs; never counted as users or identities."],
         ["Discoverability scorecard", discoverability.status, discoverability.generated_at, "Delayed aggregate snapshots from Search Console, GitHub traffic, first-party acquisition, and external route interactions."],
@@ -874,7 +874,7 @@
       setText("[data-active-growth]", identitiesAvailable ? weeklyGrowth(merged.latest_week, merged.previous_week) : "—");
       setText("[data-active-context]", merged.active_complete
         ? "GitHub accounts, wallets and named contributors. One person can have more than one account."
-        : "The account count is unavailable because a required source is missing.");
+        : "The current account count is unavailable because a required source is missing, incomplete or delayed.");
       setText("[data-payout-volume]", payout ? amount(payout.selected) : "—");
       setText("[data-settled-rounds]", payout ? formatInteger(payout.selected_settled_rounds) : "—");
       setText("[data-settlement-rate]", cohort?.settlement_rate == null ? (cohort ? "Not yet available" : "—") : `${(cohort.settlement_rate * 100).toLocaleString("en-US", { maximumFractionDigits: 1 })}%`);

@@ -63,6 +63,35 @@ class Tests(unittest.TestCase):
                     metrics.refresh(path, "fixture-token")
             self.assertEqual(path.read_text(), '{"generated_at":"original"}')
 
+    def test_cli_can_prepare_a_private_candidate_without_touching_release_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'candidate.json'
+            with patch('sys.argv', ['refresh_site_metrics.py', '--output', str(output)]), \
+                 patch.dict(metrics.os.environ, {'GITHUB_METRICS_TOKEN': 'fixture-token'}), \
+                 patch.object(metrics, 'refresh') as refresh:
+                metrics.main()
+                refresh.assert_called_once_with(output, 'fixture-token')
+
+    def test_concurrent_collector_does_not_replace_or_start_another_scan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "snapshot.json"
+            path.write_text('previous')
+            with metrics.collection_lock(path):
+                with patch.object(metrics.audit, 'collect_snapshot') as collect:
+                    with self.assertRaises(BlockingIOError):
+                        metrics.refresh(path, 'fixture-token')
+                    collect.assert_not_called()
+            self.assertEqual(path.read_text(), 'previous')
+
+    def test_invalid_generated_aggregate_does_not_replace_last_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "snapshot.json"
+            path.write_text('previous')
+            with patch.object(metrics.audit, 'collect_snapshot', return_value={}):
+                with self.assertRaises(ValueError):
+                    metrics.refresh(path, 'fixture-token')
+            self.assertEqual(path.read_text(), 'previous')
+
     def test_success_writes_aggregate_without_raw_identities(self):
         fixture = json.loads((metrics.ROOT / "scripts/fixtures/github_participation_metrics.json").read_text())
         with tempfile.TemporaryDirectory() as directory:

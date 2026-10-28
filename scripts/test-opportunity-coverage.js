@@ -97,3 +97,112 @@ test('capped pages never become a full homepage inventory total', () => {
     assert.match(result.coverage.message,/limited page.*full count is unknown/);
   }
 });
+
+function exactProjection(entry = item, view = 'recent') {
+  const payload = projection();
+  payload.items = [structuredClone(entry)];
+  payload.applied_view = view;
+  payload.degraded = false;
+  payload.coverage = 'complete';
+  payload.coverage_scope = 'canonical_identity';
+  payload.requested_opportunity_id = entry.opportunity_id;
+  payload.has_more = false;
+  const protocol = entry.opportunity_id.startsWith('canonical:') ? 'autonomous-v1'
+    : entry.opportunity_id.startsWith('open-competition-v2:') ? 'open-competition-v2-beta3' : 'open-competition-v1';
+  Object.assign(payload.source_statuses[0], {coverage:'complete', available:true, item_count:1, protocol_statuses:[status(protocol,'complete',1)]});
+  return payload;
+}
+function exactClient(payload, httpStatus = 200) {
+  const calls = [];
+  const win = {location:new URL('https://agentizable.ai/marketplace.html'), async fetch(url, options) {
+    calls.push({url:new URL(url), options});
+    return {ok:httpStatus === 200, status:httpStatus, json:async()=>structuredClone(payload)};
+  }};
+  return {client:flow.createClient(win), calls};
+}
+test('selected bounty reads only its scoped identity for each supported protocol, including old completed work', async () => {
+  for (const prefix of ['canonical', 'open-competition', 'open-competition-v2']) {
+    const entry = {...item, opportunity_id:`${prefix}:base-mainnet:${item.source_id}`, work_state:'completed', source_status:'paid', payment_state:'paid', terms_hash:null};
+    const {client, calls} = exactClient(exactProjection(entry));
+    const result = await client.inspect(entry.opportunity_id);
+    assert.equal(result.opportunity_id, entry.opportunity_id);
+    assert.equal(result.ready, false);
+    assert.equal(calls.length, 1, 'no full-market or second-view fallback');
+    assert.equal(calls[0].url.searchParams.get('opportunity_id'), entry.opportunity_id);
+    assert.equal(calls[0].url.searchParams.get('limit'), '1');
+    assert.equal(calls[0].url.searchParams.get('source_type'), 'canonical_base');
+    assert.equal(calls[0].options.credentials, 'omit');
+    assert.equal(calls[0].options.headers.Authorization, undefined);
+    assert.equal(calls[0].options.method, 'GET');
+  }
+});
+test('missing or private-filtered identities stop after one read; the client does not widen access or scan another view', async () => {
+  const payload = exactProjection(); payload.items = [];
+  payload.source_statuses[0].item_count = 0; payload.source_statuses[0].protocol_statuses[0].item_count = 0;
+  for (const httpStatus of [200, 401, 403, 404, 503]) {
+    const {client, calls} = exactClient(payload, httpStatus);
+    await assert.rejects(client.inspect(item.opportunity_id));
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].options.credentials, 'omit');
+    assert.equal(calls[0].options.headers.Authorization, undefined);
+  }
+});
+test('unavailable coverage never starts a second scan or creates an action', async () => {
+  const payload = exactProjection(item, 'ready_to_earn');
+  payload.items = []; payload.coverage = 'unavailable'; payload.degraded = true;
+  Object.assign(payload.source_statuses[0], {coverage:'unavailable',available:false,item_count:0,protocol_statuses:[status('autonomous-v1','unavailable',null)]});
+  const {client, calls} = exactClient(payload);
+  await assert.rejects(client.prepareAction({action:'solve', opportunity_id:item.opportunity_id}), /unavailable/);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].options.method, 'GET');
+});
+test('identity, network, scope and incomplete response mismatches cannot substitute another bounty', async () => {
+  for (const mutate of [
+    p => p.requested_opportunity_id = item.opportunity_id.replace('canonical:', 'open-competition:'),
+    p => p.items[0].opportunity_id = item.opportunity_id.replace('canonical:', 'open-competition:'),
+    p => p.items[0].source_id = '0x' + '22'.repeat(20),
+    p => p.items[0].source_type = 'legacy_bounty',
+    p => p.items[0].network = 'base-sepolia',
+    p => p.network = 'base-sepolia',
+    p => p.applied_view = 'ready_to_earn',
+    p => p.coverage_scope = 'inventory_page',
+    p => delete p.source_statuses[0].coverage,
+    p => p.items.push(structuredClone(p.items[0])),
+    p => p.has_more = true,
+    p => p.source_statuses[0].protocol_statuses[0].protocol = 'open-competition-v1',
+  ]) {
+    const payload = exactProjection(); mutate(payload);
+    const {client, calls} = exactClient(payload);
+    await assert.rejects(client.inspect(item.opportunity_id));
+    assert.equal(calls.length, 1);
+  }
+});
+test('a scoped result retains every existing readiness guard before action preparation', async () => {
+  for (const mutate of [
+    i => i.verification_ready = false, i => i.payment_committed = false,
+    i => i.work_state = 'submitted', i => i.source_status = 'cancelled',
+    i => i.payment_state = 'none', i => i.funded_amount.amount = '1',
+    i => i.reward.amount = '0', i => i.terms_hash = null,
+  ]) {
+    const payload = exactProjection(item, 'ready_to_earn'); mutate(payload.items[0]);
+    const {client, calls} = exactClient(payload);
+    await assert.rejects(client.prepareAction({action:'solve',opportunity_id:item.opportunity_id}), /not ready/);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].options.method, 'GET');
+    assert.equal(calls[0].url.searchParams.get('view'), 'ready_to_earn');
+  }
+});
+test('ambiguous addresses and unsupported identity forms fail before any request', async () => {
+  for (const id of [item.source_id, null, {}, item.opportunity_id.replace('base-mainnet','base-sepolia'),
+    item.opportunity_id.replace('canonical:','unfunded:'), item.opportunity_id + '&view=recent', ' ' + item.opportunity_id]) {
+    const {client, calls} = exactClient(exactProjection());
+    await assert.rejects(client.inspect(id), /full opportunity ID/);
+    assert.equal(calls.length, 0);
+  }
+});
+test('mixed-case contract spelling selects the same normalized exact identity', async () => {
+  const entry = {...item, source_id:'0x' + 'ab'.repeat(20), opportunity_id:'canonical:base-mainnet:0x' + 'ab'.repeat(20), terms_hash:null};
+  const {client, calls} = exactClient(exactProjection(entry));
+  assert.equal((await client.inspect(entry.opportunity_id.replaceAll('ab', 'aB'))).opportunity_id,entry.opportunity_id);
+  assert.equal(calls[0].url.searchParams.get('opportunity_id'),entry.opportunity_id);
+});

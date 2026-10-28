@@ -1,104 +1,8 @@
 name: Pages
 
+# Cloudflare is the production publisher. This retained workflow is manual
+# validation only; it must not duplicate push/scheduled builds or publish Pages.
 on:
-  schedule:
-    # Refresh participation totals daily. Code changes still deploy on push.
-    - cron: "17 12 * * *"
-  pull_request:
-    paths:
-      - ".github/workflows/pages.yml"
-      - "site/**"
-      - "scripts/check-site.py"
-      - "scripts/prepare-site-fonts.py"
-      - "scripts/sync-site-navigation.py"
-      - "scripts/templates/site-navigation.html"
-      - "scripts/templates/site-footer.html"
-      - "scripts/test-forest-ui.cjs"
-      - "scripts/test-leaderboard.cjs"
-      - "scripts/test-site-navigation.cjs"
-      - "scripts/assert-heading-layout.cjs"
-      - "scripts/test-marketplace-layout.cjs"
-      - "scripts/test-submissions-layout.cjs"
-      - "scripts/test-submissions.js"
-      - "scripts/test-solarpunk-home.js"
-      - "scripts/test-ai-bounty-handoff.js"
-      - "scripts/test-metrics-dashboard.js"
-      - "scripts/test-marketplace-ui.js"
-      - "scripts/test-opportunity-coverage.js"
-      - "scripts/fixtures/opportunities-audit-20260916.json"
-      - "scripts/test-webmcp.js"
-      - "scripts/test-meta-child.js"
-      - "scripts/fixtures/meta-child-plan.json"
-      - "scripts/test-competition-proof.js"
-      - "scripts/test-phone-wallet.js"
-      - "scripts/test-phone-wallet-network.cjs"
-      - "scripts/test-phone-wallet-storage.cjs"
-      - "scripts/test-posting-layout.cjs"
-      - "scripts/test-posting-auth.js"
-      - "scripts/test-posting-brief.cjs"
-      - "scripts/test-posting-reference.js"
-      - "scripts/test-posting-session.js"
-      - "scripts/test-funding-readiness.js"
-      - "tools/browser-layout/**"
-      - "scripts/configure-phone-wallet.py"
-      - "scripts/configure-wallet-providers.py"
-      - "scripts/test-wallet-link.js"
-      - "tools/coinbase-embedded-wallet/**"
-      - "tools/phone-wallet/**"
-      - "scripts/github_audience_audit.py"
-      - "scripts/test_github_audience_audit.py"
-      - "scripts/fixtures/github_participation_metrics.json"
-      - "crates/api/fixtures/public-metrics-policy.json"
-      - "deployments/base-mainnet.json"
-      - "schemas/discovery-manifest.v2.json"
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/pages.yml"
-      - "site/**"
-      - "scripts/check-site.py"
-      - "scripts/prepare-site-fonts.py"
-      - "scripts/sync-site-navigation.py"
-      - "scripts/templates/site-navigation.html"
-      - "scripts/templates/site-footer.html"
-      - "scripts/test-forest-ui.cjs"
-      - "scripts/test-leaderboard.cjs"
-      - "scripts/test-site-navigation.cjs"
-      - "scripts/assert-heading-layout.cjs"
-      - "scripts/test-marketplace-layout.cjs"
-      - "scripts/test-submissions-layout.cjs"
-      - "scripts/test-submissions.js"
-      - "scripts/test-solarpunk-home.js"
-      - "scripts/test-ai-bounty-handoff.js"
-      - "scripts/test-metrics-dashboard.js"
-      - "scripts/test-marketplace-ui.js"
-      - "scripts/test-opportunity-coverage.js"
-      - "scripts/fixtures/opportunities-audit-20260916.json"
-      - "scripts/test-webmcp.js"
-      - "scripts/test-meta-child.js"
-      - "scripts/fixtures/meta-child-plan.json"
-      - "scripts/test-competition-proof.js"
-      - "scripts/test-phone-wallet.js"
-      - "scripts/test-phone-wallet-network.cjs"
-      - "scripts/test-phone-wallet-storage.cjs"
-      - "scripts/test-posting-layout.cjs"
-      - "scripts/test-posting-auth.js"
-      - "scripts/test-posting-brief.cjs"
-      - "scripts/test-posting-reference.js"
-      - "scripts/test-posting-session.js"
-      - "scripts/test-funding-readiness.js"
-      - "tools/browser-layout/**"
-      - "scripts/configure-phone-wallet.py"
-      - "scripts/configure-wallet-providers.py"
-      - "scripts/test-wallet-link.js"
-      - "tools/coinbase-embedded-wallet/**"
-      - "tools/phone-wallet/**"
-      - "scripts/github_audience_audit.py"
-      - "scripts/test_github_audience_audit.py"
-      - "scripts/fixtures/github_participation_metrics.json"
-      - "crates/api/fixtures/public-metrics-policy.json"
-      - "deployments/base-mainnet.json"
-      - "schemas/discovery-manifest.v2.json"
   workflow_dispatch:
 
 permissions:
@@ -229,7 +133,8 @@ jobs:
           grep -q 'googleMeasurementId: "G-TEST123"' /tmp/analytics-config.js
 
   deploy:
-    if: github.repository == 'NSPG13/agent-bounties' && github.event_name != 'pull_request'
+    # Retained for migration history only; production publishing moved to Cloudflare.
+    if: ${{ false }}
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -295,16 +200,11 @@ jobs:
         run: |
           mkdir -p site/schemas
           cp schemas/discovery-manifest.v2.json site/schemas/discovery-manifest.v2.json
-      - name: Generate privacy-safe GitHub participation metrics
-        env:
-          GH_TOKEN: ${{ secrets.REPOSITORY_TRAFFIC_TOKEN || github.token }}
+      - name: Validate the reviewed GitHub participation aggregate offline
         run: |
-          python scripts/github_audience_audit.py \
-            --repository "${GITHUB_REPOSITORY}" \
-            --owner-login "${GITHUB_REPOSITORY_OWNER}" \
-            --public-metrics-policy crates/api/fixtures/public-metrics-policy.json \
-            --public-metrics-output site/generated/github-participation.json \
-            --public-metrics-only
+          python scripts/test_prepare_site_metrics.py
+          python scripts/prepare_site_metrics.py
+          python scripts/check-site.py --require-wallet-bundle
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
