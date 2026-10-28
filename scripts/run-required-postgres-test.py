@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -44,6 +45,15 @@ def run_required(package: str, selector: str, *, exact: bool = False,
     return 0
 
 
+def cargo_executable() -> str:
+    # Python cannot inherit check-postgres.sh's cargo() shell fallback.
+    # An explicit override must remain authoritative, even if it is invalid.
+    override = os.environ.get("CARGO")
+    if override is not None:
+        return override
+    return shutil.which("cargo") or shutil.which("cargo.exe") or "cargo"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-p", "--package", required=True)
@@ -54,7 +64,7 @@ def main() -> int:
     if args.test_threads is not None and args.test_threads < 1:
         parser.error("--test-threads must be positive")
     return run_required(args.package, args.selector, exact=args.exact,
-                        test_threads=args.test_threads, cargo=os.environ.get("CARGO", "cargo"))
+                        test_threads=args.test_threads, cargo=cargo_executable())
 
 
 if __name__ == "__main__":

@@ -1,8 +1,11 @@
 import contextlib
 import importlib.util
 import io
+import os
 from pathlib import Path
 import subprocess
+import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -52,6 +55,39 @@ class RequiredPostgresTests(unittest.TestCase):
     def test_unrecognized_success_output_is_not_evidence(self):
         code, _ = self.run_case([result('tests::selected: test\n'), result('all good\n')])
         self.assertEqual(code, 1)
+
+    def test_cli_selects_native_then_exe_and_preserves_explicit_override(self):
+        cases = [
+            ({"cargo": "/native/cargo", "cargo.exe": "/windows/cargo.exe"}, {}, "/native/cargo"),
+            ({"cargo.exe": "/windows/cargo.exe"}, {}, "/windows/cargo.exe"),
+            ({"cargo": "/native/cargo"}, {"CARGO": "/custom tools/cargo.exe"}, "/custom tools/cargo.exe"),
+        ]
+        for available, environment, expected in cases:
+            with self.subTest(expected=expected), patch.dict(runner.os.environ, environment, clear=True), patch.object(runner.shutil, 'which', side_effect=available.get), patch.object(sys, 'argv', ['runner', '-p', 'api', 'tests::selected', '--exact']), patch.object(runner.subprocess, 'run', side_effect=[result('tests::selected: test\n'), result('test result: ok. 1 passed; 0 failed; 0 ignored;\n')]) as calls, contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(runner.main(), 0)
+                self.assertEqual([call.args[0][0] for call in calls.call_args_list], [expected, expected])
+                self.assertIn('--exact', calls.call_args_list[0].args[0])
+                self.assertIn('--ignored', calls.call_args_list[1].args[0])
+
+    def test_missing_or_invalid_overridden_tool_does_not_fall_back_or_pass(self):
+        for environment, expected in [({}, 'cargo'), ({'CARGO': '/missing/override'}, '/missing/override')]:
+            with patch.dict(runner.os.environ, environment, clear=True), patch.object(runner.shutil, 'which', return_value=None), patch.object(sys, 'argv', ['runner', '-p', 'api', 'tests::selected']), patch.object(runner.subprocess, 'run', side_effect=FileNotFoundError) as calls:
+                with self.assertRaises(FileNotFoundError): runner.main()
+                self.assertEqual(calls.call_count, 1)
+                self.assertEqual(calls.call_args.args[0][0], expected)
+
+    @unittest.skipUnless(os.name == 'posix', 'Executable shell fixture requires POSIX')
+    def test_real_subprocess_works_with_only_cargo_exe_on_path(self):
+        # Model the WSL executable-name boundary without Rust or a database.
+        with tempfile.TemporaryDirectory(prefix='cargo path ') as directory:
+            executable = Path(directory) / 'cargo.exe'
+            executable.write_text('#!/bin/sh\ncase " $* " in\n*" --list "*) printf "tests::selected: test\\n" ;;\n*) printf "test result: ok. 1 passed; 0 failed; 0 ignored;\\n" ;;\nesac\n')
+            executable.chmod(0o700)
+            environment = dict(os.environ, PATH=directory)
+            environment.pop('CARGO', None)
+            process = subprocess.run([sys.executable, str(ROOT / 'scripts/run-required-postgres-test.py'), '-p', 'api', 'tests::selected', '--exact'], env=environment, text=True, capture_output=True, timeout=10)
+            self.assertEqual(process.returncode, 0, process.stderr)
+            self.assertIn('required_postgres_test package=api selected=1 passed=1', process.stdout)
 
     def test_postgres_entrypoints_use_guard_and_current_selectors(self):
         for name in ['.github/workflows/ci.yml', 'scripts/check-postgres.sh', 'scripts/check-postgres.ps1']:
