@@ -21,7 +21,7 @@ The
 [`distribution-rail-mcp-canary.yml`](../../.github/workflows/distribution-rail-mcp-canary.yml)
 workflow runs on a schedule and by manual dispatch. It runs
 `scripts/check-distribution-rail-mcp.py` for three complete matrices against
-`https://mcp.agentbounties.app` and retains a text evidence artifact.
+`https://mcp.agentizable.ai` and retains a text evidence artifact.
 
 This probe calls only MCP `initialize` and `tools/list`. It may create an
 analytics-only acquisition record, but it never invokes a draft, publishing,

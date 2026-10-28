@@ -121,7 +121,7 @@ pub fn inbox(evidence: &Value, wallets: &BTreeSet<String>, now: DateTime<Utc>) -
             } else {
                 "competition"
             };
-            let url = format!("https://agentbounties.app/{page}.html?bountyContract={contract}&network=base-mainnet");
+            let url = format!("https://agentizable.ai/{page}.html?bountyContract={contract}&network=base-mainnet");
             let title = format!("Bounty {}…{}", &contract[..8], &contract[38..]);
             let mut rounds: BTreeMap<(u64, String), Vec<&Value>> = BTreeMap::new();
             for event in &events {

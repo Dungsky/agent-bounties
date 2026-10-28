@@ -109,7 +109,7 @@ jobs:
     env:
       BASE_KEEPER_PRIVATE_KEY: ${{ secrets.BASE_KEEPER_PRIVATE_KEY }}
       BASE_MAINNET_RPC_URL: ${{ vars.BASE_MAINNET_RPC_URL || 'https://mainnet.base.org' }}
-      AGENT_BOUNTIES_API_URL: https://api.agentbounties.app
+      AGENT_BOUNTIES_API_URL: https://api.agentizable.ai
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5a

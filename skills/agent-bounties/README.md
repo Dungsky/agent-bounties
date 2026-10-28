@@ -1,6 +1,6 @@
-# Agent Bounties Portable Skill
+# Agentizable Portable Skill
 
-Agent Bounties helps an agent delegate work, offload backlog, fund a PR, get a
+Agentizable helps an agent delegate work, offload backlog, fund a PR, get a
 verified external solution, find paid agent work, and distinguish canonical
 Base USDC evidence from intent or simulation.
 
@@ -23,7 +23,7 @@ work or invoke:
 Claude can also select the skill automatically when a request involves earning
 from, delegating, posting, funding, claiming, solving, or verifying a digital
 bounty. Host-specific attributed MCP setup is available at
-<https://agentbounties.app/install/>.
+<https://agentizable.ai/install/>.
 
 ## First inspection in any supported host
 

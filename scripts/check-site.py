@@ -12,52 +12,52 @@ from urllib.parse import urldefrag, urlparse
 
 
 CANONICAL_PAGES = {
-    "blog/check-agent-work-before-committing-funds.html": "https://agentbounties.app/blog/check-agent-work-before-committing-funds.html",
-    "account.html": "https://agentbounties.app/account.html",
-    "check-work.html": "https://agentbounties.app/check-work.html",
-    "app-testing.html": "https://agentbounties.app/app-testing.html",
-    "api-integration.html": "https://agentbounties.app/api-integration.html",
-    "bug-fix.html": "https://agentbounties.app/bug-fix.html",
-    "index.html": "https://agentbounties.app/",
-    "earn.html": "https://agentbounties.app/earn.html",
-    "leaderboard.html": "https://agentbounties.app/leaderboard.html",
-    "competition.html": "https://agentbounties.app/competition.html",
-    "participate.html": "https://agentbounties.app/participate.html",
-    "creator-open.html": "https://agentbounties.app/creator-open.html",
-    "setup.html": "https://agentbounties.app/setup.html",
-    "funded.html": "https://agentbounties.app/funded.html",
-    "submissions.html": "https://agentbounties.app/submissions.html",
-    "recover-bounty.html": "https://agentbounties.app/recover-bounty.html",
-    "about.html": "https://agentbounties.app/about.html",
-    "blog/index.html": "https://agentbounties.app/blog/",
-    "blog/agentic-economy-needs-a-market-for-work.html": "https://agentbounties.app/blog/agentic-economy-needs-a-market-for-work.html",
-    "how-to-earn-money-with-my-ai-agent.html": "https://agentbounties.app/how-to-earn-money-with-my-ai-agent.html",
-    "install/index.html": "https://agentbounties.app/install/",
-    "collaborate/index.html": "https://agentbounties.app/collaborate/",
-    "install/bankr/index.html": "https://agentbounties.app/install/bankr/",
-    "install/chatgpt-dev/index.html": "https://agentbounties.app/install/chatgpt-dev/",
-    "install/claude-custom/index.html": "https://agentbounties.app/install/claude-custom/",
-    "install/cline/index.html": "https://agentbounties.app/install/cline/",
-    "install/cursor/index.html": "https://agentbounties.app/install/cursor/",
-    "install/github/index.html": "https://agentbounties.app/install/github/",
-    "install/glama/index.html": "https://agentbounties.app/install/glama/",
-    "install/linear/index.html": "https://agentbounties.app/install/linear/",
-    "install/mcp-so/index.html": "https://agentbounties.app/install/mcp-so/",
-    "install/mcpservers/index.html": "https://agentbounties.app/install/mcpservers/",
-    "install/mcpmarket/index.html": "https://agentbounties.app/install/mcpmarket/",
-    "install/openclaw/index.html": "https://agentbounties.app/install/openclaw/",
-    "install/vscode/index.html": "https://agentbounties.app/install/vscode/",
-    "authorize.html": "https://agentbounties.app/authorize.html",
-    "cancel.html": "https://agentbounties.app/cancel.html",
-    "earn-money-using-ai.html": "https://agentbounties.app/earn-money-using-ai.html",
-    "post-a-bounty-with-chatgpt-claude-gemini.html": "https://agentbounties.app/post-a-bounty-with-chatgpt-claude-gemini.html",
-    "metrics.html": "https://agentbounties.app/metrics.html",
-    "onramp.html": "https://agentbounties.app/onramp.html",
-    "post.html": "https://agentbounties.app/post.html",
-    "posting-draft-canary.html": "https://agentbounties.app/posting-draft-canary.html",
-    "privacy.html": "https://agentbounties.app/privacy.html",
-    "success.html": "https://agentbounties.app/success.html",
-    "terms.html": "https://agentbounties.app/terms.html",
+    "blog/check-agent-work-before-committing-funds.html": "https://agentizable.ai/blog/check-agent-work-before-committing-funds.html",
+    "account.html": "https://agentizable.ai/account.html",
+    "check-work.html": "https://agentizable.ai/check-work.html",
+    "app-testing.html": "https://agentizable.ai/app-testing.html",
+    "api-integration.html": "https://agentizable.ai/api-integration.html",
+    "bug-fix.html": "https://agentizable.ai/bug-fix.html",
+    "index.html": "https://agentizable.ai/",
+    "earn.html": "https://agentizable.ai/earn.html",
+    "leaderboard.html": "https://agentizable.ai/leaderboard.html",
+    "competition.html": "https://agentizable.ai/competition.html",
+    "participate.html": "https://agentizable.ai/participate.html",
+    "creator-open.html": "https://agentizable.ai/creator-open.html",
+    "setup.html": "https://agentizable.ai/setup.html",
+    "funded.html": "https://agentizable.ai/funded.html",
+    "submissions.html": "https://agentizable.ai/submissions.html",
+    "recover-bounty.html": "https://agentizable.ai/recover-bounty.html",
+    "about.html": "https://agentizable.ai/about.html",
+    "blog/index.html": "https://agentizable.ai/blog/",
+    "blog/agentic-economy-needs-a-market-for-work.html": "https://agentizable.ai/blog/agentic-economy-needs-a-market-for-work.html",
+    "how-to-earn-money-with-my-ai-agent.html": "https://agentizable.ai/how-to-earn-money-with-my-ai-agent.html",
+    "install/index.html": "https://agentizable.ai/install/",
+    "collaborate/index.html": "https://agentizable.ai/collaborate/",
+    "install/bankr/index.html": "https://agentizable.ai/install/bankr/",
+    "install/chatgpt-dev/index.html": "https://agentizable.ai/install/chatgpt-dev/",
+    "install/claude-custom/index.html": "https://agentizable.ai/install/claude-custom/",
+    "install/cline/index.html": "https://agentizable.ai/install/cline/",
+    "install/cursor/index.html": "https://agentizable.ai/install/cursor/",
+    "install/github/index.html": "https://agentizable.ai/install/github/",
+    "install/glama/index.html": "https://agentizable.ai/install/glama/",
+    "install/linear/index.html": "https://agentizable.ai/install/linear/",
+    "install/mcp-so/index.html": "https://agentizable.ai/install/mcp-so/",
+    "install/mcpservers/index.html": "https://agentizable.ai/install/mcpservers/",
+    "install/mcpmarket/index.html": "https://agentizable.ai/install/mcpmarket/",
+    "install/openclaw/index.html": "https://agentizable.ai/install/openclaw/",
+    "install/vscode/index.html": "https://agentizable.ai/install/vscode/",
+    "authorize.html": "https://agentizable.ai/authorize.html",
+    "cancel.html": "https://agentizable.ai/cancel.html",
+    "earn-money-using-ai.html": "https://agentizable.ai/earn-money-using-ai.html",
+    "post-a-bounty-with-chatgpt-claude-gemini.html": "https://agentizable.ai/post-a-bounty-with-chatgpt-claude-gemini.html",
+    "metrics.html": "https://agentizable.ai/metrics.html",
+    "onramp.html": "https://agentizable.ai/onramp.html",
+    "post.html": "https://agentizable.ai/post.html",
+    "posting-draft-canary.html": "https://agentizable.ai/posting-draft-canary.html",
+    "privacy.html": "https://agentizable.ai/privacy.html",
+    "success.html": "https://agentizable.ai/success.html",
+    "terms.html": "https://agentizable.ai/terms.html",
 }
 INDEXABLE_PAGES = {
     "blog/check-agent-work-before-committing-funds.html",
@@ -508,7 +508,7 @@ def check_discovery(site_dir: Path, repo_root: Path, protocol: dict) -> None:
         llms,
         [
             "get_bounty_feed",
-            "A2A Agent Card: https://api.agentbounties.app/.well-known/agent-card.json",
+            "A2A Agent Card: https://api.agentizable.ai/.well-known/agent-card.json",
             "Only a confirmed canonical `BountySettled` or `CompetitionSettledV2` event",
         ],
     )
@@ -528,7 +528,7 @@ def check_a2a_card(site_dir: Path, repo_root: Path) -> None:
     interfaces = card.get("supportedInterfaces", [])
     if interfaces != [
         {
-            "url": "https://api.agentbounties.app/a2a/v1",
+            "url": "https://api.agentizable.ai/a2a/v1",
             "protocolBinding": "HTTP+JSON",
             "protocolVersion": "1.0",
         }
@@ -581,7 +581,7 @@ def check_blog(site_dir: Path) -> None:
             '"@type": "FAQPage"',
             "Publisher disclosure:",
             "Contribution margin",
-            "Where Agent Bounties fits",
+            "Where Agentizable fits",
             "makes no earnings promise",
         ],
     )
@@ -625,11 +625,11 @@ def check_blog(site_dir: Path) -> None:
     )
     posts = json_file(site_dir / "blog" / "posts.json")
     expected_urls = {
-        "https://agentbounties.app/blog/check-agent-work-before-committing-funds.html",
-        "https://agentbounties.app/how-to-earn-money-with-my-ai-agent.html",
-        "https://agentbounties.app/blog/agentic-economy-needs-a-market-for-work.html",
-        "https://agentbounties.app/earn-money-using-ai.html",
-        "https://agentbounties.app/post-a-bounty-with-chatgpt-claude-gemini.html",
+        "https://agentizable.ai/blog/check-agent-work-before-committing-funds.html",
+        "https://agentizable.ai/how-to-earn-money-with-my-ai-agent.html",
+        "https://agentizable.ai/blog/agentic-economy-needs-a-market-for-work.html",
+        "https://agentizable.ai/earn-money-using-ai.html",
+        "https://agentizable.ai/post-a-bounty-with-chatgpt-claude-gemini.html",
     }
     if posts.get("version") != "https://jsonfeed.org/version/1.1":
         fail("blog JSON index must use JSON Feed 1.1")
@@ -654,7 +654,7 @@ def check_analytics(site_dir: Path, repo_root: Path) -> None:
         "analytics.js",
         javascript,
         [
-            "https://api.agentbounties.app/v1/analytics/events",
+            "https://api.agentizable.ai/v1/analytics/events",
             "navigator.globalPrivacyControl",
             "navigator.doNotTrack",
             'credentials: "omit"',
@@ -1138,9 +1138,9 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
     install_manifest = json_file(site_dir / "install" / "platforms.json")
     if install_manifest.get("schema_version") != "agent-bounties/install-platforms-v1":
         fail("install manifest has the wrong schema version")
-    if install_manifest.get("canonical_mcp_url") != "https://mcp.agentbounties.app/mcp":
+    if install_manifest.get("canonical_mcp_url") != "https://mcp.agentizable.ai/mcp":
         fail("install manifest must preserve the canonical untagged MCP endpoint")
-    if install_manifest.get("install_hub") != "https://agentbounties.app/install/":
+    if install_manifest.get("install_hub") != "https://agentizable.ai/install/":
         fail("install manifest has the wrong canonical install hub")
 
     expected_rails = {
@@ -1162,7 +1162,7 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
         fail(f"install manifest rail inventory drifted: {sorted(by_slug)}")
 
     for rail, platform in by_slug.items():
-        endpoint = f"https://mcp.agentbounties.app/r/{rail}/mcp"
+        endpoint = f"https://mcp.agentizable.ai/r/{rail}/mcp"
         if platform.get("mcp_url") != endpoint:
             fail(f"{rail} install route must use its exact attributed MCP endpoint")
         if not isinstance(platform.get("steps"), list) or len(platform["steps"]) < 3:
@@ -1216,9 +1216,9 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
         fail("native-directory package must record the current Glama review state")
     identity = package_manifest.get("identity", {})
     if (
-        identity.get("privacy") != "https://agentbounties.app/privacy.html"
+        identity.get("privacy") != "https://agentizable.ai/privacy.html"
         or identity.get("support") != "https://github.com/NSPG13/agent-bounties/issues"
-        or identity.get("install_hub") != "https://agentbounties.app/install/"
+        or identity.get("install_hub") != "https://agentizable.ai/install/"
     ):
         fail("native-directory package identity links drifted")
     native_targets = package_manifest.get("native_targets")
@@ -1285,9 +1285,9 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
         fail("install manifest paid-vendor inventory drifted")
     for rail in expected_paid:
         source = {"glama": "glama-paid", "mcp-so": "mcp-so-paid", "mcpmarket": "mcpmarket-paid"}.get(rail, rail)
-        endpoint = f"https://mcp.agentbounties.app/r/{source}/mcp"
-        campaign_url = f"https://agentbounties.app/install/{rail}/"
-        alias_url = f"https://install.agentbounties.app/{rail}"
+        endpoint = f"https://mcp.agentizable.ai/r/{source}/mcp"
+        campaign_url = f"https://agentizable.ai/install/{rail}/"
+        alias_url = f"https://install.agentizable.ai/{rail}"
         if paid_by_id[rail].get("paid_mcp_url", paid_by_id[rail].get("attributed_mcp_url")) != endpoint:
             fail(f"paid directory {rail} must use its exact attributed endpoint")
         if paid_by_id[rail].get("campaign_url") != campaign_url:
@@ -1329,8 +1329,8 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
 
     install_host = package_manifest.get("install_host", {})
     if (
-        install_host.get("requested_origin") != "https://install.agentbounties.app"
-        or install_host.get("current_deployable_origin") != "https://agentbounties.app/install/"
+        install_host.get("requested_origin") != "https://install.agentizable.ai"
+        or install_host.get("current_deployable_origin") != "https://agentizable.ai/install/"
         or install_host.get("truth_state") != "blocked_pending_dns_and_edge_binding"
         or install_host.get("contract") != "INSTALL_SUBDOMAIN.md"
     ):
@@ -1350,7 +1350,7 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
         "native-directory submission package",
         combined_package,
         [
-            "https://agentbounties.app/privacy.html",
+            "https://agentizable.ai/privacy.html",
             "https://github.com/NSPG13/agent-bounties/issues",
             "Only a confirmed canonical `BountySettled` event proves solver payment",
             "scripts/prepare-clawhub-skill.mjs",
@@ -1359,7 +1359,7 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
             "https://cursor.com/marketplace/publish",
             "https://linear.app/developers/agents",
             "blocked_pending_dns_and_edge_binding",
-            "https://install.agentbounties.app/{rail}",
+            "https://install.agentizable.ai/{rail}",
             "hard deployment blocker",
             "distribution-rail-mcp-canary.yml",
             "dry-run evidence only",
@@ -1381,7 +1381,7 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
             "timeout-minutes: 30",
             "persist-credentials: false",
             "python scripts/check-distribution-rail-mcp.py",
-            "--endpoint https://mcp.agentbounties.app",
+            "--endpoint https://mcp.agentizable.ai",
             "--repetitions 3",
             "scope=initialize,tools/list; analytics-only acquisition records; no product or wallet action",
             "dry-run only; never a substitute for the required excluded-operator 2-USDC funded-and-settled mainnet canary",
@@ -1439,6 +1439,9 @@ def main() -> int:
         if not (site_dir / relative).exists():
             fail(f"missing required site file: {relative}")
 
+    if (site_dir / "CNAME").read_text(encoding="utf-8").strip() != "agentizable.ai":
+        fail("static site custom domain must be agentizable.ai")
+
     html_files = {path.relative_to(site_dir).as_posix() for path in site_dir.rglob("*.html")}
     if html_files != set(CANONICAL_PAGES):
         fail(f"site HTML inventory does not match canonical page policy; found {sorted(html_files)}")
@@ -1464,6 +1467,8 @@ def main() -> int:
     for relative, canonical in CANONICAL_PAGES.items():
         path = site_dir / relative
         text = path.read_text(encoding="utf-8")
+        if re.search(r"Agent Bounties|AgentBounties\.app|agentbounties\.app", text, re.I):
+            fail(f"{relative} contains retired public branding or an active legacy URL")
         prefix = "../" * (len(PurePosixPath(relative).parts) - 1)
         analytics_version = 6
         parser = PageParser()
@@ -1534,13 +1539,13 @@ def main() -> int:
     if urls != expected_urls:
         fail(f"sitemap must list every indexable canonical website page exactly once; found {sorted(urls)}")
     for retired in (
-        "https://agentbounties.app/objective.html",
-        "https://agentbounties.app/funding.html",
+        "https://agentizable.ai/objective.html",
+        "https://agentizable.ai/funding.html",
     ):
         if retired in urls:
             fail(f"sitemap must not contain retired transactional URL {retired}")
     robots = (site_dir / "robots.txt").read_text(encoding="utf-8")
-    require_phrases("robots.txt", robots, ["User-agent: OAI-SearchBot", "Sitemap: https://agentbounties.app/sitemap.xml"])
+    require_phrases("robots.txt", robots, ["User-agent: OAI-SearchBot", "Sitemap: https://agentizable.ai/sitemap.xml"])
 
     api_policy = repo_root / "crates" / "api" / "fixtures" / "public-metrics-policy.json"
     site_policy = site_dir / "generated" / "public-metrics-policy.json"

@@ -10,7 +10,7 @@
     "google": {
       "registration_status": "registered_and_live_tested",
       "registration_container": "Google Cloud project agent-bounties-local-auth",
-      "client_name": "Agent Bounties Local Auth",
+      "client_name": "Agentizable Local Auth",
       "client_type": "Web application",
       "authorized_javascript_origins": [
         "http://127.0.0.1:4173"
@@ -18,12 +18,12 @@
       "redirect_uris": [
         "http://127.0.0.1:4173/auth/callback/google"
       ],
-      "consent_domain": "agentbounties.app"
+      "consent_domain": "agentizable.ai"
     },
     "github": {
       "registration_status": "registered_and_live_tested",
-      "client_name": "Agent Bounties Local Auth",
-      "homepage_url": "https://agentbounties.app/",
+      "client_name": "Agentizable Local Auth",
+      "homepage_url": "https://agentizable.ai/",
       "redirect_uris": [
         "http://127.0.0.1:4173/auth/callback/github"
       ]
@@ -31,7 +31,7 @@
     "microsoft": {
       "registration_status": "registered_and_live_tested",
       "registration_container": "Microsoft Entra Default Directory (zeroismmexicogmail.onmicrosoft.com)",
-      "client_name": "Agent Bounties Local Auth",
+      "client_name": "Agentizable Local Auth",
       "tenant_authority": "common",
       "supported_account_audience": "personal_and_organizational",
       "client_secret_lifetime_days": 90,
@@ -42,7 +42,7 @@
     "amazon": {
       "registration_status": "registered_and_live_tested",
       "registration_container": "Amazon Developer security profile amzn1.application.16d038ecc403449d9a39b21a1473e2c2",
-      "security_profile_name": "Agent Bounties Local Auth",
+      "security_profile_name": "Agentizable Local Auth",
       "allowed_origins": [
         "http://127.0.0.1:4173"
       ],
@@ -52,7 +52,7 @@
     },
     "enterprise": {
       "registration_status": "awaiting_organization_identity_provider",
-      "client_name": "Agent Bounties Company SSO",
+      "client_name": "Agentizable Company SSO",
       "redirect_uris": [
         "http://127.0.0.1:4173/auth/callback/enterprise"
       ]

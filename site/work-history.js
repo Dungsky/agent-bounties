@@ -9,7 +9,7 @@
     { id: "autonomous-v1", protocol: "agent-bounties/autonomous-v1", factory: "0x082c52131aaf0c56e76b075f895eab6fcab6d2f9", path: "autonomous-bounties", kind: "bounty_settled", creation: "canonical_bounty_created", clone: "bounty_contract", bond: "claim_bond_returned" },
     { id: "open-competition-v1", protocol: "agent-bounties/open-competition-v1", factory: "0x9e9382beb8b1a45b737d484b5eafa7b8779d4ca5", path: "open-competition-v1", kind: "bounty_settled", creation: "canonical_competition_created", clone: "bounty_contract", bond: "entry_bond_returned" },
     { id: "open-competition-v2-beta3", protocol: "agent-bounties/open-competition-v2-beta3", factory: "0x29d0e39e0c03797c690633535722e6b34a69a78a", path: "open-competition-v2-beta3", kind: "competition_settled", creation: "canonical_competition_created", clone: "competition", bond: null }
-  ].map(source => Object.freeze({ ...source, url: `https://api.agentbounties.app/v1/base/${source.path}/events?network=${NETWORK}` })));
+  ].map(source => Object.freeze({ ...source, url: `https://api.agentizable.ai/v1/base/${source.path}/events?network=${NETWORK}` })));
   const LIMITATIONS = Object.freeze([
     "Indexed observations from three public event feeds; no fresh chain receipt validation or complete lifetime history.",
     "Older factories, off-platform work, other payment rails and creator awards are outside this lookup. Current feeds can lag the chain.",

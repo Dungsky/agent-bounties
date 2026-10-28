@@ -23,7 +23,7 @@ DEFAULT_CONTRACT_MANIFEST = (
     ROOT / "deployments" / "bounded-agent-wallet-v2-base-mainnet.json"
 )
 RPC_DEFAULT = "https://mainnet.base.org"
-API_DEFAULT = "https://api.agentbounties.app"
+API_DEFAULT = "https://api.agentizable.ai"
 ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
 BYTES32_RE = re.compile(r"^0x[0-9a-fA-F]{64}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -636,7 +636,7 @@ def issue_body(
 
 How did you find this bounty, what made it worth attempting, and what should be easier next time?
 
-**Post your own bounty:** https://agentbounties.app/#post-a-bounty
+**Post your own bounty:** https://agentizable.ai/#post-a-bounty
 
 <!-- agent-bounties-github-metadata-v1 -->
 ## Automation metadata

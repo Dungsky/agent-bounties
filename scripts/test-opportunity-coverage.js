@@ -67,7 +67,7 @@ test('the rendered board shows a healthy card and an explicit partial-list notic
     return nodes.get(selector);
   }};
   const payload = projection();
-  const win = {location:new URL('https://agentbounties.app/marketplace.html'), setInterval() {}, async fetch() {return {ok:true,json:async()=>payload};}};
+  const win = {location:new URL('https://agentizable.ai/marketplace.html'), setInterval() {}, async fetch() {return {ok:true,json:async()=>payload};}};
   market.startBoard(win, doc);
   await new Promise(resolve => setImmediate(resolve));
   assert.match(nodes.get('[data-market-summary]').textContent, /full count is unknown/);

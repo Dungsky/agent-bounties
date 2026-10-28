@@ -137,7 +137,7 @@
     const location = locationLike || (typeof window !== "undefined" ? window.location : null);
     return !location || isLocalHost(location.hostname)
       ? `/auth${suffix}`
-      : `https://api.agentbounties.app/v1/site-auth${suffix}`;
+      : `https://api.agentizable.ai/v1/site-auth${suffix}`;
   }
 
   function authProviderPath(provider, locationLike) {
@@ -174,14 +174,14 @@
     const cleanPrompt = postingPrompt.withReviewUrl(prompt, reviewUrl);
     const retainsSource = reviewUrl && ["utm_source", "utm_campaign", "analytics"].some((key) => new URL(reviewUrl).searchParams.has(key));
     const attributedPrompt = key === "gpt" && !retainsSource
-      ? `${cleanPrompt}\n\nWhen linking me back to the market, keep https://agentbounties.app/ as the canonical URL and use this measured handoff URL: https://agentbounties.app/?utm_source=chatgpt&utm_medium=assistant_handoff&utm_campaign=post_with_agent`
+      ? `${cleanPrompt}\n\nWhen linking me back to the market, keep https://agentizable.ai/ as the canonical URL and use this measured handoff URL: https://agentizable.ai/?utm_source=chatgpt&utm_medium=assistant_handoff&utm_campaign=post_with_agent`
       : cleanPrompt;
     const encoded = encodeURIComponent(attributedPrompt);
     const links = {
       gpt: {
         label: "ChatGPT",
         // Matches OpenAI Learn's desktop composer: prompt + a shared browser tab.
-        desktopUrl: `codex://threads/new?prompt=${encoded}&browserUrl=${encodeURIComponent(reviewUrl || "https://agentbounties.app/post.html?from=webmcp")}`,
+        desktopUrl: `codex://threads/new?prompt=${encoded}&browserUrl=${encodeURIComponent(reviewUrl || "https://agentizable.ai/post.html?from=webmcp")}`,
         webUrl: `https://chatgpt.com/?prompt=${encoded}`,
         webPrefillsPrompt: true,
       },
@@ -294,7 +294,7 @@
   function competitionChildBrief(item) {
     const window = item.evidence_requirements.scoring_window;
     const windowText = `${window.starts_at} through ${window.ends_at}`;
-    return `Qualifying Agent Bounties demand brief
+    return `Qualifying Agentizable demand brief
 
 Parent competition: ${item.source_id}
 Entering/funding wallet: 0xYOUR_BASE_WALLET
@@ -352,7 +352,7 @@ ${competitionChildBrief(item)}`;
     const reason = typeof error === "string" ? error : error?.reason || error?.code;
     const messages = {
       4001: "Wallet connection or signature was cancelled.",
-      invalid_origin: "Wallet linking is available only from an approved Agent Bounties site.",
+      invalid_origin: "Wallet linking is available only from an approved Agentizable site.",
       invalid_wallet_address: "The wallet did not return a valid EVM address.",
       signature_verifier_unavailable: "The wallet signature verifier is unavailable.",
       wallet_challenge_invalid: "The ownership request expired. Please try linking again.",
@@ -361,7 +361,7 @@ ${competitionChildBrief(item)}`;
       wallet_limit_reached: "This account has reached its linked-wallet limit.",
       wallet_signature_invalid: "The signature did not prove control of that wallet.",
       wallet_selector_unavailable: "The wallet chooser could not load. Reload the page and try again.",
-      coinbase_startup_unavailable: "Coinbase wallet configuration could not load. Retry, open Agent Bounties in your phone browser, or choose another wallet. Your draft is saved.",
+      coinbase_startup_unavailable: "Coinbase wallet configuration could not load. Retry, open Agentizable in your phone browser, or choose another wallet. Your draft is saved.",
       coinbase_startup_paused: "Coinbase is still unavailable. Wait a minute before retrying, or choose another wallet. Your draft is saved.",
       wallet_address_mismatch: "This signing session returned a different address. Select the original wallet or its original sign-in method. No wallet was linked or payment requested.",
     };
@@ -382,7 +382,7 @@ ${competitionChildBrief(item)}`;
     return "unavailable";
   }
 
-  function accountInboxView(payload, origin = "https://agentbounties.app") {
+  function accountInboxView(payload, origin = "https://agentizable.ai") {
     const labels = { needs_action: "Needs action", recover_funds: "Recover funds", drafts: "Saved drafts", working: "Working", awaiting_review: "Awaiting review", paid: "Paid", completed: "Past activity" };
     const groups = Object.entries(labels).map(([id, label]) => ({ id, label, items: [] }));
     const drafts = payload?.saved_drafts, activity = payload?.activity_inbox;
@@ -390,7 +390,7 @@ ${competitionChildBrief(item)}`;
     const allowed = (value) => {
       try {
         const url = new URL(String(value), knownOrigin);
-        return [knownOrigin, "https://agentbounties.app"].includes(url.origin)
+        return [knownOrigin, "https://agentizable.ai"].includes(url.origin)
           && ["/post", "/post.html", "/participate", "/participate.html", "/competition", "/competition.html"].includes(url.pathname)
           && !url.username && !url.password ? url.href : null;
       } catch (_) { return null; }
@@ -969,7 +969,7 @@ ${competitionChildBrief(item)}`;
           : accountMode === "signup" ? "Choose a provider to get started." : "Welcome back. Choose your provider.";
         openButton.textContent = currentUser ? "Account" : "Create an account";
         if (modeToggle) modeToggle.textContent = accountMode === "signup" ? "Sign in" : "Create an account";
-        if (switchLabel) switchLabel.textContent = accountMode === "signup" ? "Already have an account?" : "New to AgentBounties.app?";
+        if (switchLabel) switchLabel.textContent = accountMode === "signup" ? "Already have an account?" : "New to Agentizable.ai?";
         if (returnButton) returnButton.hidden = !postingAuth?.pending(win);
         if (setupSteps) {
           setupSteps.hidden = ready;
@@ -1229,14 +1229,14 @@ ${competitionChildBrief(item)}`;
           else sessionAvatar.removeAttribute("src");
         }
         if (sessionAvatarFallback) {
-          const initials = String(user.name || user.email || "AB")
+          const initials = String(user.name || user.email || "A")
             .split(/\s+/)
             .filter(Boolean)
             .slice(0, 2)
             .map((part) => part[0])
             .join("")
             .toUpperCase();
-          sessionAvatarFallback.textContent = initials || "AB";
+          sessionAvatarFallback.textContent = initials || "A";
         }
         renderProviderAvailability();
       };
@@ -1565,7 +1565,7 @@ ${competitionChildBrief(item)}`;
       if (manualLink) manualLink.hidden = postingRequest.requested;
       let launcherPrompt = BOUNTY_POSTING_PROMPT;
       let fallbackProvider = null;
-      const reviewDestination = () => win.agentBountiesAnalytics?.handoffUrl?.("https://agentbounties.app/post.html?from=webmcp") || null;
+      const reviewDestination = () => win.agentBountiesAnalytics?.handoffUrl?.("https://agentizable.ai/post.html?from=webmcp") || null;
       const currentLauncherPrompt = () => postingPrompt.withReviewUrl(launcherPrompt, reviewDestination());
       let contextReady = !postingRequest.requested;
       let contextStatus = postingRequest.requested ? "Verifying the parent competition and reviewed child-bounty brief…" : "";

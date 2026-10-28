@@ -13,7 +13,7 @@ assert.ok(start > 0 && end > start, 'card payment controller not found');
 function controller(response, released = 'true') {
   const button = () => ({ hidden: true, disabled: true, dataset: { cardPaymentEnabled: released } });
   const context = {
-    API: 'https://api.agentbounties.app',
+    API: 'https://api.agentizable.ai',
     ui: { card: button(), cardNote: button() },
     state: {
       draft: { title: 'T', goal: 'G', acceptance_criteria: ['C'], evidence_schema: { type: 'object' } },
@@ -64,7 +64,7 @@ test('a confirmed quote opens its itemized order page and sends the exact solver
   await payByCard();
   assert.equal(context.opened, `account.html?managed_quote=${ID}`);
   const [url, body] = context.requests[0];
-  assert.equal(url, 'https://api.agentbounties.app/v1/managed-service/bounty-quotes');
+  assert.equal(url, 'https://api.agentizable.ai/v1/managed-service/bounty-quotes');
   assert.equal(body.solver_reward_micro_usdc, 25000000);
   assert.equal(body.document.benchmark.engine, 'customer_review_v1');
 });

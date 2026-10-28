@@ -29,7 +29,7 @@ PRIMARY_PROTOCOL = "open_competition_v2"
 
 SOURCE_DEFINITIONS: dict[str, dict[str, Any]] = {
     "autonomous": {
-        "url": "https://api.agentbounties.app/v1/base/autonomous-bounties/events?network=base-mainnet",
+        "url": "https://api.agentizable.ai/v1/base/autonomous-bounties/events?network=base-mainnet",
         "envelope_schema": None,
         "factory_contract": "0x082c52131aaf0c56e76b075f895eab6fcab6d2f9",
         "protocol_version": "agent-bounties/autonomous-v1",
@@ -40,7 +40,7 @@ SOURCE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "verifier_reward_field": "verifier_reward",
     },
     "open_competition_v1": {
-        "url": "https://api.agentbounties.app/v1/base/open-competition-v1/events?network=base-mainnet",
+        "url": "https://api.agentizable.ai/v1/base/open-competition-v1/events?network=base-mainnet",
         "envelope_schema": "agent-bounties/open-competition-v1-events-v1",
         "factory_contract": "0x9e9382beb8b1a45b737d484b5eafa7b8779d4ca5",
         "protocol_version": "agent-bounties/open-competition-v1",
@@ -51,7 +51,7 @@ SOURCE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "verifier_reward_field": "verifier_reward",
     },
     "open_competition_v2": {
-        "url": "https://api.agentbounties.app/v1/base/open-competition-v2-beta3/events?network=base-mainnet",
+        "url": "https://api.agentizable.ai/v1/base/open-competition-v2-beta3/events?network=base-mainnet",
         "envelope_schema": "agent-bounties/open-competition-v2-events-v1",
         "factory_contract": "0x29d0e39e0c03797c690633535722e6b34a69a78a",
         "protocol_version": "agent-bounties/open-competition-v2-beta3",

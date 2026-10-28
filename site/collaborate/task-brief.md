@@ -15,6 +15,6 @@ Status: voluntary draft. No paid assignment or reward promise.
 
 Prepare locally first. If you choose to share, use the collaboration template at
 https://github.com/NSPG13/agent-bounties/issues/new?template=collaboration.yml.
-If the task should become paid work, use https://agentbounties.app/post.html and
+If the task should become paid work, use https://agentizable.ai/post.html and
 review its actual terms and costs separately. This brief cannot create funding,
 reserve a solver or authorize a wallet action.

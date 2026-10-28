@@ -1,4 +1,4 @@
-# AgentBounties.app forest UI review
+# Agentizable forest UI review
 
 Implemented in the `codex/forest-ui-redesign` worktree from remote main
 `8848f747224135dd135151c37152f282ee1e7c21`, including the September 10 durable

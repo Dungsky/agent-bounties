@@ -6,7 +6,7 @@
 > bounties use `agent-bounties/autonomous-v1` as described in
 > [the autonomous protocol](autonomous-protocol.md).
 
-This note records the design constraint for Agent Bounties settlement signing:
+This note records the design constraint for Agentizable settlement signing:
 make payout broadcast easy, but do not put an unrestricted private key in the
 repo, browser logs, GitHub issues, or hosted API process by default.
 

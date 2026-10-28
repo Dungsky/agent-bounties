@@ -51,9 +51,9 @@ test('target accepts one non-nil UUID, strips untrusted return fields and reject
   for (const search of ['', '?managed_quote=evil', '?managed_order=00000000-0000-0000-0000-000000000000', `?managed_quote=${id}&managed_order=${id}`, `?managed_order=${id}&managed_order=${id}`]) assert.throws(() => core.target(search));
 });
 test('API origin and sign-in identity cannot be redirected or coerced', () => {
-  assert.equal(core.apiOrigin(new URL('https://agentbounties.app')), 'https://api.agentbounties.app');
+  assert.equal(core.apiOrigin(new URL('https://agentizable.ai')), 'https://api.agentizable.ai');
   assert.equal(core.apiOrigin(new URL('http://127.0.0.1:18680')), 'http://127.0.0.1:3000');
-  for (const url of ['https://evil.example', 'https://agentbounties.app.evil.example', 'file:///tmp/page', 'http://agentbounties.app']) assert.throws(() => core.apiOrigin(new URL(url)));
+  for (const url of ['https://evil.example', 'https://agentizable.ai.evil.example', 'file:///tmp/page', 'http://agentizable.ai']) assert.throws(() => core.apiOrigin(new URL(url)));
   assert.equal(core.session({ authenticated: false }), null);
   assert.equal(core.session({ authenticated: true, user: { id: account } }), account);
   for (const value of [{}, { authenticated: 'true' }, { authenticated: true, user: { id: account.toUpperCase() } }, { authenticated: true, user: { id: 123 } }, { authenticated: true, user: { id: [account] } }]) assert.throws(() => core.session(value));

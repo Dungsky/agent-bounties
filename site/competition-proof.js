@@ -31,7 +31,7 @@
       || BigInt(q.net_prize_if_win) !== units(q.gross_prize) - units(q.maximum_charge)) throw new Error("The quote totals do not reconcile.");
     const resource = new URL(c.resource?.url);
     if (resource.pathname !== `${ROOT}/proof-jobs/${result.proof_job_id}/payment` || resource.search || resource.hash
-      || resource.origin !== "https://api.agentbounties.app") throw new Error("The payment challenge points to an unexpected service.");
+      || resource.origin !== "https://api.agentizable.ai") throw new Error("The payment challenge points to an unexpected service.");
     return q;
   }
   function paymentData(result, wallet, nonce, evm) {
@@ -202,7 +202,7 @@
         if (item.evidence_requirements?.program_profile === "forward-canonical-gmv-attribution-metric-v2") {
           if (flow.phase(item) !== "ended") throw new Error("The scoring window is still open. Finish qualifying work first; no proof charge is needed yet.");
           const url = new URL(item.evidence_requirements.snapshot_url, win.location.href);
-          if (!([win.location.origin, "https://agentbounties.app"].includes(url.origin)) || !/^\/generated\/gmv-snapshots\/[a-z0-9-]+\.json$/.test(url.pathname)) throw new Error("The published scoring snapshot is unavailable.");
+          if (!([win.location.origin, "https://agentizable.ai"].includes(url.origin)) || !/^\/generated\/gmv-snapshots\/[a-z0-9-]+\.json$/.test(url.pathname)) throw new Error("The published scoring snapshot is unavailable.");
           const response = await win.fetch(new URL(url.pathname, win.location.origin).href, { cache: "no-store", credentials: "omit" });
           if (!response.ok) throw new Error("The scoring snapshot is not published yet. Wait for its two committed attestations; do not pay for a different metric.");
           const snapshot = await response.json();

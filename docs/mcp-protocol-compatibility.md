@@ -10,7 +10,7 @@ read-only probe passes:
 
 ```bash
 python scripts/check-mcp-protocol-eras.py \
-  --endpoint https://mcp.agentbounties.app/mcp \
+  --endpoint https://mcp.agentizable.ai/mcp \
   --expect dual
 ```
 
@@ -32,7 +32,7 @@ endpoint therefore detects the era from the modern protocol header/request
 metadata or `server/discover`; it does not mix modern fields into legacy
 responses.
 
-## Why this change benefits Agent Bounties
+## Why this change benefits Agentizable
 
 At first principles, connection state is hidden coupling: if correctness
 depends on which server handled an earlier handshake, requests need sticky
@@ -48,7 +48,7 @@ The remaining incentives line up across participants:
   features through extensions instead of expanding the core handshake;
 - gateways can route, authorize, rate-limit, and observe a method or tool from
   `Mcp-Method` and `Mcp-Name` without parsing the entire JSON body;
-- Agent Bounties can keep the existing ChatGPT/legacy lane while deploying the
+- Agentizable can keep the existing ChatGPT/legacy lane while deploying the
   modern lane independently, then measure adoption before retiring anything.
 
 The tradeoff is that each modern request carries more metadata, and the server

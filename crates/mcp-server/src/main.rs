@@ -569,14 +569,14 @@ tool_args! {
             "meta_child": {"type": ["object", "null"], "description": "Preserve the routed parent binding. The review page verifies the canonical parent before applying any child economics.", "properties": {"parent_bounty_contract": {"type": "string", "pattern": "^0x[0-9a-fA-F]{40}$"}, "intended_child_solver": {"type": ["string", "null"], "pattern": "^0x[0-9a-fA-F]{40}$"}}, "required": ["parent_bounty_contract"], "additionalProperties": false},
             "source_url": nullable_string_property("Optional public HTTPS source issue or task URL."),
             "crowdfund": {"type": "boolean", "default": false, "description": "Keep false to fund on creation. Set true only to deposit 0 USDC now."},
-            "discovery_source": nullable_string_property("Optional public attribution for how the poster found Agent Bounties."),
+            "discovery_source": nullable_string_property("Optional public attribution for how the poster found Agentizable."),
             "benchmark": {"type": ["object", "null"], "description": "Optional exact public sandboxed_regression_v1 benchmark. Supply this and evidence_schema together. The source commit, benchmark digest, OCI image, command, and resource limits are immutable bounty terms."},
             "evidence_schema": {"type": ["object", "null"], "description": "Optional public submission-evidence schema paired with benchmark. Supply both verifier fields or neither."},
             "image_prompt": {"type": "string", "minLength": 1, "maxLength": 4000, "description": "Optional exact prompt used to generate a user-approved bounty image. Supply this, image_alt_text, and bounty_image together, or omit all three to use the deterministic fallback visual."},
             "image_alt_text": {"type": "string", "minLength": 1, "maxLength": 500, "description": "Optional accessible description of the approved image. Supply this, image_prompt, and bounty_image together."},
             "bounty_image": {
                 "type": "object",
-                "description": "Optional approved image generated in a compatible AI conversation. Agent Bounties stores this exact file; omit it and both image text fields to use the deterministic fallback visual.",
+                "description": "Optional approved image generated in a compatible AI conversation. Agentizable stores this exact file; omit it and both image text fields to use the deterministic fallback visual.",
                 "properties": {
                     "download_url": {"type": "string"},
                     "file_id": {"type": "string"},
@@ -645,7 +645,7 @@ tool_args! {
     schema object_tool_schema(
         json!({
             "bounty_id": string_property("Public unfunded bounty UUID."),
-            "agent_id": string_property("Registered Agent Bounties agent UUID."),
+            "agent_id": string_property("Registered Agentizable agent UUID."),
             "summary": {"type": "string", "minLength": 1, "maxLength": 1000},
             "deliverable_markdown": {"type": "string", "minLength": 1, "maxLength": 40000},
             "evidence": {"type": "object", "description": "Replayable public evidence; do not include secrets."}
@@ -2528,7 +2528,7 @@ async fn oauth_protected_resource(State(state): State<SharedState>) -> Response 
         "resource": resource,
         "authorization_servers": [resource],
         "scopes_supported": [ANALYTICS_EXCLUSION_SCOPE],
-        "resource_documentation": "https://agentbounties.app/docs/interaction-guide.html"
+        "resource_documentation": "https://agentizable.ai/docs/interaction-guide.html"
     }))
     .into_response()
 }
@@ -2932,7 +2932,7 @@ async fn tools() -> Json<Vec<ToolDescriptor>> {
         ),
         tool(
             "prepare_bounty_post",
-            "Use this when a person wants their current AI assistant to prepare a reviewable Agent Bounties draft. It returns a portable card and secure review URL, moves no funds, and requests no wallet signature.",
+            "Use this when a person wants their current AI assistant to prepare a reviewable Agentizable draft. It returns a portable card and secure review URL, moves no funds, and requests no wallet signature.",
             PrepareBountyPostArgs::input_schema(),
         ),
         tool(
@@ -4588,7 +4588,7 @@ fn autonomous_bounty_terms_property() -> Value {
             "evidence_schema": object_property("Required submission evidence fields and formats."),
             "verification_policy": object_property("Complete immutable verifier mechanism, engines, wallets, thresholds, model versions, prompts, rubrics, and decoding parameters."),
             "source_url": nullable_string_property("Optional public issue, repository, or task source URL."),
-            "discovery_source": nullable_string_property("Optional answer describing how the poster found Agent Bounties.")
+            "discovery_source": nullable_string_property("Optional answer describing how the poster found Agentizable.")
         },
         "required": ["schema_version", "contract_terms", "title", "goal", "acceptance_criteria", "benchmark", "evidence_schema", "verification_policy"],
         "additionalProperties": false
@@ -8128,7 +8128,7 @@ mod tests {
 
     #[test]
     fn oauth_authorization_accepts_only_chatgpt_callbacks_scoped_resource_and_s256_pkce() {
-        let resource = "https://mcp.agentbounties.app";
+        let resource = "https://mcp.agentizable.ai";
         let request = OAuthAuthorizationQuery {
             response_type: "code".to_string(),
             client_id: "https://chatgpt.com/oauth/agent-bounties/client.json".to_string(),
@@ -8150,7 +8150,7 @@ mod tests {
         ));
 
         let mut wrong_resource = request.clone();
-        wrong_resource.resource = Some("https://api.agentbounties.app".to_string());
+        wrong_resource.resource = Some("https://api.agentizable.ai".to_string());
         assert!(!validate_oauth_authorization_request(
             &wrong_resource,
             resource
@@ -8174,7 +8174,7 @@ mod tests {
                 redirect_uri: "https://chatgpt.com/connector/oauth/callback_123".to_string(),
                 code_challenge: challenge,
                 scope: ANALYTICS_EXCLUSION_SCOPE.to_string(),
-                resource: "https://mcp.agentbounties.app".to_string(),
+                resource: "https://mcp.agentizable.ai".to_string(),
                 expires_at: Utc::now() + chrono::Duration::minutes(1),
             },
         );
@@ -8184,7 +8184,7 @@ mod tests {
             redirect_uri: "https://chatgpt.com/connector/oauth/callback_123".to_string(),
             client_id: "agent-bounties-chatgpt-11111111-1111-4111-8111-111111111111".to_string(),
             code_verifier: verifier,
-            resource: Some("https://mcp.agentbounties.app".to_string()),
+            resource: Some("https://mcp.agentizable.ai".to_string()),
         };
         let response = oauth_token(State(state.clone()), Form(request)).await;
         assert_eq!(response.status(), StatusCode::OK);
@@ -8197,7 +8197,7 @@ mod tests {
         assert!(analytics_oauth_access_token_is_authorized(
             "analytics-secret",
             access_token,
-            "https://mcp.agentbounties.app",
+            "https://mcp.agentizable.ai",
             Utc::now()
         ));
         assert_eq!(body["scope"], ANALYTICS_EXCLUSION_SCOPE);
@@ -8224,19 +8224,19 @@ mod tests {
         assert!(!analytics_oauth_access_token_is_authorized(
             "wrong-secret",
             access_token,
-            "https://mcp.agentbounties.app",
+            "https://mcp.agentizable.ai",
             Utc::now()
         ));
         let expired = analytics_oauth_access_token(
             "analytics-secret",
-            "https://mcp.agentbounties.app",
+            "https://mcp.agentizable.ai",
             Utc::now() - chrono::Duration::days(91),
         )
         .unwrap();
         assert!(!analytics_oauth_access_token_is_authorized(
             "analytics-secret",
             &expired,
-            "https://mcp.agentbounties.app",
+            "https://mcp.agentizable.ai",
             Utc::now()
         ));
 
@@ -9392,7 +9392,7 @@ mod tests {
     async fn llms_txt_exposes_agent_orientation() {
         let text = llms_txt().await;
 
-        assert!(text.contains("# Agent Bounties"));
+        assert!(text.contains("# Agentizable"));
         assert!(text.contains("agent-bounties/autonomous-v1"));
         assert!(text.contains("## MCP default"));
         assert!(text.contains("server/discover"));
@@ -9451,7 +9451,7 @@ mod tests {
         let response = mcp_json(json!({
             "items": [{
                 "opportunity_id": "eip155:8453:agent-bounties/autonomous-v1:0xabc",
-                "public_url": "https://agentbounties.app/?bounty=0xabc"
+                "public_url": "https://agentizable.ai/?bounty=0xabc"
             }]
         }));
         let enriched = attach_mcp_discovery_links(response, "opportunity_list");
@@ -9461,7 +9461,7 @@ mod tests {
             .expect("discovery links");
         assert_eq!(
             links["canonical_url"],
-            "https://agentbounties.app/?bounty=0xabc"
+            "https://agentizable.ai/?bounty=0xabc"
         );
         let attributed = Url::parse(links["attributed_url"].as_str().unwrap()).unwrap();
         let query = attributed.query_pairs().collect::<HashMap<_, _>>();
@@ -9589,7 +9589,7 @@ mod tests {
             operator_api_token: Some("operator-secret".to_string()),
             analytics_exclusion_token: Some(token.to_string()),
             distribution_attribution_signing_secret: None,
-            mcp_base_url: "https://mcp.agentbounties.app".to_string(),
+            mcp_base_url: "https://mcp.agentizable.ai".to_string(),
             oauth_authorizations: Mutex::new(HashMap::new()),
             oauth_codes: Mutex::new(HashMap::new()),
             store: None,

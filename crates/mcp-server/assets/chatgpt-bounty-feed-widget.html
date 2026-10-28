@@ -6,8 +6,8 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <meta name="robots" content="noindex,nofollow">
     <meta name="color-scheme" content="dark">
-    <meta name="description" content="A branded, conversation-first live Agent Bounties feed for ChatGPT.">
-    <title>Agent Bounties live feed</title>
+    <meta name="description" content="A branded, conversation-first live Agentizable feed for ChatGPT.">
+    <title>Agentizable live feed</title>
     <style>
       :root {
         color-scheme: dark;
@@ -408,7 +408,7 @@
       <header class="topbar">
         <div class="brand-mark" aria-hidden="true">AB</div>
         <div class="brand-copy">
-          <p class="eyebrow">Agent Bounties · Base USDC</p>
+          <p class="eyebrow">Agentizable · Base USDC</p>
           <h1>Live bounties</h1>
         </div>
         <span class="topbar-spacer"></span>
@@ -748,13 +748,13 @@
 
         function postPrompt() {
           return [
-            "I want to post a new bounty with Agent Bounties.",
+            "I want to post a new bounty with Agentizable.",
             "Start a focused conversation about this bounty and interview me one useful question at a time.",
             "Collect the title, goal, acceptance criteria, relevant context, solver reward, verifier reward, funding choice, deadline, and verification requirements.",
             "If the objective is too broad, propose a logical set of smaller independently reviewable bounties and let me choose the breakdown.",
             "When those details are complete, write a specific image prompt based on the bounty and generate one unique bounty image using my ChatGPT account.",
             "Show me that exact image with the complete bounty summary and ask for my explicit approval.",
-            "Only after I approve both, pass the approved image file, its exact generation prompt, and accessible alt text to prepare_bounty_post. Agent Bounties must store that file and must not generate a replacement.",
+            "Only after I approve both, pass the approved image file, its exact generation prompt, and accessible alt text to prepare_bounty_post. Agentizable must store that file and must not generate a replacement.",
             "Use first-party hosted authorization for any wallet, payment, identity, or signature step.",
             "Never ask me to enter a private key, seed phrase, card number, wallet signature, or payment authorization in ChatGPT.",
           ].join(" ");
@@ -762,7 +762,7 @@
 
         function commentPrompt(item) {
           return [
-            `I want to comment on the Agent Bounties bounty "${item.title}" (${idOf(item)}).`,
+            `I want to comment on the Agentizable bounty "${item.title}" (${idOf(item)}).`,
             "Ask me what I want to say, help me make it concise and useful, then show the exact public comment and ask for my confirmation before publishing it.",
             "After confirmed publication, refresh the bounty and offer to help me share the comment.",
           ].join(" ");
@@ -770,7 +770,7 @@
 
         function sharePrompt(item) {
           return [
-            `Help me share the Agent Bounties bounty "${item.title}" (${idOf(item)}), currently marked "${statusLabel(item)}".`,
+            `Help me share the Agentizable bounty "${item.title}" (${idOf(item)}), currently marked "${statusLabel(item)}".`,
             "Ask which social platform and tone I want.",
             "Then prepare a factual caption and the complete social card using this bounty's displayed image, keeping the canonical evidence boundary explicit.",
             "Show me the final share package before opening any external social destination; sharing must remain optional.",
@@ -779,7 +779,7 @@
 
         function solvePrompt(item) {
           return [
-            `I want to solve the Agent Bounties bounty "${item.title}" (${idOf(item)}).`,
+            `I want to solve the Agentizable bounty "${item.title}" (${idOf(item)}).`,
             `Its displayed reward is ${amount(item.reward)} and its claim bond is ${amount(item.bond)}.`,
             `Review the goal, acceptance criteria, bond, deadline, and "${item.verification_method || "public evidence"}" verification method with me.`,
             "Ask only for missing public details in the conversation.",
@@ -834,7 +834,7 @@
               title: "Ship a reliable MCP Apps integration test",
               goal: "Add a deterministic end-to-end test that proves the in-chat bounty feed renders, starts conversational actions, and preserves canonical evidence boundaries.",
               categories: ["Engineering"],
-              public_url: "https://agentbounties.app/",
+              public_url: "https://agentizable.ai/",
               work_state: "claimable",
               payment_state: "escrowed",
               payment_committed: true,

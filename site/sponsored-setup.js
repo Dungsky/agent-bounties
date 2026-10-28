@@ -1,7 +1,7 @@
 (function(win,doc){
   "use strict";
   const core=win.AgentBountiesSponsoredSetup,evm=win.AgentBountiesEvm,$=id=>doc.getElementById(id),key="agentbounties:sponsored-setup:v1",lower=v=>String(v||"").toLowerCase();
-  const api=["localhost","127.0.0.1","[::1]"].includes(win.location.hostname)?"http://127.0.0.1:3000":"https://api.agentbounties.app";
+  const api=["localhost","127.0.0.1","[::1]"].includes(win.location.hostname)?"http://127.0.0.1:3000":"https://api.agentizable.ai";
   let record=null,provider=null,wallet=null,busy=false,available=false,complete=false,generation=0,blocked=false;
   const when=n=>{const date=new Date(n*1000);return Number.isNaN(date.getTime())?`Unix timestamp ${n}`:date.toISOString();};
   const message=s=>{$("setup-status").textContent=s;};

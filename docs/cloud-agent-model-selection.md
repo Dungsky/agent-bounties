@@ -1,6 +1,6 @@
 # Cloud Agent Model Selection
 
-Agent Bounties chooses cloud models with the exact Objective Compiler prompt,
+Agentizable chooses cloud models with the exact Objective Compiler prompt,
 strict response schema, repair pass, and deterministic validators used by the
 hosted API. Headline benchmarks do not authorize a production model change.
 

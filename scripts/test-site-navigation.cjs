@@ -65,7 +65,7 @@ async function main() {
       let reference;
       for (const file of pages) {
         if (file === "posting-draft-canary.html") {
-          const sessionUrl = "https://api.agentbounties.app/v1/site-auth/session";
+          const sessionUrl = "https://api.agentizable.ai/v1/site-auth/session";
           await page.route(sessionUrl, route => route.fulfill({
             headers: { "Cache-Control": "no-store" },
             json: { authenticated: false, user: null, posting_drafts_enabled: false },

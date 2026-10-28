@@ -1,7 +1,7 @@
 "use strict";
 const fs = require("node:fs");
 const { validate } = require("../../site/collaborate/recognition.js");
-const URL = "https://agentbounties.app/collaborate/recognition.json";
+const URL = "https://agentizable.ai/collaborate/recognition.json";
 const LIMIT = 1000000;
 function profile(value) {
   if (value !== undefined && (typeof value !== "string" || !/^https:\/\/github\.com\/[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(value))) throw Error("Invalid public profile filter.");

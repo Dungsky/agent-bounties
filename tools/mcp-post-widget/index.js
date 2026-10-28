@@ -7,7 +7,7 @@ import { App } from "@modelcontextprotocol/ext-apps/app-with-deps";
   let connected = false;
   const byId = (id) => document.getElementById(id);
   const app = new App(
-    { name: "Agent Bounties bounty review", version: "1.0.0" },
+    { name: "Agentizable bounty review", version: "1.0.0" },
     {},
     { autoResize: true },
   );

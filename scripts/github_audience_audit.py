@@ -25,6 +25,7 @@ from typing import Any, Callable
 
 DISCOVERY_QUESTION_MARKERS = (
     "how did you find agent bounties",
+    "how did you find agentizable",
     "how exactly did you discover",
     "exactly how did you discover",
     "one-time distribution feedback request",
@@ -37,6 +38,7 @@ DISCOVERY_ANSWER_MARKERS = (
     "discovery feedback",
     "i found this through",
     "found agent bounties",
+    "found agentizable",
 )
 MENTION_RE = re.compile(r"(?<![A-Za-z0-9-])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))")
 PLATFORM_LAUNCH_AT = "2026-07-08T20:22:19Z"

@@ -1,9 +1,9 @@
 # Phone-wallet connection
 
-Agent Bounties can pair a WalletConnect-compatible phone wallet from an internal
+Agentizable can pair a WalletConnect-compatible phone wallet from an internal
 browser without an extension. Choose **Connect phone wallet**. On a phone,
 choose **Open in Trust Wallet** or **Open in MetaMask**; on desktop, scan the QR
-with a wallet on a second device. Check `agentbounties.app` and approve the
+with a wallet on a second device. Check `agentizable.ai` and approve the
 connection. The same
 approved Base session can be used on the marketplace board, posting, participation, competition proof,
 onramp and account-linking pages. Each signature and transaction remains a

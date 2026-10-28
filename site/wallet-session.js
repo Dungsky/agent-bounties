@@ -6,13 +6,15 @@
 })(typeof window === "undefined" ? globalThis : window, function () {
   "use strict";
   const sessions = new WeakMap();
-  const statement = "Sign in to Agent Bounties for 15 minutes. This does not link a website account or authorize a transaction, token approval, or payment.";
+  const statement = "Sign in to Agentizable for 15 minutes. This does not link a website account or authorize a transaction, token approval, or payment.";
+  // New challenges use Agentizable; existing server-issued challenges retain their exact signed text.
+  const legacyStatement = statement.replace("Agentizable", "Agent Bounties");
   function validateChallenge(value, api, address, now = Date.now()) {
     const origin = new URL(api), lines = String(value?.message || "").split("\n");
-    if (!/^https:\/\/api\.agentbounties\.app$/.test(api) && !/^http:\/\/127\.0\.0\.1:3000$/.test(api)) throw new Error("Unsupported wallet login destination.");
+    if (!/^https:\/\/api\.(?:agentizable\.ai|agentbounties\.app)$/.test(api) && !/^http:\/\/127\.0\.0\.1:3000$/.test(api)) throw new Error("Unsupported wallet login destination.");
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value?.challenge_id) || value.chain_id !== 8453 || value.address?.toLowerCase() !== address
       || lines.length !== 11 || lines[0] !== `${origin.host} wants you to sign in with your Ethereum account:`
-      || lines[1].toLowerCase() !== address || lines[2] !== "" || lines[3] !== statement || lines[4] !== ""
+      || lines[1].toLowerCase() !== address || lines[2] !== "" || ![statement, legacyStatement].includes(lines[3]) || lines[4] !== ""
       || lines[5] !== `URI: ${api}/v1/auth/wallet/session` || lines[6] !== "Version: 1" || lines[7] !== "Chain ID: 8453"
       || !/^Nonce: [0-9a-f]{64}$/.test(lines[8])) throw new Error("The wallet login message has a different identity or purpose. No signature was requested.");
     const challengeExpiry = Date.parse(value.expires_at);

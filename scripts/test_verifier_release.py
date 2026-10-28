@@ -39,9 +39,9 @@ class ReleaseTests(unittest.TestCase):
                         self.assertFalse(path.exists());self.assertEqual(list(Path(directory).iterdir()),[])
             self.assertEqual(path.read_bytes(),b'reviewed worker fixture')
     def test_health_cannot_send_credentials_to_another_origin_or_component(self):
-        for url in ['http://api.agentbounties.app','https://evil.test','https://api.agentbounties.app@evil.test','https://api.agentbounties.app/private?x=y']:
+        for url in ['http://api.agentizable.ai','https://evil.test','https://api.agentizable.ai@evil.test','https://api.agentizable.ai/private?x=y']:
             with self.subTest(url=url),self.assertRaises(ValueError):release.post_checkpoint(url,self.value,'runner',True,'x'*40)
-        with self.assertRaises(ValueError):release.post_checkpoint('https://api.agentbounties.app',self.value,'operator',True,'x'*40)
+        with self.assertRaises(ValueError):release.post_checkpoint('https://api.agentizable.ai',self.value,'operator',True,'x'*40)
     def test_candidates_remain_valid_only_for_the_same_approved_release(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);path=root/'release.json'
@@ -71,7 +71,7 @@ class ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'worker';path.write_bytes(b'changed')
             with mock.patch.object(release.subprocess,'run') as run, self.assertRaises(ValueError):
-                release.diagnose_component(path,self.value,'signer:'+self.value['signers'][0],'https://api.agentbounties.app')
+                release.diagnose_component(path,self.value,'signer:'+self.value['signers'][0],'https://api.agentizable.ai')
             run.assert_not_called()
     def test_healthy_signer_requires_a_real_diagnostic_and_pending_job_discovery(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -80,11 +80,11 @@ class ReleaseTests(unittest.TestCase):
                 run.return_value.stdout='{"healthy":true}'
                 opener.return_value.open.return_value=io.BytesIO(b'[]')
                 component='signer:'+self.value['signers'][0]
-                result=release.diagnose_component(path,self.value,component,'https://api.agentbounties.app')
+                result=release.diagnose_component(path,self.value,component,'https://api.agentizable.ai')
                 self.assertTrue(result['healthy']);self.assertEqual(result['release_id'],self.value['release_id'])
                 self.assertNotIn('fixture-only',str(run.call_args.args))
                 run.return_value.stdout='{"healthy":false}'
-                with self.assertRaises(ValueError):release.diagnose_component(path,self.value,component,'https://api.agentbounties.app')
+                with self.assertRaises(ValueError):release.diagnose_component(path,self.value,component,'https://api.agentizable.ai')
 
     def test_download_redirects_remain_bounded_to_https_release_hosts(self):
         redirect=release.ReleaseRedirect()

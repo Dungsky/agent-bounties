@@ -96,7 +96,7 @@ if (typeof document !== "undefined") {
 })(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
 
-  const WEBMCP_RETURN_URL = "https://agentbounties.app/post.html?from=webmcp";
+  const WEBMCP_RETURN_URL = "https://agentizable.ai/post.html?from=webmcp";
   const MOBILE_PROVIDERS = Object.freeze({
     gpt: Object.freeze({ label: "ChatGPT", hostname: "chatgpt.com", androidPackage: "com.openai.chatgpt" }),
     claude: Object.freeze({ label: "Claude", hostname: "claude.ai", androidPackage: "com.anthropic.claude" }),
@@ -152,7 +152,7 @@ if (typeof document !== "undefined") {
     try {
       const candidate = win.agentBountiesAnalytics?.handoffUrl?.(WEBMCP_RETURN_URL) || WEBMCP_RETURN_URL;
       const url = new URL(candidate);
-      if (url.origin === "https://agentbounties.app" && ["/post", "/post.html"].includes(url.pathname)) return url.href;
+      if (url.origin === "https://agentizable.ai" && ["/post", "/post.html"].includes(url.pathname)) return url.href;
     } catch (_error) { /* The canonical first-party handoff remains available. */ }
     return WEBMCP_RETURN_URL;
   }
@@ -167,7 +167,7 @@ if (typeof document !== "undefined") {
     }
     const help = dialog.querySelector(".bounty-connection-help .bounty-launch-note");
     if (help) {
-      help.textContent = "ChatGPT and Claude open their mobile app with the posting message ready. Send it so the assistant can open Agent Bounties and continue through WebMCP. If the app is unavailable, the same link opens its web version.";
+      help.textContent = "ChatGPT and Claude open their mobile app with the posting message ready. Send it so the assistant can open Agentizable and continue through WebMCP. If the app is unavailable, the same link opens its web version.";
     }
   }
 
@@ -226,7 +226,7 @@ if (typeof document !== "undefined") {
         webFallback.hidden = false;
       }
       if (status) {
-        status.textContent = `Opening ${config.label} with your posting message ready. Send it so ${config.label} can open Agent Bounties and continue through WebMCP. Nothing is posted or funded until you approve it.`;
+        status.textContent = `Opening ${config.label} with your posting message ready. Send it so ${config.label} can open Agentizable and continue through WebMCP. Nothing is posted or funded until you approve it.`;
       }
 
       try {

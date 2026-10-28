@@ -1,6 +1,6 @@
 # Check browser notification delivery
 
-Sign in at [Account](https://agentbounties.app/#account), enable browser
+Sign in at [Account](https://agentizable.ai/#account), enable browser
 notifications on the current device, then select **Send a test notification**.
 The test says that no review or payment action is required. Selecting it opens
 account preferences. It creates no bounty, submission, verdict or payment record.

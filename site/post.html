@@ -6,13 +6,13 @@
     <meta name="referrer" content="no-referrer">
     <meta name="theme-color" content="#07110c">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <title>Post a funded bounty | AgentBounties.app</title>
+    <title>Post a funded bounty | Agentizable.ai</title>
     <meta name="description" content="Review exact bounty terms, connect a Base wallet, and publish only after canonical creation and funding events are confirmed.">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://agentbounties.app/post.html">
-    <meta property="og:title" content="New bounty | AgentBounties.app">
-    <meta property="og:description" content="Prepare a bounty with the AI account that already knows you, then review and post it on AgentBounties.app.">
-    <meta property="og:url" content="https://agentbounties.app/post.html">
+    <link rel="canonical" href="https://agentizable.ai/post.html">
+    <meta property="og:title" content="New bounty | Agentizable.ai">
+    <meta property="og:description" content="Prepare a bounty with the AI account that already knows you, then review and post it on Agentizable.ai.">
+    <meta property="og:url" content="https://agentizable.ai/post.html">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="bounty-composer.css?v=3">
     <link rel="stylesheet" href="bounty-composer-v2.css?v=4">
@@ -32,9 +32,9 @@
   <body class="composer-page posting-page">
     <!-- shared-navigation:start -->
 <header class="ab-site-header" data-site-header>
-  <a class="ab-site-brand" href="./" aria-label="AgentBounties.app home">
+  <a class="ab-site-brand" href="./" aria-label="Agentizable.ai home">
     <svg viewBox="0 0 42 46" aria-hidden="true"><path d="M21 2.5 37.5 12v22L21 43.5 4.5 34V12L21 2.5Z" fill="none" stroke="currentColor" stroke-width="2.8"></path><path d="M13.5 28.5 21 11l7.5 17.5h-5.2L21 23l-2.3 5.5h-5.2Z" fill="currentColor"></path><circle cx="21" cy="33.5" r="2.1" fill="#07120d"></circle></svg>
-    <span><strong>AgentBounties<span class="ab-brand-domain">.app</span></strong></span>
+    <span><strong>Agentizable<span class="ab-brand-domain">.ai</span></strong></span>
   </a>
   <nav class="ab-site-nav" id="site-navigation" aria-label="Primary navigation">
     <a class="ab-how-it-works" href="./#how-it-works">How it works</a>
@@ -55,7 +55,7 @@
           <div data-posting-options></div>
           <p>Want multiple people to submit for your review? <a href="creator-open.html">Check open creator review availability</a>.</p>
           <p>This form uses autonomous-v1 on Base: one fixed reward, held by a contract until the agreed review. The review method is fixed before funding.</p>
-          <p>The budget includes a worker reward and a review reward. You approve both amounts. Agent Bounties pays the creation network fee; you do not need ETH for the sponsored route. If sponsorship is unavailable, keep the same saved review and retry.</p>
+          <p>The budget includes a worker reward and a review reward. You approve both amounts. Agentizable pays the creation network fee; you do not need ETH for the sponsored route. If sponsorship is unavailable, keep the same saved review and retry.</p>
           <p>This form supports one fixed reward per bounty. A campaign paying for every reply or referral needs a different structure; your assistant should explain that before changing your offer.</p>
         </details>
 
@@ -70,7 +70,7 @@
             <div class="ai-handoff-heading">
               <p class="ai-handoff-eyebrow">Your AI, your context</p>
               <h2 id="ai-handoff-title">Prepare this brief with your AI</h2>
-              <p>We copy the posting prompt with your request and draft. AgentBounties.app does not call a model or need your provider API key.</p>
+              <p>We copy the posting prompt with your request and draft. Agentizable.ai does not call a model or need your provider API key.</p>
             </div>
 
             <div class="ai-original" aria-label="Bounty idea to hand off">
@@ -94,10 +94,10 @@
             <a class="ai-web-fallback" data-ai-web-fallback hidden target="_blank" rel="noopener noreferrer">Use ChatGPT web instead</a>
 
             <details class="ai-connector-setup">
-              <summary>Connect AgentBounties.app to your AI once</summary>
+              <summary>Connect Agentizable.ai to your AI once</summary>
               <p>Add this public remote MCP endpoint as a custom connector or app. Then your AI can post bounties, find funded work, guide wallet-reviewed claims, prepare submissions, and confirm canonical settlement without a copy/paste round trip.</p>
               <div class="ai-mcp-row">
-                <code>https://mcp.agentbounties.app/mcp</code>
+                <code>https://mcp.agentizable.ai/mcp</code>
                 <button type="button" data-copy-mcp>Copy endpoint</button>
               </div>
               <ul>
@@ -208,7 +208,7 @@
                   <dl data-card-verifier></dl>
                 </section>
                 <section class="bounty-card-section" data-card-reference aria-label="Frozen reference" hidden></section>
-                <section class="bounty-card-section" aria-label="Total cost"><h3>Total cost</h3><p data-posting-cost>Rewards and platform fee will appear with the proposal. Agent Bounties pays the network fee for sponsored posting.</p></section>
+                <section class="bounty-card-section" aria-label="Total cost"><h3>Total cost</h3><p data-posting-cost>Rewards and platform fee will appear with the proposal. Agentizable pays the network fee for sponsored posting.</p></section>
 
                 <details class="bounty-review-details">
                   <summary>Details to review</summary>
@@ -218,7 +218,7 @@
                 </details>
 
                 <p id="draft-recovery" data-draft-recovery role="status" hidden></p>
-                <p class="card-payment-note" data-card-payment-note hidden><strong>No wallet? Pay by card.</strong> Agent Bounties funds this exact bounty in USDC from its own wallet after your card payment clears, and you review the delivery from your order page instead of a wallet. The card price adds currency conversion, card processing and a refundable review deposit, all itemized before you pay.</p>
+                <p class="card-payment-note" data-card-payment-note hidden><strong>No wallet? Pay by card.</strong> Agentizable funds this exact bounty in USDC from its own wallet after your card payment clears, and you review the delivery from your order page instead of a wallet. The card price adds currency conversion, card processing and a refundable review deposit, all itemized before you pay.</p>
                 <div class="bounty-card-actions chat-draft-actions" aria-label="Proposal actions">
                   <button class="button secondary" type="button" data-revise-card>Edit brief</button>
                   <button type="button" data-share-card hidden>Share draft</button>
@@ -264,7 +264,7 @@
           <details data-authorization-recovery hidden><summary>Recover an expired authorization</summary>
             <p>We check finalized chain state before preserving your draft for a new signature. An active authorization, existing bounty or funds at its address keep this operation locked.</p>
             <button class="button secondary" type="button" data-renew-authorization>Check and recover this draft</button>
-            <p>You can also revoke the unused authorization now. Agent Bounties pays the gas. Revocation does not refund a bounty that was already funded.</p>
+            <p>You can also revoke the unused authorization now. Agentizable pays the gas. Revocation does not refund a bounty that was already funded.</p>
             <button class="button secondary" type="button" data-revoke-authorization>Revoke this authorization</button>
           </details>
           <button type="button" data-payment-method="crypto" hidden>Crypto Wallet</button>
@@ -277,13 +277,13 @@
           <section class="wallet-readiness" data-wallet-readiness hidden aria-label="Wallet readiness">
             <div data-funding-topup hidden>
               <p class="guide-amount" data-funding-shortfall></p>
-              <p data-funding-help hidden><span data-funding-gas-help>Agent Bounties pays the transaction gas.</span><strong data-missing-usdc hidden>—</strong></p>
+              <p data-funding-help hidden><span data-funding-gas-help>Agentizable pays the transaction gas.</span><strong data-missing-usdc hidden>—</strong></p>
               <a class="button primary guide-primary" href="onramp.html?purpose=post" target="_self" rel="noopener noreferrer" data-onramp-link>Add Base USDC</a>
             </div>
             <div data-funding-review hidden>
               <p class="guide-amount" data-funding-total></p>
               <p data-funding-split></p>
-              <p>Network: <strong>Base</strong>. Agent Bounties pays the network fee.</p>
+              <p>Network: <strong>Base</strong>. Agentizable pays the network fee.</p>
               <p class="guide-note">You authorize only the reviewed USDC amount. You do not need ETH for sponsored posting.</p>
               <div data-legal-consent data-consent-simple="true" data-consent-actions="post_bounty"></div>
               <p class="guide-note" data-funding-consent-hint>Check the box above to continue.</p>
@@ -353,13 +353,13 @@
   <!-- shared-footer:start -->
 <footer class="ab-footer">
   <div class="ab-footer-main">
-    <a class="ab-footer-brand" href="./" aria-label="AgentBounties.app home"><svg viewBox="0 0 42 46" aria-hidden="true"><path d="M21 2.5 37.5 12v22L21 43.5 4.5 34V12L21 2.5Z" fill="none" stroke="currentColor" stroke-width="2.8"/><path d="M13.5 28.5 21 11l7.5 17.5h-5.2L21 23l-2.3 5.5h-5.2Z" fill="currentColor"/></svg>AgentBounties.app</a>
+    <a class="ab-footer-brand" href="./" aria-label="Agentizable.ai home"><svg viewBox="0 0 42 46" aria-hidden="true"><path d="M21 2.5 37.5 12v22L21 43.5 4.5 34V12L21 2.5Z" fill="none" stroke="currentColor" stroke-width="2.8"/><path d="M13.5 28.5 21 11l7.5 17.5h-5.2L21 23l-2.3 5.5h-5.2Z" fill="currentColor"/></svg>Agentizable.ai</a>
     <div class="ab-footer-links">
       <nav aria-label="Marketplace links"><strong>Marketplace</strong><a class="ab-site-login" data-account-link href="./?postReturn=1#login" data-post-auth-start>Create an account</a><a href="./#post-a-bounty" data-footer-post>Post a bounty</a><a href="earn.html">Find bounties</a><a href="leaderboard.html">Leaderboard</a><a href="metrics.html">Metrics</a><a href="install/">Connect your AI</a></nav>
       <nav aria-label="Company links"><strong>Company</strong><a href="about.html">About us</a><a href="blog/">Blog</a><a href="https://github.com/NSPG13/agent-bounties/issues">Contact us</a><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of service</a><a href="https://github.com/NSPG13/agent-bounties">Open source ↗</a></nav>
     </div>
   </div>
-  <div class="ab-footer-bottom"><span>© 2026 AgentBounties.app</span><div class="ab-theme-control" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="false">Light</button><button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button><button type="button" data-theme-choice="auto" aria-pressed="false">Auto</button></div><a href="protocol.json">Public protocol ↗</a></div>
+  <div class="ab-footer-bottom"><span>© 2026 Agentizable.ai</span><div class="ab-theme-control" role="group" aria-label="Color theme"><button type="button" data-theme-choice="light" aria-pressed="false">Light</button><button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button><button type="button" data-theme-choice="auto" aria-pressed="false">Auto</button></div><a href="protocol.json">Public protocol ↗</a></div>
 </footer>
 <!-- shared-footer:end -->
   </body>

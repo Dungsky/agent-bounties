@@ -1,6 +1,6 @@
-# OpenHands ↔ Agent Bounties integration
+# OpenHands ↔ Agentizable integration
 
-Lets an OpenHands agent recognise Agent Bounties as paid-work infrastructure,
+Lets an OpenHands agent recognise Agentizable as paid-work infrastructure,
 follow the earning loop, and — crucially — **not be able to end a session while a
 bond is posted and nothing is submitted**, or claim it was paid when it was not.
 
@@ -183,7 +183,7 @@ guard.
 | `AGENT_BOUNTIES_OPERATOR_PUBKEY` | **required** base64 Ed25519 public key the binding must be signed by |
 | `AGENT_BOUNTIES_SESSION_DIR` | directory of `<session-id>.json` work facts |
 | `AGENT_BOUNTIES_SESSION_FILE` | exact workfile path, instead of `_DIR` + session id |
-| `AGENT_BOUNTIES_API` | override the API base (default `https://api.agentbounties.app`) |
+| `AGENT_BOUNTIES_API` | override the API base (default `https://api.agentizable.ai`) |
 | `AGENT_BOUNTIES_EVENTS_FILE` | **test-only** offline event snapshot; requires `AGENT_BOUNTIES_ALLOW_TEST_SNAPSHOT=1`, and can never settle |
 | `AGENT_BOUNTIES_STATE` | a plain state file, bypassing the producer (test/manual use) |
 

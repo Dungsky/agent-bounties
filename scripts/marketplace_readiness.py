@@ -141,7 +141,7 @@ def inspect(payload, now=None):
 def observe(base_url, timeout_seconds=15):
     evidence = {'started_at': datetime.now(timezone.utc).isoformat(), 'http_status': None}
     request = urllib.request.Request(base_url.rstrip('/') + '/readiness/marketplace',
-                                     headers={'User-Agent': 'AgentBounties-MarketplaceMonitor/1'})
+                                     headers={'User-Agent': 'Agentizable-MarketplaceMonitor/1'})
     try:
         try:
             response = urllib.request.urlopen(request, timeout=timeout_seconds)

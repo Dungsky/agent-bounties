@@ -108,7 +108,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ed25519_verify import canonical_payload  # noqa: E402
 from ed25519_verify import verify as ed25519_verify  # noqa: E402
 
-DEFAULT_API = "https://api.agentbounties.app"
+DEFAULT_API = "https://api.agentizable.ai"
 EVENTS_PATH = "/v1/base/autonomous-bounties/events"
 
 BINDING_SCHEMA = "agent-bounties/openhands-session-binding/v1"
@@ -724,7 +724,7 @@ def main(argv: list[str]) -> int:
     # invocation. The accepted surface below is identical.
     if any(a in ("-h", "--help") for a in argv):
         print("usage: state_producer.py [-h] [session]\n\n"
-              "Agent Bounties OpenHands state producer\n\n"
+              "Agentizable OpenHands state producer\n\n"
               "positional arguments:\n"
               "  session     OpenHands session id "
               "(default: $OPENHANDS_SESSION_ID)")

@@ -1,7 +1,7 @@
 //! Seller-of-record invoiced orders (ADR 0006).
 //!
-//! AgentBounties sells a verified outcome to a business buyer and invoices it through Stripe from
-//! the US entity. Once the invoice is paid, AgentBounties funds an autonomous-v2 bounty from its
+//! Agentizable sells a verified outcome to a business buyer and invoices it through Stripe from
+//! the US entity. Once the invoice is paid, Agentizable funds an autonomous-v2 bounty from its
 //! own treasury, gated so that only attested contractors
 //! (`agent-bounties/invoice-contractor-v1`) can claim it.
 //!

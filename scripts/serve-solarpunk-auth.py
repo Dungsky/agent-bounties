@@ -139,9 +139,9 @@ def wallet_link_message(
 ) -> str:
     return "\n".join(
         (
-            "Agent Bounties wallet ownership verification",
+            "Agentizable wallet ownership verification",
             "",
-            "Sign this message to link the wallet to your signed-in Agent Bounties account.",
+            "Sign this message to link the wallet to your signed-in Agentizable account.",
             "This proves address control only. It does not authorize a transaction, token approval, or payment.",
             "",
             f"Origin: {origin}",
@@ -380,7 +380,7 @@ def request_json(
     headers: dict[str, str] | None = None,
 ) -> Any:
     encoded = urllib.parse.urlencode(data).encode("utf-8") if data is not None else None
-    request_headers = {"Accept": "application/json", "User-Agent": "AgentBounties-LocalAuth/1.0"}
+    request_headers = {"Accept": "application/json", "User-Agent": "Agentizable-LocalAuth/1.0"}
     request_headers.update(headers or {})
     request = urllib.request.Request(url, data=encoded, headers=request_headers, method=method)
     with urllib.request.urlopen(request, timeout=15) as response:
@@ -999,7 +999,7 @@ class LocalAuthServer(ThreadingHTTPServer):
         self.auth_env = env
         wallet_secret = env.get("AUTH_WALLET_LINK_SECRET") or env["AUTH_SESSION_SECRET"]
         self.wallet_store = WalletLinkStore(wallet_links_path.resolve(), wallet_secret)
-        self.api_base_url = env.get("AGENT_BOUNTIES_API_BASE_URL", "https://api.agentbounties.app").rstrip("/")
+        self.api_base_url = env.get("AGENT_BOUNTIES_API_BASE_URL", "https://api.agentizable.ai").rstrip("/")
         super().__init__(address, handler)
 
 
@@ -1034,7 +1034,7 @@ def main() -> int:
         args.wallet_links_file,
     )  # type: ignore[arg-type]
     providers = ", ".join(name for name, ready in configured_providers(env).items() if ready) or "none"
-    print(f"Agent Bounties local auth: http://{args.host}:{args.port}/ (providers: {providers})", flush=True)
+    print(f"Agentizable local auth: http://{args.host}:{args.port}/ (providers: {providers})", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

@@ -1,16 +1,16 @@
 {
-  "name": "Agent Bounties Discovery Agent",
-  "description": "A read-only Agent2Agent interface for discovering verifiable Agent Bounties opportunities, inspecting their economics and evidence requirements, and learning how to monitor new work. It cannot claim work, sign transactions, move funds, verify submissions, or prove payment.",
+  "name": "Agentizable Discovery Agent",
+  "description": "A read-only Agent2Agent interface for discovering verifiable Agentizable opportunities, inspecting their economics and evidence requirements, and learning how to monitor new work. It cannot claim work, sign transactions, move funds, verify submissions, or prove payment.",
   "supportedInterfaces": [
     {
-      "url": "https://api.agentbounties.app/a2a/v1",
+      "url": "https://api.agentizable.ai/a2a/v1",
       "protocolBinding": "HTTP+JSON",
       "protocolVersion": "1.0"
     }
   ],
   "provider": {
-    "url": "https://agentbounties.app/",
-    "organization": "Agent Bounties"
+    "url": "https://agentizable.ai/",
+    "organization": "Agentizable"
   },
   "version": "0.1.0",
   "documentationUrl": "https://github.com/NSPG13/agent-bounties/blob/main/docs/a2a.md",
@@ -40,7 +40,7 @@
         "usdc"
       ],
       "examples": [
-        "Find ready-to-earn Agent Bounties work",
+        "Find ready-to-earn Agentizable work",
         "Return claimable, escrowed Base bounties requiring the rust skill",
         "List bounties paying at least 5 USDC"
       ],
@@ -78,7 +78,7 @@
     },
     {
       "id": "explain-agent-bounties-protocol",
-      "name": "Explain the Agent Bounties protocol",
+      "name": "Explain the Agentizable protocol",
       "description": "Returns authoritative REST, MCP, feed, documentation, safety, and protocol-specific settlement-evidence links. It clearly separates discovery from funding, claiming, verification, and payment proof.",
       "tags": [
         "protocol",
@@ -87,7 +87,7 @@
         "documentation"
       ],
       "examples": [
-        "Explain how Agent Bounties proves payment",
+        "Explain how Agentizable proves payment",
         "Which interface should an external agent use?"
       ],
       "inputModes": [
@@ -123,5 +123,5 @@
       ]
     }
   ],
-  "iconUrl": "https://agentbounties.app/favicon.svg"
+  "iconUrl": "https://agentizable.ai/favicon.svg"
 }

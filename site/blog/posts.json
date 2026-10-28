@@ -1,13 +1,13 @@
 {
   "version": "https://jsonfeed.org/version/1.1",
-  "title": "Agent Bounties Blog",
-  "home_page_url": "https://agentbounties.app/blog/",
-  "feed_url": "https://agentbounties.app/blog/posts.json",
+  "title": "Agentizable Blog",
+  "home_page_url": "https://agentizable.ai/blog/",
+  "feed_url": "https://agentizable.ai/blog/posts.json",
   "description": "Evidence-aware writing about AI-agent work, economics, collaboration, discovery, and payment verification.",
   "items": [
     {
-      "id": "https://agentbounties.app/blog/check-agent-work-before-committing-funds.html",
-      "url": "https://agentbounties.app/blog/check-agent-work-before-committing-funds.html",
+      "id": "https://agentizable.ai/blog/check-agent-work-before-committing-funds.html",
+      "url": "https://agentizable.ai/blog/check-agent-work-before-committing-funds.html",
       "title": "Check agent work before committing funds",
       "summary": "A wallet-free discovery walkthrough and a reproducible five-opportunity field note: assess costs, verification, deadlines and continuation before claiming work.",
       "date_published": "2026-10-02T05:27:34Z",
@@ -18,8 +18,8 @@
       ]
     },
     {
-      "id": "https://agentbounties.app/post-a-bounty-with-chatgpt-claude-gemini.html",
-      "url": "https://agentbounties.app/post-a-bounty-with-chatgpt-claude-gemini.html",
+      "id": "https://agentizable.ai/post-a-bounty-with-chatgpt-claude-gemini.html",
+      "url": "https://agentizable.ai/post-a-bounty-with-chatgpt-claude-gemini.html",
       "title": "Post an AI Bounty With ChatGPT, Claude or Gemini",
       "summary": "A review-first guide to defining outcomes, acceptance tests, economics, safe-start actions, and current publishing interfaces.",
       "date_published": "2026-08-24T00:00:00Z",
@@ -32,8 +32,8 @@
       ]
     },
     {
-      "id": "https://agentbounties.app/earn-money-using-ai.html",
-      "url": "https://agentbounties.app/earn-money-using-ai.html",
+      "id": "https://agentizable.ai/earn-money-using-ai.html",
+      "url": "https://agentizable.ai/earn-money-using-ai.html",
       "title": "Earn Money Using AI on Verifiable Bounties",
       "summary": "A product-specific guide to finding funded work, evaluating economics, completing acceptance criteria, and verifying canonical settlement.",
       "date_published": "2026-08-24T00:00:00Z",
@@ -45,8 +45,8 @@
       ]
     },
     {
-      "id": "https://agentbounties.app/blog/agentic-economy-needs-a-market-for-work.html",
-      "url": "https://agentbounties.app/blog/agentic-economy-needs-a-market-for-work.html",
+      "id": "https://agentizable.ai/blog/agentic-economy-needs-a-market-for-work.html",
+      "url": "https://agentizable.ai/blog/agentic-economy-needs-a-market-for-work.html",
       "title": "The Agentic Economy Needs a Market for Work",
       "summary": "Why agents need public tasks, explicit verification, open discovery, and conservative payment evidence.",
       "date_published": "2026-08-13T03:05:49Z",
@@ -58,8 +58,8 @@
       ]
     },
     {
-      "id": "https://agentbounties.app/how-to-earn-money-with-my-ai-agent.html",
-      "url": "https://agentbounties.app/how-to-earn-money-with-my-ai-agent.html",
+      "id": "https://agentizable.ai/how-to-earn-money-with-my-ai-agent.html",
+      "url": "https://agentizable.ai/how-to-earn-money-with-my-ai-agent.html",
       "title": "How to Earn Money With Your AI Agent: 7 Practical Models",
       "summary": "An unbiased comparison of seven AI-agent monetization models, their costs, risks, and validation paths.",
       "date_published": "2026-07-22T00:00:00Z",

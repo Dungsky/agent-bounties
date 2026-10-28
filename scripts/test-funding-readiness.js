@@ -128,7 +128,7 @@ test("top-up saves the approved operation before same-tab navigation and binds t
   const context = vm.createContext({ URL, postingBusy: false,
     state: { account: wallet, fundingUsdc: 2.01, accountSession: { authenticated: true } },
     postingSession: { async flush(options) { calls.push(["save", options.requireServer]); if (blocked) throw new Error("Draft changed on another device"); }, snapshot: () => ({ operation_id: operation }) },
-    window: { location: { href: "https://agentbounties.app/post.html?analytics=off", assign: url => calls.push(["navigate", url]) }, open: () => { throw new Error("Popups are blocked"); } },
+    window: { location: { href: "https://agentizable.ai/post.html?analytics=off", assign: url => calls.push(["navigate", url]) }, open: () => { throw new Error("Popups are blocked"); } },
     formatUsdc: value => value.toFixed(2), setPaymentStatus: text => statuses.push(text),
   });
   const source = fs.readFileSync(path.join(root, "site/bounty-composer-v2.js"), "utf8");
@@ -353,7 +353,7 @@ test("changed EIP3009 identity, economics, expiry or exact types cannot request 
   assert.throws(() => api.validateFundingAuthorization(zero), /authorization does not match/);
 });
 
-async function onrampContext({ saved = new Map(), balance = "0x1e8480", contract = "", checkoutError = false, returnUrl = "https://agentbounties.app/post.html?journey=saved-123" } = {}) {
+async function onrampContext({ saved = new Map(), balance = "0x1e8480", contract = "", checkoutError = false, returnUrl = "https://agentizable.ai/post.html?journey=saved-123" } = {}) {
   const elements = new Map();
   const opened = [];
   const requests = [];
@@ -366,7 +366,7 @@ async function onrampContext({ saved = new Map(), balance = "0x1e8480", contract
     return elements.get(selector);
   };
   element("[data-onramp-asset]").value = "usdc";
-  const location = new URL(`https://agentbounties.app/onramp.html?amount=5&wallet=${wallet}&operation=posting-123${contract ? `&bountyContract=${contract}` : ""}&return=${encodeURIComponent(returnUrl)}`);
+  const location = new URL(`https://agentizable.ai/onramp.html?amount=5&wallet=${wallet}&operation=posting-123${contract ? `&bountyContract=${contract}` : ""}&return=${encodeURIComponent(returnUrl)}`);
   location.assign = () => {};
   const window = { handlers: {}, addEventListener(type, handler) { this.handlers[type] = handler; },
     dispatchEvent(event) { this.handlers[event.type]?.(event); },
@@ -384,7 +384,7 @@ async function onrampContext({ saved = new Map(), balance = "0x1e8480", contract
     document: { hidden: false, querySelector: element, querySelectorAll: () => [], createElement: () => ({ textContent: "" }), addEventListener() {} },
     fetch: async (url, options = {}) => {
       requests.push({ url, options });
-      if (url === "protocol.json") return { ok: true, json: async () => ({ status: "active", network: "base-mainnet", chain_id: 8453, native_usdc: usdc, mcp_base_url: "https://mcp.agentbounties.app" }) };
+      if (url === "protocol.json") return { ok: true, json: async () => ({ status: "active", network: "base-mainnet", chain_id: 8453, native_usdc: usdc, mcp_base_url: "https://mcp.agentizable.ai" }) };
       if (String(url).includes("/checkout")) {
         if (checkoutError) throw new Error("connection lost");
         return { ok: false, status: 503, json: async () => ({ message: "Partner unavailable" }) };
@@ -452,7 +452,7 @@ test("generic MoonPay never opens or records a new purchase", async () => {
 });
 
 for (const path of ["/post", "/post.html", "/participate", "/competition"]) test(`funding continuation preserves ${path} and its review context`, async () => {
-  const returnUrl = `https://agentbounties.app${path}?operation_id=saved-123#bounty-preview`;
+  const returnUrl = `https://agentizable.ai${path}?operation_id=saved-123#bounty-preview`;
   const { context } = await onrampContext({ returnUrl });
   assert.equal(context.window.AgentBountiesOnramp.status().return_url, returnUrl);
 });

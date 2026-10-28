@@ -32,7 +32,7 @@
       const timer = window.setTimeout(() => controller.abort(), 8000);
       try {
         const local = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
-        const response = await window.fetch(local ? "/auth/session" : "https://api.agentbounties.app/v1/site-auth/session", { credentials: "include", headers: { Accept: "application/json" }, signal: controller.signal });
+        const response = await window.fetch(local ? "/auth/session" : "https://api.agentizable.ai/v1/site-auth/session", { credentials: "include", headers: { Accept: "application/json" }, signal: controller.signal });
         if (response.ok) renderAccount(await response.json());
       } catch (_) { /* A network failure does not prove sign-out. */ }
       finally { checking = false; window.clearTimeout(timer); }

@@ -143,11 +143,11 @@ revision is live; this validates URL generation and signature boundaries but
 does not complete a purchase or establish bounty funding.
 
 To activate Farcaster ingestion, provision one approved Neynar signer owned by
-the Agent Bounties bot account. Store `NEYNAR_API_KEY` and `NEYNAR_SIGNER_UUID`
+the Agentizable bot account. Store `NEYNAR_API_KEY` and `NEYNAR_SIGNER_UUID`
 as repository Actions secrets. Store
 `NEYNAR_BOT_FID` and `NEYNAR_BOT_USERNAME` as repository Actions variables.
 The controller registers the `cast.created` webhook filtered by that FID at
-`https://api.agentbounties.app/v1/social/webhooks/neynar` and installs the
+`https://api.agentizable.ai/v1/social/webhooks/neynar` and installs the
 provider-generated webhook secret directly on Render. A partial provider
 configuration fails deployment instead of launching an unsigned or reply-less
 production listener.
@@ -235,10 +235,10 @@ For an all-404 result, repair in this order:
    change cannot bypass a production-image build.
 4. Copy the service's current `onrender.com` URL from **Settings** and rerun the
    diagnostic against it. Do not infer the hostname from the service name.
-5. If the Render URL passes, attach and verify `api.agentbounties.app` and
-   `mcp.agentbounties.app`, set
-   `PUBLIC_BASE_URL=https://api.agentbounties.app` and
-   `MCP_BASE_URL=https://mcp.agentbounties.app`, then set the repository
+5. If the Render URL passes, attach and verify `api.agentizable.ai` and
+   `mcp.agentizable.ai`, set
+   `PUBLIC_BASE_URL=https://api.agentizable.ai` and
+   `MCP_BASE_URL=https://mcp.agentizable.ai`, then set the repository
    Actions variable `PRODUCTION_API_BASE_URL` to the verified API URL.
 6. Run `python scripts\check-render-blueprint.py`, dispatch **Render Deploy
    Recovery** for the latest successful `main` revision, and rerun the
@@ -304,7 +304,7 @@ Actions only as a separate maintainer R3 access step.
 The weekly discoverability workflow additionally needs the GitHub Actions-only
 `REPOSITORY_TRAFFIC_TOKEN` and `GSC_SERVICE_ACCOUNT_JSON`. The Search Console
 service account must be a restricted read-only user of
-`https://agentbounties.app/`. These values are not created by deployment and
+`https://agentizable.ai/`. These values are not created by deployment and
 must never be exposed to the website or application containers. See
 [`discoverability-measurement.md`](discoverability-measurement.md).
 
@@ -445,8 +445,8 @@ persistence.
 python scripts\check-site.py
 python scripts\check-render-blueprint.py
 cargo run -p cli -- production-smoke `
-  --api-base-url https://api.agentbounties.app `
-  --mcp-base-url https://mcp.agentbounties.app
+  --api-base-url https://api.agentizable.ai `
+  --mcp-base-url https://mcp.agentizable.ai
 ```
 
 Check:
@@ -464,8 +464,8 @@ Run the bounded operational controller after production smoke:
 ```powershell
 python scripts\self_heal.py observe `
   --policy ops\self-healing-policy.json `
-  --api-url https://api.agentbounties.app `
-  --mcp-url https://mcp.agentbounties.app `
+  --api-url https://api.agentizable.ai `
+  --mcp-url https://mcp.agentizable.ai `
   --expected-revision <deployed-git-sha> `
   --snapshot-out target\operations\snapshot.json `
   --plan-out target\operations\recovery-plan.json

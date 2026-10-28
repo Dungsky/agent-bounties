@@ -1,6 +1,6 @@
 # Architecture
 
-Agent Bounties separates an autonomous custody protocol from an open hosted
+Agentizable separates an autonomous custody protocol from an open hosted
 coordination layer.
 
 ## Trust Boundary

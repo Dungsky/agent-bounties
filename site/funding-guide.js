@@ -17,7 +17,7 @@
       connect: ["1", "Connect", "Choose your wallet", "Use the wallet you want to pay from."],
       connecting: ["1", "Connect", "Check your wallet", "Approve the connection. No money will move."],
       check: ["2", "Add money", s.tone === "error" ? "Try the balance check again" : "Checking your balance…", s.tone === "error" ? "We could not read your wallet. Your bounty is saved." : "This may take a few seconds."],
-      topup: ["2", "Add money", needsUsdc ? "Add money to your wallet" : "Waiting for gas sponsorship", needsUsdc ? "USDC is the digital money used to pay for work." : "Agent Bounties pays the network fee. Recheck when sponsorship is available."],
+      topup: ["2", "Add money", needsUsdc ? "Add money to your wallet" : "Waiting for gas sponsorship", needsUsdc ? "USDC is the digital money used to pay for work." : "Agentizable pays the network fee. Recheck when sponsorship is available."],
       review: s.continuable ? ["3", "Continue", "Resume your saved request", "Check the same payment's status and retry its saved authorization. Do not add money or sign a new payment to recover a lost reply."] : ["3", "Review", "Review before you pay", "Check the cost. Then confirm in your wallet."],
       wait: ["3", "Confirm", s.busy ? "Follow the steps in your wallet" : "Checking your saved payment", s.busy ? "Read each request before you approve it." : "Do not pay again. We are checking the same request."],
       done: ["3", "Done", "Your bounty is ready", "People can now claim this bounty."],
@@ -32,7 +32,7 @@
     show("[data-funding-wait]", ["wait", "done"].includes(step));
     show("[data-change-funding-wallet]", Boolean(s.connected) && !s.busy && !s.recorded);
     show("[data-funding-help]", false);
-    if (step === "topup") text("[data-funding-gas-help]", "Agent Bounties pays the network fee; you only need Base USDC.");
+    if (step === "topup") text("[data-funding-gas-help]", "Agentizable pays the network fee; you only need Base USDC.");
     // Preserve the machine-facing amount even when the extra help is collapsed.
     text("[data-funding-shortfall]", step === "topup" ? needsUsdc ? `${short} USDC needed` : "Gas sponsorship unavailable" : "");
     const topup = $("[data-funding-topup] [data-onramp-link]");
@@ -42,7 +42,7 @@
     check.hidden = !["topup", "check", "review"].includes(step);
     check.disabled = step === "check" && s.tone !== "error";
     check.textContent = check.disabled ? "Checking…" : "Check my balance";
-    text("[data-funding-total]", `${s.total} USDC · ${s.gasSponsored ? "network fee paid by Agent Bounties" : "waiting for gas sponsorship"}`);
+    text("[data-funding-total]", `${s.total} USDC · ${s.gasSponsored ? "network fee paid by Agentizable" : "waiting for gas sponsorship"}`);
     text("[data-funding-split]", `${s.solver} USDC for the work. ${s.verifier} USDC ${s.creator ? "set aside for your review" : "for the reviewer"}. Platform fee: 0 USDC.`);
     const consent = dialog.querySelector("[data-legal-consent-checkbox]");
     show("[data-funding-consent-hint]", !consent?.checked);

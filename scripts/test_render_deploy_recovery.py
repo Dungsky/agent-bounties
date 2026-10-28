@@ -901,11 +901,11 @@ class RenderDeployRecoveryTests(unittest.TestCase):
     def test_custom_domain_is_reused_or_attached_exactly_once(self) -> None:
         existing = RecordingClient()
         existing._read_with_retry = lambda _path: [
-            {"customDomain": {"name": "api.agentbounties.app", "verificationStatus": "verified"}}
+            {"customDomain": {"name": "api.agentizable.ai", "verificationStatus": "verified"}}
         ]
         reused = existing.ensure_custom_domain(
             {"id": "srv-api", "name": "agent-bounties-api"},
-            "api.agentbounties.app",
+            "api.agentizable.ai",
         )
         self.assertEqual(reused["verificationStatus"], "verified")
         self.assertEqual(existing.requests, [])
@@ -920,7 +920,7 @@ class RenderDeployRecoveryTests(unittest.TestCase):
                 [
                     {
                         "customDomain": {
-                            "name": "api.agentbounties.app",
+                            "name": "api.agentizable.ai",
                             "verificationStatus": "pending",
                         }
                     }
@@ -930,31 +930,31 @@ class RenderDeployRecoveryTests(unittest.TestCase):
         created._read_with_retry = lambda _path: next(reads)
         attached = created.ensure_custom_domain(
             {"id": "srv-api", "name": "agent-bounties-api"},
-            "api.agentbounties.app",
+            "api.agentizable.ai",
         )
         self.assertEqual(attached["verificationStatus"], "pending")
         self.assertEqual(
             created.requests,
-            [("POST", "/services/srv-api/custom-domains", {"name": "api.agentbounties.app"})],
+            [("POST", "/services/srv-api/custom-domains", {"name": "api.agentizable.ai"})],
         )
 
     def test_duplicate_custom_domains_fail_closed(self) -> None:
         client = RecordingClient()
         client._read_with_retry = lambda _path: [
-            {"name": "api.agentbounties.app"},
-            {"customDomain": {"name": "API.AGENTBOUNTIES.APP"}},
+            {"name": "api.agentizable.ai"},
+            {"customDomain": {"name": "API.AGENTIZABLE.AI"}},
         ]
         with self.assertRaisesRegex(recovery.RecoveryError, "duplicate"):
             client.ensure_custom_domain(
                 {"id": "srv-api", "name": "agent-bounties-api"},
-                "api.agentbounties.app",
+                "api.agentizable.ai",
             )
 
-    def test_custom_domain_reconciliation_removes_alias_before_attaching_canonical(self) -> None:
+    def test_custom_domain_reconciliation_attaches_canonical_before_removing_obsolete_alias(self) -> None:
         client = RecordingClient(
             response={
                 "customDomain": {
-                    "name": "api.agentbounties.app",
+                    "name": "api.agentizable.ai",
                     "verificationStatus": "pending",
                 }
             }
@@ -963,54 +963,78 @@ class RenderDeployRecoveryTests(unittest.TestCase):
             [
                 [{"name": "api.bountyboard.global"}],
                 [],
-                [{"name": "api.agentbounties.app", "verificationStatus": "pending"}],
+                [{"name": "api.agentizable.ai", "verificationStatus": "pending"}],
             ]
         )
         client._read_with_retry = lambda _path: next(reads)
         reconciled = client.reconcile_custom_domains(
             {"id": "srv-api", "name": "agent-bounties-api"},
-            ("api.agentbounties.app",),
+            ("api.agentizable.ai",),
         )
-        self.assertEqual(reconciled[0]["name"], "api.agentbounties.app")
+        self.assertEqual(reconciled[0]["name"], "api.agentizable.ai")
         self.assertEqual(
             client.requests,
             [
+                (
+                    "POST",
+                    "/services/srv-api/custom-domains",
+                    {"name": "api.agentizable.ai"},
+                ),
                 (
                     "DELETE",
                     "/services/srv-api/custom-domains/api.bountyboard.global",
                     None,
                 ),
-                (
-                    "POST",
-                    "/services/srv-api/custom-domains",
-                    {"name": "api.agentbounties.app"},
-                ),
             ],
         )
 
-    def test_custom_domain_inventory_reserves_two_runtime_slots(self) -> None:
+    def test_custom_domain_migration_preserves_legacy_route_even_when_not_requested(self) -> None:
+        client = RecordingClient(response={})
+        client._read_with_retry = lambda _path: [{"name": "api.agentbounties.app"}]
+        attached = []
+        client.ensure_custom_domain = lambda service, name: attached.append(name) or {"name": name}
+        result = client.reconcile_custom_domains(
+            {"id": "srv-api", "name": "agent-bounties-api"}, ("api.agentizable.ai",)
+        )
+        self.assertEqual(result, [{"name": "api.agentizable.ai"}])
+        self.assertEqual(attached, ["api.agentizable.ai"])
+        self.assertEqual(client.requests, [])
+
+    def test_custom_domain_attach_failure_never_removes_existing_routes(self) -> None:
+        client = RecordingClient(response={})
+        client._read_with_retry = lambda _path: [{"name": "api.agentbounties.app"}, {"name": "api.bountyboard.global"}]
+        def fail_attach(_service, _name):
+            raise recovery.RecoveryError("Custom domain plan limit")
+        client.ensure_custom_domain = fail_attach
+        with self.assertRaisesRegex(recovery.RecoveryError, "plan limit"):
+            client.reconcile_custom_domains(
+                {"id": "srv-api", "name": "agent-bounties-api"}, ("api.agentizable.ai",)
+            )
+        self.assertEqual(client.requests, [])
+
+    def test_custom_domain_inventory_retains_legacy_runtime_names(self) -> None:
         self.assertEqual(
             recovery.CUSTOM_DOMAINS["agent-bounties-mcp"],
-            ("mcp.agentbounties.app",),
+            ("mcp.agentizable.ai", "mcp.agentbounties.app"),
         )
         self.assertEqual(
             recovery.CUSTOM_DOMAINS["agent-bounties-api"],
-            ("api.agentbounties.app",),
+            ("api.agentizable.ai", "api.agentbounties.app"),
         )
 
     def test_public_base_urls_require_bare_https_origins(self) -> None:
         self.assertEqual(
             recovery.normalize_public_base_url(
-                "PUBLIC_BASE_URL", " https://api.agentbounties.app/ "
+                "PUBLIC_BASE_URL", " https://api.agentizable.ai/ "
             ),
-            "https://api.agentbounties.app",
+            "https://api.agentizable.ai",
         )
         for value in (
-            "http://api.agentbounties.app",
-            "https://user@api.agentbounties.app",
-            "https://api.agentbounties.app:8443",
-            "https://api.agentbounties.app/path",
-            "https://api.agentbounties.app?query=1",
+            "http://api.agentizable.ai",
+            "https://user@api.agentizable.ai",
+            "https://api.agentizable.ai:8443",
+            "https://api.agentizable.ai/path",
+            "https://api.agentizable.ai?query=1",
         ):
             with self.subTest(value=value), self.assertRaises(recovery.RecoveryError):
                 recovery.normalize_public_base_url("PUBLIC_BASE_URL", value)
@@ -1018,14 +1042,14 @@ class RenderDeployRecoveryTests(unittest.TestCase):
     def test_public_environment_includes_website_origin(self) -> None:
         self.assertEqual(
             recovery.public_environment_values(
-                "https://api.agentbounties.app/",
-                "https://mcp.agentbounties.app/",
-                "https://agentbounties.app/",
+                "https://api.agentizable.ai/",
+                "https://mcp.agentizable.ai/",
+                "https://agentizable.ai/",
             ),
             {
-                "PUBLIC_BASE_URL": "https://api.agentbounties.app",
-                "MCP_BASE_URL": "https://mcp.agentbounties.app",
-                "WEBSITE_BASE_URL": "https://agentbounties.app",
+                "PUBLIC_BASE_URL": "https://api.agentizable.ai",
+                "MCP_BASE_URL": "https://mcp.agentizable.ai",
+                "WEBSITE_BASE_URL": "https://agentizable.ai",
             },
         )
 
@@ -1330,7 +1354,7 @@ class RenderDeployRecoveryTests(unittest.TestCase):
     def test_matching_public_env_var_is_verified_without_mutation(self) -> None:
         expected = {
             "key": "PUBLIC_BASE_URL",
-            "value": "https://api.agentbounties.app",
+            "value": "https://api.agentizable.ai",
         }
         client = RecordingClient()
         client._read_with_retry = lambda _path: expected
@@ -1345,7 +1369,7 @@ class RenderDeployRecoveryTests(unittest.TestCase):
     def test_stale_public_env_var_is_updated_and_read_back(self) -> None:
         expected = {
             "key": "MCP_BASE_URL",
-            "value": "https://mcp.agentbounties.app",
+            "value": "https://mcp.agentizable.ai",
         }
         reads = iter(
             [
@@ -1466,8 +1490,8 @@ class RenderDeployRecoveryTests(unittest.TestCase):
             client,
             {"id": "srv-api", "name": "agent-bounties-api"},
             supplied,
-            public_base_url="https://api.agentbounties.app",
-            website_base_url="https://agentbounties.app",
+            public_base_url="https://api.agentizable.ai",
+            website_base_url="https://agentizable.ai",
         )
         self.assertTrue(changed)
         self.assertEqual(len(evidence), 16)
@@ -1475,13 +1499,30 @@ class RenderDeployRecoveryTests(unittest.TestCase):
             (
                 "agent-bounties-api",
                 "GITHUB_OAUTH_REDIRECT_URI",
-                "https://api.agentbounties.app/v1/site-auth/callback/github",
+                "https://api.agentizable.ai/v1/site-auth/callback/github",
             ),
             client.calls,
         )
         serialized = recovery.json.dumps(evidence)
         for secret in ("s" * 40, "w" * 40, "google-secret", "github-secret"):
             self.assertNotIn(secret, serialized)
+
+    def test_site_auth_origin_migration_preserves_exact_canonical_and_legacy_hosts(self) -> None:
+        supplied = {"AUTH_SESSION_SECRET": "s" * 40}
+        for provider in ("GOOGLE", "MICROSOFT", "GITHUB", "AMAZON"):
+            supplied[f"{provider}_OAUTH_CLIENT_ID"] = "id"
+            supplied[f"{provider}_OAUTH_CLIENT_SECRET"] = "secret"
+        for origin in ("https://agentizable.ai", "https://agentbounties.app"):
+            normalized = recovery.normalize_site_auth_environment(
+                supplied, public_base_url="https://api.agentizable.ai", website_base_url=origin
+            )
+            self.assertEqual(normalized["SITE_AUTH_ALLOWED_ORIGINS"].split(","), [
+                "https://agentizable.ai", "https://www.agentizable.ai", "https://agentbounties.app", "https://www.agentbounties.app"
+            ])
+        normalized = recovery.normalize_site_auth_environment(
+            supplied, public_base_url="https://api.example", website_base_url="https://custom.example/"
+        )
+        self.assertEqual(normalized["SITE_AUTH_ALLOWED_ORIGINS"], "https://custom.example")
 
     def test_site_auth_partial_provider_configuration_fails_closed(self) -> None:
         with self.assertRaisesRegex(recovery.RecoveryError, "Google OAuth"):
@@ -1490,8 +1531,8 @@ class RenderDeployRecoveryTests(unittest.TestCase):
                     "AUTH_SESSION_SECRET": "s" * 40,
                     "GOOGLE_OAUTH_CLIENT_ID": "google-client",
                 },
-                public_base_url="https://api.agentbounties.app",
-                website_base_url="https://agentbounties.app",
+                public_base_url="https://api.agentizable.ai",
+                website_base_url="https://agentizable.ai",
             )
 
     def test_site_auth_readiness_requires_all_public_providers_and_postgres(self) -> None:
@@ -1695,8 +1736,8 @@ class RenderDeployRecoveryTests(unittest.TestCase):
                 return {
                     "webhook": {
                         "webhook_id": "wh-test",
-                        "title": "Agent Bounties social mention drafts",
-                        "target_url": "https://api.agentbounties.app/v1/social/webhooks/neynar",
+                        "title": "Agentizable social mention drafts",
+                        "target_url": "https://api.agentizable.ai/v1/social/webhooks/neynar",
                         "active": True,
                         "subscription": {
                             "filters": {"cast.created": {"mentioned_fids": [12345]}}
@@ -1709,7 +1750,7 @@ class RenderDeployRecoveryTests(unittest.TestCase):
         evidence, secret = recovery.ensure_neynar_social_webhook(
             client,
             bot_fid="12345",
-            target_url="https://api.agentbounties.app/v1/social/webhooks/neynar",
+            target_url="https://api.agentizable.ai/v1/social/webhooks/neynar",
         )
         self.assertEqual(secret, "provider-generated-secret")
         self.assertTrue(evidence["active"])
@@ -1721,8 +1762,8 @@ class RenderDeployRecoveryTests(unittest.TestCase):
                 "POST",
                 "/v2/farcaster/webhook/",
                 {
-                    "name": "Agent Bounties social mention drafts",
-                    "url": "https://api.agentbounties.app/v1/social/webhooks/neynar",
+                    "name": "Agentizable social mention drafts",
+                    "url": "https://api.agentizable.ai/v1/social/webhooks/neynar",
                     "subscription": {
                         "cast.created": {"mentioned_fids": [12345]}
                     },
@@ -1730,11 +1771,34 @@ class RenderDeployRecoveryTests(unittest.TestCase):
             ),
         )
 
+    def test_neynar_rebrand_updates_existing_webhook_instead_of_creating_duplicate(self) -> None:
+        class Client:
+            def __init__(self):
+                self.calls = []
+            def request_json(self, method, path, payload=None):
+                self.calls.append((method, path, payload))
+                webhook = {
+                    "webhook_id": "wh-existing",
+                    "title": "Agent Bounties social mention drafts" if method == "GET" else "Agentizable social mention drafts",
+                    "target_url": "https://api.agentbounties.app/v1/social/webhooks/neynar" if method == "GET" else payload["url"],
+                    "active": True,
+                    "subscription": {"filters": {"cast.created": {"mentioned_fids": [12345]}}},
+                    "secrets": [{"value": "provider-generated-secret"}],
+                }
+                return {"webhooks": [webhook]} if method == "GET" else {"webhook": webhook}
+        client = Client()
+        evidence, _secret = recovery.ensure_neynar_social_webhook(
+            client, bot_fid="12345", target_url="https://api.agentizable.ai/v1/social/webhooks/neynar"
+        )
+        self.assertTrue(evidence["changed"])
+        self.assertEqual(client.calls[1][0], "PUT")
+        self.assertEqual(client.calls[1][2]["webhook_id"], "wh-existing")
+
     def test_exact_neynar_webhook_is_reused_without_provider_mutation(self) -> None:
-        target = "https://api.agentbounties.app/v1/social/webhooks/neynar"
+        target = "https://api.agentizable.ai/v1/social/webhooks/neynar"
         webhook = {
             "webhook_id": "wh-existing",
-            "title": "Agent Bounties social mention drafts",
+            "title": "Agentizable social mention drafts",
             "target_url": target,
             "active": True,
             "subscription": {
@@ -1787,7 +1851,7 @@ class RenderDeployRecoveryTests(unittest.TestCase):
         client = RecordingClient(
             response={
                 "key": "PUBLIC_BASE_URL",
-                "value": "https://api.agentbounties.app",
+                "value": "https://api.agentizable.ai",
             }
         )
         client._read_with_retry = lambda _path: {
@@ -1798,7 +1862,7 @@ class RenderDeployRecoveryTests(unittest.TestCase):
             client.ensure_env_var(
                 {"id": "srv-api", "name": "agent-bounties-api"},
                 "PUBLIC_BASE_URL",
-                "https://api.agentbounties.app",
+                "https://api.agentizable.ai",
             )
 
     def test_rejected_trigger_fails_without_unbounded_retry(self) -> None:

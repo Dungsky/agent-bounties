@@ -804,7 +804,7 @@ fn validate_message(request: &A2aSendMessageRequest) -> A2aResult<()> {
             StatusCode::BAD_REQUEST,
             "FAILED_PRECONDITION",
             "PUSH_NOTIFICATION_NOT_SUPPORTED",
-            "The public Agent Card declares pushNotifications=false. Use the Agent Bounties signed discovery webhook API separately.",
+            "The public Agent Card declares pushNotifications=false. Use the Agentizable signed discovery webhook API separately.",
             BTreeMap::new(),
         )));
     }
@@ -1051,7 +1051,7 @@ async fn discover_bounties(state: &SharedState, parameters: &Value) -> Execution
     ExecutionOutcome {
         state: A2aTaskState::Completed,
         summary: format!("Found {count} matching public opportunities. degraded={degraded}. Re-fetch the selected item before work because inventory and economics can change."),
-        artifact_name: Some("Agent Bounties opportunity projection".to_string()),
+        artifact_name: Some("Agentizable opportunity projection".to_string()),
         data: Some(json!({
             "schemaVersion": "agent-bounties/a2a-opportunity-result-v1",
             "generatedAt": projection.generated_at,
@@ -1127,7 +1127,7 @@ async fn explain_opportunity(state: &SharedState, parameters: &Value) -> Executi
     ExecutionOutcome {
         state: A2aTaskState::Completed,
         summary: format!("{} is currently {} with payment state {}. This response is read-only and does not reserve or claim it.", item.title, item.work_state, item.payment_state),
-        artifact_name: Some("Agent Bounties opportunity detail".to_string()),
+        artifact_name: Some("Agentizable opportunity detail".to_string()),
         data: Some(json!({
             "found": true,
             "generatedAt": projection.generated_at,
@@ -1160,17 +1160,17 @@ fn attributed_discovery_url(canonical_url: &str, campaign: &str, discovery_id: &
 fn protocol_overview() -> ExecutionOutcome {
     ExecutionOutcome {
         state: A2aTaskState::Completed,
-        summary: "Agent Bounties exposes separate A2A, MCP, REST, feed, and portable-skill interfaces. Discovery is not funding, a claim, verification, settlement, or payment proof.".to_string(),
-        artifact_name: Some("Agent Bounties protocol orientation".to_string()),
+        summary: "Agentizable exposes separate A2A, MCP, REST, feed, and portable-skill interfaces. Discovery is not funding, a claim, verification, settlement, or payment proof.".to_string(),
+        artifact_name: Some("Agentizable protocol orientation".to_string()),
         data: Some(json!({
             "a2a": {
-                "canonicalUrl": "https://api.agentbounties.app/.well-known/agent-card.json",
-                "attributedUrl": attributed_discovery_url("https://api.agentbounties.app/.well-known/agent-card.json", "a2a-protocol-orientation", "agent-card")
+                "canonicalUrl": "https://api.agentizable.ai/.well-known/agent-card.json",
+                "attributedUrl": attributed_discovery_url("https://api.agentizable.ai/.well-known/agent-card.json", "a2a-protocol-orientation", "agent-card")
             },
-            "openapi": "https://api.agentbounties.app/api-docs/openapi.json",
-            "mcp": "https://mcp.agentbounties.app/mcp",
-            "opportunityFeed": "https://api.agentbounties.app/v1/opportunities/feed.json",
-            "agentGuide": "https://agentbounties.app/agent/index.md",
+            "openapi": "https://api.agentizable.ai/api-docs/openapi.json",
+            "mcp": "https://mcp.agentizable.ai/mcp",
+            "opportunityFeed": "https://api.agentizable.ai/v1/opportunities/feed.json",
+            "agentGuide": "https://agentizable.ai/agent/index.md",
             "source": "https://github.com/NSPG13/agent-bounties",
             "evidenceBoundary": PAYMENT_BOUNDARY,
             "walletSafety": "Never send a private key or recovery phrase. Ask the responsible person before every wallet signature."
@@ -1182,16 +1182,16 @@ fn alert_overview() -> ExecutionOutcome {
     ExecutionOutcome {
         state: A2aTaskState::Completed,
         summary: "Use a signed discovery webhook for low-latency alerts or conditionally poll the JSON Feed with ETag/Last-Modified. Deduplicate IDs and recheck economics and canonical state before work.".to_string(),
-        artifact_name: Some("Agent Bounties alert options".to_string()),
+        artifact_name: Some("Agentizable alert options".to_string()),
         data: Some(json!({
             "signedWebhooks": {
                 "documentation": "https://github.com/NSPG13/agent-bounties/blob/main/docs/discovery-subscriptions.md",
-                "createEndpoint": "https://api.agentbounties.app/v1/discovery/subscriptions",
+                "createEndpoint": "https://api.agentizable.ai/v1/discovery/subscriptions",
                 "verify": ["HMAC signature", "timestamp tolerance", "event ID deduplication"]
             },
             "conditionalFeed": {
-                "canonicalUrl": "https://api.agentbounties.app/v1/opportunities/feed.json?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&work_state=claimable&payment_state=escrowed",
-                "attributedUrl": attributed_discovery_url("https://api.agentbounties.app/v1/opportunities/feed.json?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&work_state=claimable&payment_state=escrowed", "a2a-alerts", "ready-to-earn-feed"),
+                "canonicalUrl": "https://api.agentizable.ai/v1/opportunities/feed.json?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&work_state=claimable&payment_state=escrowed",
+                "attributedUrl": attributed_discovery_url("https://api.agentizable.ai/v1/opportunities/feed.json?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&work_state=claimable&payment_state=escrowed", "a2a-alerts", "ready-to-earn-feed"),
                 "validators": ["ETag", "Last-Modified"],
                 "suggestedIntervalSeconds": [300, 900]
             },
@@ -1457,13 +1457,13 @@ mod tests {
 
     #[test]
     fn attributed_links_keep_the_canonical_target_and_exact_discovery_id() {
-        let canonical = "https://agentbounties.app/?bounty=0xabc";
+        let canonical = "https://agentizable.ai/?bounty=0xabc";
         let discovery_id = "eip155:8453:agent-bounties/autonomous-v1:0xabc";
         let attributed =
             attributed_discovery_url(canonical, "a2a-opportunity-detail", discovery_id);
         let parsed = Url::parse(&attributed).unwrap();
         assert_eq!(parsed.scheme(), "https");
-        assert_eq!(parsed.host_str(), Some("agentbounties.app"));
+        assert_eq!(parsed.host_str(), Some("agentizable.ai"));
         let query = parsed.query_pairs().collect::<BTreeMap<_, _>>();
         assert_eq!(
             query.get("bounty").map(|value| value.as_ref()),

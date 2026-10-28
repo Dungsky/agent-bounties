@@ -59,10 +59,10 @@ class AgentDiscoveryContractTests(unittest.TestCase):
         status = root / "docs" / "a2a-status.md"
         status.write_text(
             (
-                "Agent Bounties implements a public, read-only Agent2Agent (A2A) "
+                "Agentizable implements a public, read-only Agent2Agent (A2A) "
                 "1.0 HTTP+JSON interface.\n"
                 if conforming_a2a
-                else "Agent Bounties does not currently implement the Agent2Agent "
+                else "Agentizable does not currently implement the Agent2Agent "
                 "(A2A) protocol.\n"
             )
             + "https://github.com/a2aproject/A2A/blob/main/docs/specification.md\n",
@@ -89,7 +89,7 @@ class AgentDiscoveryContractTests(unittest.TestCase):
             card = {
                 "supportedInterfaces": [
                     {
-                        "url": "https://api.agentbounties.app/a2a/v1",
+                        "url": "https://api.agentizable.ai/a2a/v1",
                         "protocolBinding": "HTTP+JSON",
                         "protocolVersion": "1.0",
                     }
@@ -154,7 +154,7 @@ class AgentDiscoveryContractTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "intentionally removed route objective.html"):
             guard.validate_entrypoint_text(
                 "guide.md",
-                "Open https://agentbounties.app/objective.html\n",
+                "Open https://agentizable.ai/objective.html\n",
                 max_lines=4,
                 max_chars=200,
                 required=(),
@@ -173,15 +173,15 @@ class AgentDiscoveryContractTests(unittest.TestCase):
     def test_static_agent_entrypoint_must_resolve(self) -> None:
         discovery = {
             "endpoints": {
-                "agent_mode": "https://agentbounties.app/agent/",
-                "agent_mode_markdown": "https://agentbounties.app/agent/index.md",
+                "agent_mode": "https://agentizable.ai/agent/",
+                "agent_mode_markdown": "https://agentizable.ai/agent/index.md",
             }
         }
         with self.assertRaisesRegex(SystemExit, "retained Markdown entrypoint"):
             guard.validate_static_discovery_urls(discovery)
 
     def test_static_agent_entrypoint_alignment_passes(self) -> None:
-        endpoint = "https://agentbounties.app/agent/index.md"
+        endpoint = "https://agentizable.ai/agent/index.md"
         guard.validate_static_discovery_urls(
             {"endpoints": {"agent_mode": endpoint, "agent_mode_markdown": endpoint}}
         )

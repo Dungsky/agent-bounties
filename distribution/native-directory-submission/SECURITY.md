@@ -2,7 +2,7 @@
 
 ## Trust Model
 
-Agent Bounties exposes a public remote MCP service and an open-source portable
+Agentizable exposes a public remote MCP service and an open-source portable
 skill. A directory installation grants an agent access to the advertised tool
 catalog; it grants no wallet, GitHub, Linear, payment, settlement, or operator
 credential.
@@ -28,5 +28,5 @@ credential.
 
 Security reports follow the repository [security policy](https://github.com/NSPG13/agent-bounties/blob/main/SECURITY.md).
 Public privacy and terms are available at
-<https://agentbounties.app/privacy.html> and
-<https://agentbounties.app/terms.html>.
+<https://agentizable.ai/privacy.html> and
+<https://agentizable.ai/terms.html>.

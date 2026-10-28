@@ -174,17 +174,17 @@ def build_cohort(
                 "analysis_sources": [
                     {
                         "kind": "canonical_platform_metric",
-                        "url": "https://api.agentbounties.app/v1/metrics/platform?period=28d",
+                        "url": "https://api.agentizable.ai/v1/metrics/platform?period=28d",
                     },
                     {
                         "kind": "privacy_safe_funnel_metric",
-                        "url": "https://api.agentbounties.app/v1/analytics/site?window_hours=720",
+                        "url": "https://api.agentizable.ai/v1/analytics/site?window_hours=720",
                     },
                 ],
                 "feedback_sources": [
                     {
                         "kind": "observable_public_participation_behavior",
-                        "url": "https://api.agentbounties.app/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&limit=300",
+                        "url": "https://api.agentizable.ai/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&limit=300",
                         "observation": "The reviewed 3-USDC controls had zero accepted entries at cohort review time.",
                     }
                 ],

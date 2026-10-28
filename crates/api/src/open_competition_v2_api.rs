@@ -3355,11 +3355,11 @@ mod tests {
             ArtifactRequirement::JsonValid { weight: 1 },
             ArtifactRequirement::JsonPointerStringEquals {
                 pointer: "/url".to_string(),
-                expected: "https://agentbounties.app/tasks/".to_string(),
+                expected: "https://agentizable.ai/tasks/".to_string(),
                 weight: 2,
             },
         ];
-        let artifact = r#"{"url":"https://agentbounties.app/tasks/"}"#;
+        let artifact = r#"{"url":"https://agentizable.ai/tasks/"}"#;
         let scope = JournalScopeV2 {
             chain_id: 84_532,
             competition: [0x11; 20],

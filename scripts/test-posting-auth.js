@@ -14,7 +14,7 @@ function storage() {
   };
 }
 
-function browser(href = "https://agentbounties.app/post.html") {
+function browser(href = "https://agentizable.ai/post.html") {
   const navigations = [];
   const current = new URL(href);
   return {
@@ -33,30 +33,30 @@ function browser(href = "https://agentbounties.app/post.html") {
 
 test("only the exact same-origin post target is accepted", () => {
   const win = browser();
-  const target = "https://agentbounties.app/post.html?title=Glama&criterion=one&criterion=two&acquisition=opaque#review";
+  const target = "https://agentizable.ai/post.html?title=Glama&criterion=one&criterion=two&acquisition=opaque#review";
   assert.equal(postingAuth.safePostTarget(win, target), target);
-  assert.equal(postingAuth.safePostTarget(win, "/post.html?from=webmcp"), "https://agentbounties.app/post.html?from=webmcp");
+  assert.equal(postingAuth.safePostTarget(win, "/post.html?from=webmcp"), "https://agentizable.ai/post.html?from=webmcp");
   for (const unsafe of [
     "https://evil.example/post.html",
-    "https://agentbounties.app.evil.example/post.html",
-    "https://user@agentbounties.app/post.html",
-    "https://agentbounties.app/earn.html",
+    "https://agentizable.ai.evil.example/post.html",
+    "https://user@agentizable.ai/post.html",
+    "https://agentizable.ai/earn.html",
     "javascript:alert(1)",
   ]) assert.equal(postingAuth.safePostTarget(win, unsafe), null);
 });
 
 test("login begins without flattening or leaking the prepared URL", () => {
-  const target = "https://agentbounties.app/post.html?title=Audit+Glama&criterion=a%2Fb&benchmark=%7B%22engine%22%3A%22sandboxed_regression_v1%22%7D&acquisition=aba1_opaque&handoff=uuid";
+  const target = "https://agentizable.ai/post.html?title=Audit+Glama&criterion=a%2Fb&benchmark=%7B%22engine%22%3A%22sandboxed_regression_v1%22%7D&acquisition=aba1_opaque&handoff=uuid";
   const win = browser(target);
   assert.equal(postingAuth.begin(win, target, 1000), target);
-  assert.deepEqual(win.navigations, [{ method: "assign", value: "https://agentbounties.app/?postReturn=1#login" }]);
+  assert.deepEqual(win.navigations, [{ method: "assign", value: "https://agentizable.ai/?postReturn=1#login" }]);
   assert.equal(postingAuth.pending(win), target);
   assert.doesNotMatch(win.navigations[0].value, /title|criterion|benchmark|acquisition|handoff/);
 });
 
 test("account completion returns once and leaves a bounded public receipt", () => {
   const now = Date.now();
-  const target = "https://agentbounties.app/post.html?from=ai-app&acquisition=opaque";
+  const target = "https://agentizable.ai/post.html?from=ai-app&acquisition=opaque";
   const win = browser(target);
   postingAuth.remember(win, target, now);
   assert.equal(postingAuth.complete(win, { walletKind: "phone", address: "0x" + "AB".repeat(20) }, now + 1000), true);
@@ -98,7 +98,7 @@ test("posting action is driven by server account state", () => {
 });
 
 for (const path of ["/post", "/post.html"]) test(`account sign-in preserves ${path} continuation`, () => {
-  const target = `https://agentbounties.app${path}?operation_id=10000000-0000-4000-8000-000000000001#bounty-preview`;
+  const target = `https://agentizable.ai${path}?operation_id=10000000-0000-4000-8000-000000000001#bounty-preview`;
   const win = browser(target);
   assert.equal(postingAuth.begin(win), target);
   assert.equal(postingAuth.pending(win), target);
@@ -119,13 +119,13 @@ function postingController(fetchImpl) {
   const ui = Object.fromEntries(['fundNow', 'fund', 'approve', 'confidence', 'recovery'].map(key => [key, element()]));
   const state = { draft: {}, imageReady: true, reviewStale: false, postingAccountStatus: 'checking', approved: false };
   const timers = new Map(); let timerId = 0;
-  const context = { ui, state, API: 'https://api.agentbounties.app', AbortController,
+  const context = { ui, state, API: 'https://api.agentizable.ai', AbortController,
     fetch: fetchImpl, postingAccountStatus: composer.postingAccountStatus, postingPrimaryAction: composer.postingPrimaryAction,
     expiredDeliveryDeadline: () => false, supportedVerificationPolicy: () => {}, syncCardPayment: () => {},
     postingJournal: { load: () => null }, postingSession: { canContinue: () => false, invalidate: () => {}, hydrate: async () => {}, approved: async () => false, snapshot: () => ({ status: "saved", conflict: false }) },
     restoration: Promise.resolve(), restorationError: null,
     setStatus(message) { context.message = message; }, updatePostingTracker: () => {},
-    window: { location: { hostname: 'agentbounties.app' },
+    window: { location: { hostname: 'agentizable.ai' },
       setTimeout(fn) { const id = ++timerId; timers.set(id, fn); return id; },
       clearTimeout(id) { timers.delete(id); } },
   };

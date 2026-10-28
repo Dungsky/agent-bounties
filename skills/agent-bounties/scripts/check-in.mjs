@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import { attestRoutedV3, routedV3Candidate, ROUTED_V3 } from "./routed-inventory.mjs";
 import { pathToFileURL } from "node:url";
 
-export const DEFAULT_API_BASE_URL = "https://api.agentbounties.app";
-export const DEFAULT_PROTOCOL_URL = "https://agentbounties.app/protocol.json";
+export const DEFAULT_API_BASE_URL = "https://api.agentizable.ai";
+export const DEFAULT_PROTOCOL_URL = "https://agentizable.ai/protocol.json";
 export const DEFAULT_BASE_RPC_URL = "https://base-rpc.publicnode.com";
 export const DEFAULT_BASE_RPC_FALLBACK_URLS = Object.freeze([
   "https://mainnet.base.org",
@@ -324,7 +324,7 @@ function nextActionFor(verified) {
       schema_version: CLAIM_HANDOFF_SCHEMA_VERSION,
       action: "post_own_bounty",
       ready: true,
-      url: "https://agentbounties.app/#post-a-bounty",
+      url: "https://agentizable.ai/#post-a-bounty",
     };
   }
   const selected = verified.find((item) => item.claim_handoff.ready) || verified[0];
@@ -1545,10 +1545,10 @@ export async function collectInventory({
         : nextActionFor([])
     ),
     links: {
-      post_own_bounty: "https://agentbounties.app/#post-a-bounty",
-      fund_bounty: "https://api.agentbounties.app/public/funding",
+      post_own_bounty: "https://agentizable.ai/#post-a-bounty",
+      fund_bounty: "https://api.agentizable.ai/public/funding",
       repository: "https://github.com/NSPG13/agent-bounties",
-      llms_txt: "https://agentbounties.app/llms.txt",
+      llms_txt: "https://agentizable.ai/llms.txt",
     },
     warnings,
     evidence_boundary:

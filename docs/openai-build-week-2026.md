@@ -2,11 +2,11 @@
 
 ## Entry
 
-**Project:** Agent Bounties Objective Compiler
+**Project:** Agentizable Objective Compiler
 
 **Track:** Developer Tools
 
-**Live judge path:** https://api.agentbounties.app/v1/cloud-agent/objective-plans
+**Live judge path:** https://api.agentizable.ai/v1/cloud-agent/objective-plans
 
 **Source:** https://github.com/NSPG13/agent-bounties
 
@@ -32,7 +32,7 @@ flowchart LR
 
 Model capability is increasingly abundant, but reliable coordination is not.
 Different agents have different tools, context, compute, and specialized
-harnesses. Agent Bounties turns a large objective into explicit work that can
+harnesses. Agentizable turns a large objective into explicit work that can
 be discovered, independently completed, replayably verified, and paid without
 giving a planner model custody or settlement authority.
 
@@ -92,7 +92,7 @@ arithmetic, and the settlement evidence boundary.
 ### Hosted API
 
 1. POST a digital outcome, constraints, task limit, and solver budget to
-   `https://api.agentbounties.app/v1/cloud-agent/objective-plans`.
+   `https://api.agentizable.ai/v1/cloud-agent/objective-plans`.
 2. Inspect the returned task graph and deterministic validation report.
 3. Reject any task without replayable evidence or within-budget economics.
 5. Inspect graph dependencies, verifier commands, evidence fields, and budget.
@@ -101,7 +101,7 @@ arithmetic, and the settlement evidence boundary.
 ### API
 
 ```bash
-curl -sS https://api.agentbounties.app/v1/cloud-agent/objective-plans \
+curl -sS https://api.agentizable.ai/v1/cloud-agent/objective-plans \
   -H "content-type: application/json" \
   -d '{
     "objective":"Ship a source-backed release with replayable regression tests",

@@ -6,8 +6,8 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <meta name="robots" content="noindex,nofollow">
     <meta name="color-scheme" content="light dark">
-    <meta name="description" content="Preview and download a social-ready Agent Bounties update.">
-    <title>Agent Bounties image preview</title>
+    <meta name="description" content="Preview and download a social-ready Agentizable update.">
+    <title>Agentizable image preview</title>
     <style>
       :root {
         color-scheme: dark;
@@ -111,7 +111,7 @@
       </div>
       <p id="status" class="status" role="status" aria-live="polite">Generating the 1080 × 1350 PNG locally in this browser…</p>
       <section class="stage">
-        <img id="preview" class="preview" alt="Agent Bounties social image preview">
+        <img id="preview" class="preview" alt="Agentizable social image preview">
         <aside class="details">
           <h2>Share safely</h2>
           <p>Download the image, copy the factual caption, and attach both in the social app you choose. Sharing remains optional.</p>
@@ -128,7 +128,7 @@
         const CARD_ART = "__BOUNTY_CARD_ART_DATA_URI__";
         const params = new URLSearchParams(window.location.search);
         const bounded = (name, fallback, max) => String(params.get(name) || fallback).trim().slice(0, max);
-        const title = bounded("title", "Agent Bounties opportunity", 200);
+        const title = bounded("title", "Agentizable opportunity", 200);
         const goal = bounded("goal", "A public digital-work opportunity.", 560);
         const status = bounded("status", "open", 80);
         const reward = bounded("reward", "Reward not stated", 80);
@@ -146,7 +146,7 @@
         const bountyLink = document.getElementById("bounty-link");
         let imageUrl = "";
 
-        document.title = `${title} · Agent Bounties card`;
+        document.title = `${title} · Agentizable card`;
         preview.alt = `${title} social card preview`;
         captionNode.textContent = caption;
 
@@ -214,7 +214,7 @@
           context.textAlign = "left";
           context.fillStyle = "#f6f7ef";
           context.font = "650 28px system-ui";
-          context.fillText("Agent Bounties", 160, 108);
+          context.fillText("Agentizable", 160, 108);
           context.fillStyle = "#b9c0b8";
           context.font = "500 20px system-ui";
           context.fillText("Public work · Base USDC", 160, 137);

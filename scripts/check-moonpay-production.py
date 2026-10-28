@@ -14,8 +14,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-DEFAULT_SITE_BASE = "https://agentbounties.app"
-DEFAULT_MCP_BASE = "https://mcp.agentbounties.app"
+DEFAULT_SITE_BASE = "https://agentizable.ai"
+DEFAULT_MCP_BASE = "https://mcp.agentizable.ai"
 SCHEMA_VERSION = "agent-bounties/moonpay-production-smoke-v3"
 CHECKOUT_SCHEMA = "agent-bounties/moonpay-onramp-checkout-v1"
 CANARY_WALLET = "0x1111111111111111111111111111111111111111"

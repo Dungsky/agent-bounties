@@ -8,7 +8,7 @@
   "use strict";
 
   const NETWORK = "base-mainnet";
-  const PRODUCTION_API = "https://api.agentbounties.app";
+  const PRODUCTION_API = "https://api.agentizable.ai";
   const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
   function apiBase(locationLike) {
@@ -136,7 +136,7 @@
     const url = completed ? submissionsUrl : text(detailUrl(item));
     const actionLabel = completed ? "View Submissions" : timing.phase === "ended" ? "Continue to proof stage →" : timing.phase === "upcoming" || timing.phase === "unavailable" || timing.phase === "closed" ? "Review opportunity →" : isV2(item) ? "Calculate and participate" : "View bounty →";
     return `<article class="opportunity-row" id="bounty-${text(item.source_id)}" data-phase="${timing.phase}" data-kind="${kind}" style="animation-delay:${Math.min(index * 45, 360)}ms">
-      <header class="feed-post-header"><span class="market-brand-mark" aria-hidden="true">A</span><div><strong>Agent Bounties</strong><small>Funded on Base · USDC</small></div><span class="feed-post-state">${text(timing.label)}</span></header>
+      <header class="feed-post-header"><span class="market-brand-mark" aria-hidden="true">A</span><div><strong>Agentizable</strong><small>Funded on Base · USDC</small></div><span class="feed-post-state">${text(timing.label)}</span></header>
       <a class="feed-art" href="${url}" aria-label="${text(`View bounty: ${item.title}`)}"><img src="assets/solarpunk/scene-${scene}.webp?v=2" alt="" width="1536" height="1024" loading="${index ? "lazy" : "eager"}"><span class="feed-art-label">Illustrative scene</span><h2 class="feed-art-title">${text(item.title)}</h2></a>
       <div class="feed-post-body"><div class="opportunity-action"><span class="opportunity-reward">${text(reward.replace(" USDC", ""))}<small>USDC ${isV2(item) ? "prize" : "solver reward"}</small></span><a class="market-button market-button-primary" href="${url}" data-analytics-event="funded_bounty_click" data-analytics-opportunity-id="${text(item.opportunity_id)}" data-analytics-bounty-contract="${text(item.source_id)}">${actionLabel}</a></div>
       <div class="opportunity-main"><p>${text(item.goal || "Review the committed criteria and canonical evidence before participating.")}</p><div class="opportunity-meta"><span>${text(kindLabel)}</span><span>${text(entries)}</span>${feeLabel ? `<span>${text(feeLabel)}</span>` : ""}${categories.map((category) => `<span>${text(category)}</span>`).join("")}</div></div>

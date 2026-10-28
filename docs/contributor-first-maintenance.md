@@ -86,7 +86,7 @@ command contributors should run.
 
 Every public maintainer notice should include this Distribution feedback request:
 
-- How did you find Agent Bounties?
+- How did you find Agentizable?
 - What made this bounty or project worth participating in?
 - Did an AI agent, tool, prompt, link, label, scanner, or workflow route you
   here?

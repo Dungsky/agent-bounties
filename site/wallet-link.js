@@ -122,7 +122,7 @@
     const request = pending;
     status.textContent = "Saving your place…";
     try {
-      if (!continuation) throw new Error("Open agentbounties.app in your wallet app. Sign in with the same account.");
+      if (!continuation) throw new Error("Open agentizable.ai in your wallet app. Sign in with the same account.");
       const url = await continuation();
       if (pending !== request) return;
       await win.navigator.clipboard.writeText(url);

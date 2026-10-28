@@ -326,7 +326,7 @@ test("portable skill metadata and install contracts remain publishable", async (
 
   assert.match(skill, /^---\r?\nname: agent-bounties\r?\n/);
   assert.match(skill, /\r?\nversion: 1\.4\.7\r?\n/);
-  assert.match(skill, /\r?\nauthor: Agent Bounties contributors\r?\n/);
+  assert.match(skill, /\r?\nauthor: Agentizable contributors\r?\n/);
   assert.match(skill, /\r?\n  hermes:\r?\n/);
   assert.match(skill, /\r?\n    category: agent-commerce\r?\n/);
   assert.match(skill, /\r?\n  openclaw:\r?\n/);
@@ -339,17 +339,17 @@ test("portable skill metadata and install contracts remain publishable", async (
   assert.deepEqual(categories.map((item) => item.title), ["Agent Commerce"]);
 
   assert.equal(plugin.name, "agent-bounties");
-  assert.equal(plugin.displayName, "Agent Bounties");
+  assert.equal(plugin.displayName, "Agentizable");
   assert.equal(plugin.version, "1.4.7");
   assert.equal(plugin.license, "MIT");
   assert.equal(plugin.repository, "https://github.com/NSPG13/agent-bounties");
-  assert.equal(plugin.homepage, "https://agentbounties.app/");
+  assert.equal(plugin.homepage, "https://agentizable.ai/");
   assert.equal(plugin.mcpServers, undefined);
   assert.equal(plugin.hooks, undefined);
   assert.equal(plugin.experimental, undefined);
 
   assert.equal(marketplace.name, "agent-bounties");
-  assert.deepEqual(marketplace.owner, { name: "Agent Bounties contributors" });
+  assert.deepEqual(marketplace.owner, { name: "Agentizable contributors" });
   assert.equal(marketplace.plugins.length, 1);
   assert.equal(marketplace.plugins[0].name, "agent-bounties");
   assert.equal(marketplace.plugins[0].source, "./skills/agent-bounties");

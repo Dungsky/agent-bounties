@@ -38,7 +38,7 @@ jobs:
       - name: Find leading-zero-work jobs and mine proofs
         id: discover
         env:
-          API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://api.agentbounties.app' }}
+          API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://api.agentizable.ai' }}
           GH_TOKEN: ${{ github.token }}
         run: >-
           python scripts/auto_verify_autonomous_bounties.py discover

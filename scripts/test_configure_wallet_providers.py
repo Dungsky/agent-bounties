@@ -16,7 +16,7 @@ if SPEC is None or SPEC.loader is None:
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
-ORIGIN = "https://agentbounties.app"
+ORIGIN = "https://agentizable.ai"
 PROJECT = "9dfed88a-0b37-47e8-b867-96f1dfd0d4ee"
 
 
@@ -144,14 +144,14 @@ def test_missing_link_header_fails_closed() -> None:
 
 
 def test_origin_and_default_configuration() -> None:
-    assert MODULE.normalized_https_origin("https://agentbounties.app/") == ORIGIN
+    assert MODULE.normalized_https_origin("https://agentizable.ai/") == ORIGIN
     for invalid in (
-        "http://agentbounties.app",
-        "https://agentbounties.app/path",
-        "https://user@agentbounties.app",
-        "https://agentbounties.app?query=1",
-        "https://agentbounties.app#fragment",
-        "https://agentbounties.app:bad",
+        "http://agentizable.ai",
+        "https://agentizable.ai/path",
+        "https://user@agentizable.ai",
+        "https://agentizable.ai?query=1",
+        "https://agentizable.ai#fragment",
+        "https://agentizable.ai:bad",
     ):
         expect_exit(lambda value=invalid: MODULE.normalized_https_origin(value), "--verify-origin")
 

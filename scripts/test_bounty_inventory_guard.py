@@ -136,8 +136,8 @@ def open_competition_v2_report(*, count: int = 5) -> Path:
             "accepted_entries": 0,
             "evidence": "confirmed_canonical_open_competition_v2",
             "observed_safe_block": 50_223_549,
-            "source_url": "https://api.agentbounties.app/v1/base/open-competition-v2-beta3/inventory",
-            "proof_quote_url": "https://api.agentbounties.app/v1/base/open-competition-v2-beta3/proof-quotes",
+            "source_url": "https://api.agentizable.ai/v1/base/open-competition-v2-beta3/inventory",
+            "proof_quote_url": "https://api.agentizable.ai/v1/base/open-competition-v2-beta3/proof-quotes",
         }
         for index in range(count)
     ]

@@ -20,7 +20,7 @@ function harness(configured = true) {
   const win = new EventTarget();
   Object.assign(win, {
     Event, setTimeout, clearTimeout,
-    document: { baseURI: "https://agentbounties.app/", head: new Element("head"), body: new Element("body"), createElement: (tag) => new Element(tag) },
+    document: { baseURI: "https://agentizable.ai/", head: new Element("head"), body: new Element("body"), createElement: (tag) => new Element(tag) },
     AgentBountiesWalletConfig: { providers: { coinbaseEmbedded: { enabled: configured } } },
   });
   const calls = [];
@@ -212,7 +212,7 @@ test("Coinbase compatibility flags never turn it into the MetaMask choice", asyn
 
 test("phone continuation saves the existing review before copying, without wallet requests", async () => {
   const h = harness(); const calls = [];
-  const url = "https://agentbounties.app/post.html?operation_id=11111111-1111-4111-8111-111111111111&funding_review=1#bounty-preview";
+  const url = "https://agentizable.ai/post.html?operation_id=11111111-1111-4111-8111-111111111111&funding_review=1#bounty-preview";
   h.win.navigator = { clipboard: { writeText: async value => calls.push(["copy", value]) } };
   const pending = h.chooser.select({ prepareContinuation: async () => { calls.push(["save"]); return url; } });
   options(h)[0].click(); options(h)[1].click(); await tick();

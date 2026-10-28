@@ -6,4 +6,4 @@ User-agent: OAI-SearchBot
 Allow: /
 
 # Machine discovery remains at /llms.txt, /agent/index.md, and /.well-known/.
-Sitemap: https://agentbounties.app/sitemap.xml
+Sitemap: https://agentizable.ai/sitemap.xml

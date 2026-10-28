@@ -68,7 +68,7 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
   };
   const sdk = new EthereumProvider(); sdk.signer = universal; sdk.chainId = 8453; sdk.accounts = [address];
   const win = {
-    document: null, crypto: webcrypto, localStorage: store, sessionStorage: store, location: new URL("https://agentbounties.app/post.html"),
+    document: null, crypto: webcrypto, localStorage: store, sessionStorage: store, location: new URL("https://agentizable.ai/post.html"),
     agentBountiesPhoneWalletConfig: { projectId: "0".repeat(32) },
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
     addEventListener() {}, dispatchEvent() {}, setTimeout, clearTimeout,
@@ -150,7 +150,7 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
     },
     track() {}, renderFundingGuide() {}, setPaymentStatus: value => statuses.push(value), refreshWalletReadiness: async () => {},
     updatePostingCost() {}, updatePostingTracker() {},
-    loadProtocol: async () => ({ api_base_url: "https://api.agentbounties.app", factory: "0x" + "90".repeat(20), chain_id_hex: "0x2105", native_usdc: nativeUsdc }),
+    loadProtocol: async () => ({ api_base_url: "https://api.agentizable.ai", factory: "0x" + "90".repeat(20), chain_id_hex: "0x2105", native_usdc: nativeUsdc }),
     currentRewardSplit: () => ({ solver: "900000", verifier: "100000", total: "1000000" }),
     contractTerms: () => ({}), termsDocument: () => ({}), createPayload: () => ({ creator: address, creation_nonce: creationNonce, funding_deadline: fundingDeadline }), validateCreationPlan() {}, formatUsdc: String,
     requestJson: async (url, options) => {

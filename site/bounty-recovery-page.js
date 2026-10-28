@@ -2,7 +2,7 @@
 (async () => {
   const core = window.AgentBountiesRecovery;
   const ui = Object.fromEntries(["contract", "owner", "balance", "wallet", "contribution", "connect", "send", "refresh", "status", "receipt", "next"].map(name => [name, document.getElementById(`recovery-${name}`)]));
-  const api = "https://api.agentbounties.app";
+  const api = "https://api.agentizable.ai";
   let contract, provider, account, view, busy = false, walletWaiting = false, refreshing = false, timer, refreshVersion = 0;
   const message = text => { ui.status.textContent = text; };
   const invalidateReads = () => { refreshVersion++; clearTimeout(timer); };

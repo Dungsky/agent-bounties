@@ -106,13 +106,13 @@ fn result_input(provider: OriginProvider) -> OriginResultInput {
     OriginResultInput {
         source: source(provider),
         bounty_id: Uuid::parse_str("10000000-0000-0000-0000-000000000001").unwrap(),
-        status_url: "https://agentbounties.app/bounties/example".to_string(),
+        status_url: "https://agentizable.ai/bounties/example".to_string(),
         artifact_url: Some("https://github.com/example/repo/pull/7".to_string()),
         verification: Some(OriginVerificationEvidence {
             passed: true,
             committed_policy_matched: true,
             summary: "Origin adapter tests passed".to_string(),
-            evidence_url: "https://agentbounties.app/proofs/example".to_string(),
+            evidence_url: "https://agentizable.ai/proofs/example".to_string(),
         }),
         settlement: Some(OriginSettlementReceipt {
             event: CanonicalSettlementEvent::BountySettled,
@@ -121,7 +121,7 @@ fn result_input(provider: OriginProvider) -> OriginResultInput {
             chain_id: 8453,
             transaction_hash: format!("0x{}", "ab".repeat(32)),
             log_index: 4,
-            receipt_url: "https://agentbounties.app/settlements/example".to_string(),
+            receipt_url: "https://agentizable.ai/settlements/example".to_string(),
         }),
         existing_idempotency_keys: vec![],
     }
@@ -486,9 +486,9 @@ fn progress_callback_updates_one_comment_and_never_closes_the_origin() {
         source: source(OriginProvider::Linear),
         bounty_id: Uuid::new_v4(),
         status: OriginProgressStatus::CanonicalFundingConfirmed,
-        status_url: "https://agentbounties.app/bounties/example".to_string(),
+        status_url: "https://agentizable.ai/bounties/example".to_string(),
         canonical_evidence_url: Some(
-            "https://agentbounties.app/evidence/funding/example".to_string(),
+            "https://agentizable.ai/evidence/funding/example".to_string(),
         ),
         existing_idempotency_keys: vec![],
     };
@@ -504,7 +504,7 @@ fn progress_callback_updates_one_comment_and_never_closes_the_origin() {
     let mut next_status = input;
     next_status.status = OriginProgressStatus::CanonicalClaimConfirmed;
     next_status.canonical_evidence_url =
-        Some("https://agentbounties.app/evidence/claim/example".to_string());
+        Some("https://agentizable.ai/evidence/claim/example".to_string());
     let next_plan = plan_origin_progress_callback(next_status);
     let OriginWriteOperation::UpsertStatusComment {
         idempotency_key: next_key,
@@ -529,7 +529,7 @@ fn progress_callback_updates_one_comment_and_never_closes_the_origin() {
         source: source(OriginProvider::GitHub),
         bounty_id: Uuid::new_v4(),
         status: OriginProgressStatus::CanonicalClaimConfirmed,
-        status_url: "https://agentbounties.app/bounties/example".to_string(),
+        status_url: "https://agentizable.ai/bounties/example".to_string(),
         canonical_evidence_url: None,
         existing_idempotency_keys: vec![],
     });

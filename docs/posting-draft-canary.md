@@ -5,7 +5,7 @@ draft API before publishing the full posting interface. These new standalone
 files load no existing journey, approval, login, wallet, or composer scripts.
 The page never calls a funding, signing, legal, publication, or transaction API.
 
-Open `https://agentbounties.app/posting-draft-canary.html` in an existing signed-in
+Open `https://agentizable.ai/posting-draft-canary.html` in an existing signed-in
 browser. **Refresh account** reads the ordinary credentialed session endpoint
 and displays only authentication, the opaque account HMAC ID, and the effective
 draft-storage rollout flag. Normal account authentication remains mandatory.

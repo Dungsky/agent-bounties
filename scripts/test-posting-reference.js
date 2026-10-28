@@ -8,7 +8,7 @@ const references = require("../site/posting-reference.js");
 const home = require("../site/solarpunk-home.js");
 
 function browser(fetch) {
-  return { location: new URL("https://agentbounties.app/post.html"), fetch, crypto: webcrypto, AbortController, setTimeout, clearTimeout };
+  return { location: new URL("https://agentizable.ai/post.html"), fetch, crypto: webcrypto, AbortController, setTimeout, clearTimeout };
 }
 function image(phase = "day", variant = "desktop") {
   return readFileSync(join(__dirname, "../site", references.asset(phase, variant).path));
@@ -26,7 +26,7 @@ test("all eight homepage originals match immutable revision hashes and lengths",
     assert.equal(attachment.byte_length, image(phase, variant).byteLength);
     assert.ok(attachment.byte_length <= references.MAX_BYTES);
     assert.match(attachment.asset_url, new RegExp(`/agent-bounties/${references.REVISION}/site/`));
-    assert.equal(attachment.source_url, "https://agentbounties.app/");
+    assert.equal(attachment.source_url, "https://agentizable.ai/");
     assert.ok(Date.now() - Date.parse(attachment.captured_at) < 1000);
     assert.deepEqual(references.validate(JSON.parse(JSON.stringify(attachment))), attachment);
     assert.ok(JSON.stringify(attachment).length < 800);
@@ -46,7 +46,7 @@ test("capture uses only the selected same-origin asset with no credentials or re
   await references.captureHomepage({ phase: "day", variant: "desktop" }, browser(async (url, options) => {
     requested = { url, options }; return response();
   }));
-  assert.equal(requested.url, "https://agentbounties.app/assets/solarpunk/scene-day.webp");
+  assert.equal(requested.url, "https://agentizable.ai/assets/solarpunk/scene-day.webp");
   assert.equal(requested.options.credentials, "omit");
   assert.equal(requested.options.redirect, "error");
   assert.equal(requested.options.cache, "no-store");

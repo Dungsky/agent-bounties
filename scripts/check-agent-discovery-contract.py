@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail closed when Agent Bounties advertises unsupported A2A interoperability."""
+"""Fail closed when Agentizable advertises unsupported A2A interoperability."""
 
 from __future__ import annotations
 
@@ -109,18 +109,18 @@ def validate_public_agent_entrypoints(root: Path) -> None:
 
     public_source = (root / "crates/web-public/src/lib.rs").read_text(encoding="utf-8")
     for route in RETIRED_PUBLIC_ROUTES:
-        retired_url = f'https://agentbounties.app/{route}'
+        retired_url = f'https://agentizable.ai/{route}'
         if retired_url in public_source:
             raise SystemExit(f"shared discovery source advertises removed URL {retired_url}")
     if 'const DISCOVERY_SCHEMA: &str = "https://agentbounties.app/' not in public_source:
-        raise SystemExit("shared discovery source must use the agentbounties.app schema identity")
+        raise SystemExit("shared discovery source must preserve the established discovery schema identity")
 
     schema_path = root / "schemas/discovery-manifest.v2.json"
     discovery_path = root / "site/.well-known/agent-bounties.json"
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     discovery = json.loads(discovery_path.read_text(encoding="utf-8"))
     if schema.get("$id") != "https://agentbounties.app/schemas/discovery-manifest.v2.json":
-        raise SystemExit("discovery schema $id must use agentbounties.app")
+        raise SystemExit("discovery schema $id must preserve its established identity")
     if discovery.get("schema") != schema.get("$id"):
         raise SystemExit("static discovery does not identify its published schema")
     unknown = set(discovery) - set(schema.get("properties", {}))
@@ -135,8 +135,8 @@ def validate_public_agent_entrypoints(root: Path) -> None:
     for route in RETIRED_PUBLIC_ROUTES:
         if route in serialized_discovery:
             raise SystemExit(f"static discovery advertises removed route {route}")
-    if discovery.get("website") != "https://agentbounties.app/":
-        raise SystemExit("static discovery website must be https://agentbounties.app/")
+    if discovery.get("website") != "https://agentizable.ai/":
+        raise SystemExit("static discovery website must be https://agentizable.ai/")
     validate_static_discovery_urls(discovery)
 
     protocol = json.loads((root / "site/protocol.json").read_text(encoding="utf-8"))
@@ -251,7 +251,7 @@ def validate_a2a_implementation(root: Path, api: str, status: str) -> None:
         raise SystemExit(f"A2A Agent Card is not valid JSON: {error}") from error
     interfaces = card.get("supportedInterfaces")
     expected_interface = {
-        "url": "https://api.agentbounties.app/a2a/v1",
+        "url": "https://api.agentizable.ai/a2a/v1",
         "protocolBinding": "HTTP+JSON",
         "protocolVersion": "1.0",
     }

@@ -9,14 +9,14 @@
 # MoonPay wallet on-ramp
 
 > Public UI status: active after deployment at
-> `https://agentbounties.app/onramp.html`. The page offers the signed MoonPay
+> `https://agentizable.ai/onramp.html`. The page offers the signed MoonPay
 > path only after live destination checks; the public-consumer fallback is blocked.
 
 This integration adds a bounded MoonPay wallet-top-up step without changing the autonomous bounty protocol. The ChatGPT app exposes only a first-party handoff planner; provider checkout and every wallet or purchase step remain outside ChatGPT.
 
 ## Evidence boundary
 
-MoonPay handles **asset acquisition**. Agent Bounties handles **bounty allocation and settlement**.
+MoonPay handles **asset acquisition**. Agentizable handles **bounty allocation and settlement**.
 
 1. MoonPay can deliver Base USDC or Base ETH to the wallet the user connects.
 2. Returning from MoonPay, receiving a MoonPay transaction identifier, or observing a larger wallet balance does **not** fund a bounty.
@@ -35,9 +35,9 @@ The destination is the user's wallet, never the bounty contract. A plain ERC-20 
 5. Choose:
    - **Base USDC** for the bounty contribution; or
    - **Base ETH** when the wallet needs transaction gas and does not sponsor it.
-6. Agent Bounties requests a short-lived, server-signed MoonPay checkout URL bound to the browser's public IP in live mode.
+6. Agentizable requests a short-lived, server-signed MoonPay checkout URL bound to the browser's public IP in live mode.
 7. MoonPay collects payment information, performs its own eligibility, KYC, fraud, and payment checks, and delivers the selected asset to the connected wallet.
-8. Return to Agent Bounties, refresh balances, and separately approve the exact canonical contribution.
+8. Return to Agentizable, refresh balances, and separately approve the exact canonical contribution.
 
 The fiat amount is only a starting value. MoonPay remains authoritative for its final quote, fees, supported payment methods, purchase limits, eligibility, and received crypto amount.
 
@@ -143,7 +143,7 @@ Official sources checked 2026-09-17:
 
 The browser never receives `MOONPAY_SECRET_KEY`. It sends the reviewed wallet, asset, fiat amount, return URL, optional hosted action intent, and bounty contract to the first-party server. The server validates the request origin and return URL, rate-limits the device, binds live URLs to a hash of the public client IP, signs the final encoded query with HMAC-SHA256, appends `signature` last, and returns a `no-store` response.
 
-`prepare_moonpay_onramp` accepts only a canonical Base bounty contract, a bounded planned USDC amount, and an optional hosted-intent UUID. It returns `https://agentbounties.app/onramp.html` with `checkout_created: false`, `purchase_completed: false`, and `bounty_funded: false`. It never returns MoonPay's provider checkout URL or accepts a wallet address, email, card field, or identity document. The on-ramp can therefore be removed, replaced, or supplemented later without changing the canonical contribution planner.
+`prepare_moonpay_onramp` accepts only a canonical Base bounty contract, a bounded planned USDC amount, and an optional hosted-intent UUID. It returns `https://agentizable.ai/onramp.html` with `checkout_created: false`, `purchase_completed: false`, and `bounty_funded: false`. It never returns MoonPay's provider checkout URL or accepts a wallet address, email, card field, or identity document. The on-ramp can therefore be removed, replaced, or supplemented later without changing the canonical contribution planner.
 
 ## Required environment variables
 
@@ -154,7 +154,7 @@ Set these on the hosted MCP service to activate the prefilled, server-signed par
 | `MOONPAY_PUBLISHABLE_KEY` | Yes | `pk_test_...` in sandbox or `pk_live_...` in production |
 | `MOONPAY_SECRET_KEY` | Yes | `sk_test_...` in sandbox or `sk_live_...` in production; server only |
 | `MOONPAY_ENVIRONMENT` | Yes | `sandbox` or `live` |
-| `MOONPAY_ALLOWED_ORIGINS` | Recommended | Comma-separated exact origins; production default is `https://agentbounties.app` |
+| `MOONPAY_ALLOWED_ORIGINS` | Recommended | Comma-separated exact origins; production default is `https://agentizable.ai` |
 | `MOONPAY_CLIENT_IP_HEADER` | Recommended | Reverse-proxy header containing the customer's public IP. On Render use `true-client-ip`, which Render's edge sets and overwrites; the leftmost `x-forwarded-for` entry is client-controlled (see `docs/fiat-ramps.md`, "Client IP on Render") |
 | `MOONPAY_TRUSTED_PROXY_HOPS` | Recommended | 1 to 8. Reads the client IP that many trusted proxies from the right of `MOONPAY_CLIENT_IP_HEADER`, ignoring client-prepended entries and other headers. Unset keeps the legacy first entry |
 | `MOONPAY_USDC_BASE_CURRENCY_CODE` | Optional | Dashboard-enabled live code; default `usdc_base` |
@@ -187,7 +187,7 @@ MoonPay sandbox does **not** top up Base mainnet. MoonPay's test ERC-20 flow use
 Activation sequence:
 
 1. Create or obtain the MoonPay partner account.
-2. Add `https://agentbounties.app` as the approved production origin.
+2. Add `https://agentizable.ai` as the approved production origin.
 3. Confirm the account's codes for USDC on Base and ETH on Base.
 4. Configure sandbox keys first and deploy.
 5. Run the repository checks and complete a sandbox checkout-return rehearsal.
@@ -217,11 +217,11 @@ The static gate verifies that the generic MoonPay control is disabled, has no na
 
 ## Deliberate limitations
 
-- No card, bank, PayPal, identity, or KYC data is collected by Agent Bounties.
+- No card, bank, PayPal, identity, or KYC data is collected by Agentizable.
 - No MoonPay checkout is treated as escrow or protocol funding.
 - No MoonPay redirect parameter is treated as authoritative transaction evidence.
 - No checkout URL is persisted in browser storage.
-- No email or other personal identifier is sent to MoonPay from Agent Bounties.
+- No email or other personal identifier is sent to MoonPay from Agentizable.
 - No affiliate fee is added in this version. This keeps the first implementation focused on reducing entry friction rather than creating an incentive to encourage unnecessary purchases.
 - The direct consumer fallback is blocked. It cannot preserve the user's wallet and Base network.
 - The in-memory rate limit is appropriate for the current single-service deployment. A horizontally scaled deployment should replace it with a shared rate limiter before increasing traffic.

@@ -66,5 +66,5 @@ specified, independently verifiable coverage commitment.
 Sources:
 - https://github.com/x402-foundation/x402/issues/2833
 - https://github.com/x402-foundation/x402/issues/2222
-- https://agentbounties.app/x402.html
-- https://agentbounties.app/x402-test-vectors.json
+- https://agentizable.ai/x402.html
+- https://agentizable.ai/x402-test-vectors.json

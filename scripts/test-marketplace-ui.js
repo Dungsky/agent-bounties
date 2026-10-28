@@ -48,9 +48,9 @@ function v2Opportunity(overrides = {}) {
         entrant_binding: "The funding wallet must equal the competition entrant.",
         excluded: ["operator-funded work", "unsettled deposits"],
       },
-      snapshot_url: "https://api.agentbounties.app/v1/base/open-competition-v2-beta3/gmv-snapshots/gmv-activation-01",
+      snapshot_url: "https://api.agentizable.ai/v1/base/open-competition-v2-beta3/gmv-snapshots/gmv-activation-01",
     },
-    next_action: { action: "enter_open_competition_v2", url: "https://api.agentbounties.app/v1/relay" },
+    next_action: { action: "enter_open_competition_v2", url: "https://api.agentizable.ai/v1/relay" },
     evidence_boundary: "Only confirmed canonical settlement events count.",
     ...overrides,
   };
@@ -160,10 +160,10 @@ test("homepage and board both reject unavailable inventory instead of reporting 
   ]) {
     const payload = { ...audit, items: [], ...change };
     assert.throws(() => home.marketSnapshot(platform, payload, AUDIT_NOW));
-    await assert.rejects(marketplace.loadOpportunities({ location: { hostname: "agentbounties.app" }, fetch: async () => ({ ok: true, json: async () => payload }) }));
+    await assert.rejects(marketplace.loadOpportunities({ location: { hostname: "agentizable.ai" }, fetch: async () => ({ ok: true, json: async () => payload }) }));
   }
   for (const fetch of [async () => ({ ok: false, status: 503 }), async () => { throw new Error("Offline"); }]) {
-    await assert.rejects(workflow.loadFundedInventory({ location: { hostname: "agentbounties.app" }, fetch }));
+    await assert.rejects(workflow.loadFundedInventory({ location: { hostname: "agentizable.ai" }, fetch }));
   }
   assert.equal(home.marketSnapshot(platform, { ...audit, items: [] }, AUDIT_NOW).live, 0, "healthy empty inventory may truthfully report zero");
 });
@@ -174,7 +174,7 @@ test("non-V2 readiness still requires its canonical terms hash", () => {
     source_status: "claimable",
     competition_mode: null,
     evidence_requirements: {},
-    next_action: { action: "claim", url: "https://agentbounties.app/claim" },
+    next_action: { action: "claim", url: "https://agentizable.ai/claim" },
   });
   assert.equal(marketplace.isReadyToEarn(nonV2), false);
   assert.equal(marketplace.isReadyToEarn({ ...nonV2, terms_hash: "0xabc" }), true);
@@ -274,7 +274,7 @@ test("competition details retain closed work and its later proof deadline withou
     return nodes.get(selector);
   } };
   const win = {
-    location: new URL(`https://agentbounties.app/competition.html?bountyContract=${contract}&network=base-mainnet`),
+    location: new URL(`https://agentizable.ai/competition.html?bountyContract=${contract}&network=base-mainnet`),
     async fetch(url, options) {
       const query = new URL(url).searchParams;
       assert.equal(query.get("view"), "recent");
@@ -314,7 +314,7 @@ test("paid and closed history never offers child funding or proof purchases even
       if (!nodes.has(selector)) nodes.set(selector, { dataset: {}, textContent: "", hidden: false, setAttribute() {}, removeAttribute(key) { delete this[key]; } });
       return nodes.get(selector);
     } };
-    const win = { location: new URL(`https://agentbounties.app/competition.html?bountyContract=${item.source_id}`),
+    const win = { location: new URL(`https://agentizable.ai/competition.html?bountyContract=${item.source_id}`),
       async fetch() { return { ok: true, json: async () => ({ schema_version: "agent-bounties/opportunity-projection-v1", network: "base-mainnet", applied_view: "recent", degraded: false, source_statuses: [{ source_type: "canonical_base", available: true }], items: [item] }) }; } };
     await competition.start(win, doc);
     assert.equal(nodes.get("[data-competition-app]").dataset.state, "unavailable");

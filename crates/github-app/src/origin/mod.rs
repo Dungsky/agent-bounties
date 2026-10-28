@@ -251,7 +251,7 @@ pub fn plan_origin_progress_callback(input: OriginProgressInput) -> OriginProgre
     let status_key = progress_idempotency_key(&input);
     let stable_marker = status_comment_marker(&input.source, input.bounty_id);
     let mut markdown = format!(
-        "Agent Bounties status: **{}**\n\nBounty: `{}`\nStatus: {}",
+        "Agentizable status: **{}**\n\nBounty: `{}`\nStatus: {}",
         input.status.display(),
         input.bounty_id,
         input.status_url
@@ -617,7 +617,7 @@ fn render_status_markdown(
     stable_marker: &str,
 ) -> String {
     let mut lines = vec![
-        format!("Agent Bounties status: **{}**", status.display()),
+        format!("Agentizable status: **{}**", status.display()),
         String::new(),
         format!("Bounty: `{}`", input.bounty_id),
         format!("Status: {}", input.status_url),

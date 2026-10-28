@@ -186,17 +186,17 @@ def validate_orders(policy: dict[str, Any], packet: dict[str, Any]) -> None:
         )
         _require(
             order.get("source_endpoint")
-            == f"https://mcp.agentbounties.app/r/{vendor['rail_id']}/mcp",
+            == f"https://mcp.agentizable.ai/r/{vendor['rail_id']}/mcp",
             f"{vendor_id} source endpoint is not the immutable attributed route",
         )
         _require(
             order.get("install_destination")
-            == f"https://agentbounties.app/install/{install_rail}/",
+            == f"https://agentizable.ai/install/{install_rail}/",
             f"{vendor_id} install destination is not the deployed rail-specific route",
         )
         _require(
             order.get("preferred_install_alias_after_dns")
-            == f"https://install.agentbounties.app/{install_rail}",
+            == f"https://install.agentizable.ai/{install_rail}",
             f"{vendor_id} preferred install alias is not rail specific",
         )
         required = set(_list(order.get("required_before_purchase"), f"{vendor_id}.required_before_purchase"))

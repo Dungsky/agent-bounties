@@ -25,8 +25,8 @@ RELAYER_GROUP = "agent-bounties-x402-relayer"
 BASE_GROUP = "agent-bounties-base"
 RPC_LOG_BATCH_SIZE = 50
 V2_SERVICES = (
-    render.ServiceSpec("agent-bounties-api", "web_service", "https://api.agentbounties.app/health"),
-    render.ServiceSpec("agent-bounties-mcp", "web_service", "https://mcp.agentbounties.app/health"),
+    render.ServiceSpec("agent-bounties-api", "web_service", "https://api.agentizable.ai/health"),
+    render.ServiceSpec("agent-bounties-mcp", "web_service", "https://mcp.agentizable.ai/health"),
     render.ServiceSpec("agent-bounties-open-competition-v2-beta3-indexer", "background_worker", None),
     render.ServiceSpec("agent-bounties-open-competition-v2-beta3-shadow", "background_worker", None),
     render.ServiceSpec("agent-bounties-open-competition-v2-beta3-keeper", "background_worker", None),

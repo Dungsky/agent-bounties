@@ -7,7 +7,7 @@ use std::{collections::BTreeMap, path::PathBuf};
 pub struct HostedOptions {
     #[arg(
         long,
-        default_value = "https://api.agentbounties.app",
+        default_value = "https://api.agentizable.ai",
         env = "AGENT_BOUNTIES_API_URL"
     )]
     api_url: String,

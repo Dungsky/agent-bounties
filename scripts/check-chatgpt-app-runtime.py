@@ -144,7 +144,7 @@ def main() -> int:
     environment.update(
         {
             "MCP_BIND_ADDR": f"127.0.0.1:{port}",
-            "MCP_BASE_URL": "https://mcp.agentbounties.app",
+            "MCP_BASE_URL": "https://mcp.agentizable.ai",
             # Keep every live hosted API request local and guaranteed to fail.
             "PUBLIC_BASE_URL": "http://127.0.0.1:9",
             "CHATGPT_APP_SANDBOX_MODE": "false",
@@ -214,7 +214,7 @@ def main() -> int:
         )
         server_info = discovered["_meta"]["io.modelcontextprotocol/serverInfo"]
         require(server_info["name"] == "agent-bounties", "server name drifted")
-        require(server_info["title"] == "Agent Bounties", "server title drifted")
+        require(server_info["title"] == "Agentizable", "server title drifted")
         require(
             "Public review mode" not in discovered["instructions"],
             "retired public-review profile is still reachable",
@@ -462,7 +462,7 @@ def main() -> int:
             "mounted widget does not use the full production profile",
         )
         require(
-            "https://agentbounties.app"
+            "https://agentizable.ai"
             in resource["_meta"]["ui"]["csp"]["redirectDomains"],
             "first-party hosted actions are absent from widget CSP",
         )
@@ -484,7 +484,7 @@ def main() -> int:
         onramp = urlparse(handoff["onramp_url"])
         require(
             onramp.scheme == "https"
-            and onramp.netloc == "agentbounties.app"
+            and onramp.netloc == "agentizable.ai"
             and onramp.path == "/onramp.html",
             "MoonPay handoff escaped the first-party origin",
         )

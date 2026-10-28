@@ -507,7 +507,7 @@ def main() -> int:
     for service in SERVICE_NAMES:
         block = named_block(services, service)
         require_database_ref(block)
-        require_env_value(block, "PUBLIC_BASE_URL", "https://api.agentbounties.app")
+        require_env_value(block, "PUBLIC_BASE_URL", "https://api.agentizable.ai")
         if "autoDeployTrigger: off" not in block:
             fail(f"{service} must disable Render auto-deploys")
         if "branch: main" not in block:
@@ -518,13 +518,11 @@ def main() -> int:
             if "maxShutdownDelaySeconds: 60" not in block:
                 fail(f"{service} must allow graceful shutdown")
             domains = domain_lines(block)
-            expected_domain = (
-                "- api.agentbounties.app"
-                if service == "agent-bounties-api"
-                else "- mcp.agentbounties.app"
-            )
-            if domains != [expected_domain]:
-                fail(f"{service} custom domain must be exactly {expected_domain}")
+            prefix = "api" if service == "agent-bounties-api" else "mcp"
+            expected_domains = [f"- {prefix}.agentizable.ai", f"- {prefix}.agentbounties.app"]
+            if domains != expected_domains:
+                fail(f"{service} must publish the Agentizable host and retain its legacy compatibility host")
+
         if service == "agent-bounties-api":
             require_env_sync_false(block, "DISCOVERABILITY_INGEST_TOKEN")
         if service != "agent-bounties-api" and "DISCOVERABILITY_INGEST_TOKEN" in block:

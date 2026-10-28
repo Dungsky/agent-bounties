@@ -142,7 +142,7 @@ test("saved brief edits reach the shared journey and invalidate an older funding
   const document = { activeElement: null, documentElement: { dataset: {} }, querySelector: (name) => elements.get(name), addEventListener() {} };
   let invalidations = 0;
   const win = { AgentBountiesWorkflow: flow, AgentBountiesPostingBrief: require("../site/posting-brief.js"), AgentBountiesComposer: { invalidate() { invalidations++; } }, document, setInterval() {},
-    crypto: require("node:crypto").webcrypto, location: new URL("https://agentbounties.app/post.html"),
+    crypto: require("node:crypto").webcrypto, location: new URL("https://agentizable.ai/post.html"),
     sessionStorage: { getItem: (key) => records.get(key) || null, setItem: (key, value) => records.set(key, value) },
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
     addEventListener(name, fn) { listeners.set(name, fn); }, dispatchEvent(event) { listeners.get(event.type)?.(event); } };

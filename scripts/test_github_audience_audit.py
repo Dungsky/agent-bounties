@@ -301,7 +301,7 @@ class GitHubAudienceAuditTests(unittest.TestCase):
                     "html_url": "https://github.com/NSPG13/agent-bounties/issues/12#issuecomment-206",
                     "issue_url": "https://api.github.com/repos/NSPG13/agent-bounties/issues/12",
                     "created_at": "2026-07-06T12:00:00Z",
-                    "body": "How did you find Agent Bounties? What made this bounty or project worth participating in?",
+                    "body": "How did you find Agentizable? What made this bounty or project worth participating in?",
                     "user": owner,
                 },
             ]

@@ -40,7 +40,7 @@ class Server {
 }
 function browser(server, options = {}) {
   const listeners = new Map(), timers = new Map(); let nextTimer = 0;
-  const win = { location: new URL(options.url || "https://agentbounties.app/post.html"), sessionStorage: options.storage || storage(), user: options.owner || "owner-a",
+  const win = { location: new URL(options.url || "https://agentizable.ai/post.html"), sessionStorage: options.storage || storage(), user: options.owner || "owner-a",
     crypto: { subtle: webcrypto.subtle, randomUUID }, AgentBountiesWorkflow: workflow,
     document: { hidden: false, querySelector: () => null }, CustomEvent: class { constructor(type, data) { this.type = type; this.detail = data?.detail; } },
     addEventListener: (name, fn) => { const callbacks = listeners.get(name) || []; callbacks.push(fn); listeners.set(name, callbacks); },
@@ -57,7 +57,7 @@ function seed(win, id = OPERATION) {
 function current(win) { return workflow.createClient(win).load(); }
 function edit(win, mutate) { const value = clone(current(win)); mutate(value); workflow.createClient(win).save(value); }
 async function ready(server = new Server()) { const win = browser(server); seed(win); const session = posting.create(win); await session.hydrate(account()); return { server, win, session }; }
-async function second(server, options = {}) { const win = browser(server, { url: `https://agentbounties.app/post.html?operation_id=${OPERATION}`, ...options }); const session = posting.create(win); await session.hydrate(account(win.user)); return { win, session }; }
+async function second(server, options = {}) { const win = browser(server, { url: `https://agentizable.ai/post.html?operation_id=${OPERATION}`, ...options }); const session = posting.create(win); await session.hydrate(account(win.user)); return { win, session }; }
 function pending(hash = HASH) { return { bounty_contract: CONTRACT, bounty_id: BOUNTY, phase: "sending", transactions: [hash], authorizationIssued: true }; }
 
 test("a signed continuation survives reload, checks integrity and reserves at most one submission", async () => {
@@ -128,7 +128,7 @@ test("fresh authenticated draft uses object recovery state and private credentia
   assert.deepEqual(server.record().recovery_state, { display_context: { timezone: "America/Mexico_City" } });
   assert.equal(server.record().approved_draft_hash, null);
   for (const request of server.requests) { assert.equal(request.options.credentials, "include"); assert.equal(request.options.cache, "no-store"); assert.equal(request.options.referrerPolicy, "no-referrer"); }
-  assert.equal(session.snapshot().continuation_url, `https://agentbounties.app/post.html?operation_id=${OPERATION}#bounty-preview`);
+  assert.equal(session.snapshot().continuation_url, `https://agentizable.ai/post.html?operation_id=${OPERATION}#bounty-preview`);
   assert.doesNotMatch(session.snapshot().continuation_url, /Create|budget|email|signature/);
 });
 
@@ -304,7 +304,7 @@ test("a save cannot pair older terms with newer wallet progress while hashing", 
 });
 
 test("an explicit new MCP operation may save matching imported terms without auto-approval", async () => {
-  const server = new Server(), win = browser(server, { url: `https://agentbounties.app/post.html?operation_id=${OPERATION}` }); seed(win);
+  const server = new Server(), win = browser(server, { url: `https://agentizable.ai/post.html?operation_id=${OPERATION}` }); seed(win);
   const session = posting.create(win); await session.hydrate(account());
   assert.equal(server.record().operation_id, OPERATION);
   assert.equal(await session.approved(), false);
@@ -480,7 +480,7 @@ test("another device follows only the server-retired authorization into the unap
   const storageCopy=storage();for(const key of ["agent-bounties.posting-operation.v1","agent-bounties.posting-continuation.v1"]){storageCopy.setItem(key,one.win.sessionStorage.getItem(key));}
   const oldJourney=clone(current(one.win));
   await one.session.renewExpiredAuthorization();
-  const win=browser(one.server,{storage:storageCopy,url:`https://agentbounties.app/post.html?operation_id=${OPERATION}`});
+  const win=browser(one.server,{storage:storageCopy,url:`https://agentizable.ai/post.html?operation_id=${OPERATION}`});
   workflow.createClient(win).save(oldJourney);
   const fetch=win.fetch;
   win.fetch=async(url,args)=>url.endsWith(OPERATION)&&args.method==="GET"?new Response(JSON.stringify({...one.state.next,retired_operation_id:OPERATION,retired_continuation_hash:one.old.recovery_state.continuation_hash}),{status:200}):fetch(url,args);

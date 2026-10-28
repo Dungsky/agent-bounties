@@ -122,7 +122,7 @@ def check_rail(endpoint: str, rail: str, canary_kind: str) -> None:
     attribution = (
         body.get("result", {})
         .get("_meta", {})
-        .get("agentbounties.app/acquisition", {})
+        .get("agentizable.ai/acquisition", {})
     )
     if (
         attribution.get("acquisition_id") != acquisition

@@ -2,9 +2,9 @@
 
 Business buyers often cannot hold crypto and need a vendor invoice. On this
 path:
-- AgentBounties, the US entity, sells the verified outcome and invoices it
+- Agentizable, the US entity, sells the verified outcome and invoices it
   through Stripe.
-- AgentBounties funds an autonomous-v2 bounty from its own treasury.
+- Agentizable funds an autonomous-v2 bounty from its own treasury.
 - Only attested contractors can claim that bounty.
 
 The design and its rejected alternatives are in

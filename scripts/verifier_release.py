@@ -89,7 +89,7 @@ def ensure_worker(path: Path, release: dict, url: str | None = None) -> None:
         with tempfile.NamedTemporaryFile(dir=path.parent,delete=False) as output:
             temporary=Path(output.name)
             opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),ReleaseRedirect())
-            with opener.open(urllib.request.Request(url,headers={'User-Agent':'AgentBounties-reviewed-worker/1'}),timeout=60) as response:
+            with opener.open(urllib.request.Request(url,headers={'User-Agent':'Agentizable-reviewed-worker/1'}),timeout=60) as response:
                 received=0
                 while chunk:=response.read(1024*1024):
                     received+=len(chunk)
@@ -106,7 +106,7 @@ def post_checkpoint(api_base: str, release: dict, component: str, healthy: bool,
         raise ValueError('checkpoint component is outside the approved release')
     if not 32<=len(token)<=256: raise ValueError('checkpoint credential unavailable')
     parsed=urllib.parse.urlsplit(api_base)
-    if parsed.scheme!='https' or parsed.port not in (None,443) or parsed.hostname not in ('api.agentbounties.app','mcp.agentbounties.app') or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in ('','/'):
+    if parsed.scheme!='https' or parsed.port not in (None,443) or parsed.hostname not in ('api.agentizable.ai','mcp.agentizable.ai') or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in ('','/'):
         raise ValueError('checkpoint destination must be a first-party service')
     payload={'release':release,'component':component,'issued_at':datetime.now(timezone.utc).isoformat(),'healthy':healthy}
     request=urllib.request.Request(api_base.rstrip('/')+'/internal/verifier-checkpoints',data=json.dumps(payload).encode(),headers={'Content-Type':'application/json','Authorization':'Bearer '+token})
@@ -145,11 +145,11 @@ def diagnose_component(worker: Path, release: dict, component: str, api_base: st
     # Keep pending-job discovery outside the public ready-to-earn filter. This
     # read carries no health or signing credential and cannot spend funds.
     parsed=urllib.parse.urlsplit(api_base)
-    if parsed.scheme!='https' or parsed.netloc not in ('api.agentbounties.app','mcp.agentbounties.app') or parsed.path not in ('','/') or parsed.query or parsed.fragment:
+    if parsed.scheme!='https' or parsed.netloc not in ('api.agentizable.ai','mcp.agentizable.ai') or parsed.path not in ('','/') or parsed.query or parsed.fragment:
         raise ValueError('diagnostic destination must be a first-party service')
     verifier = release['signers'][0] if component=='runner' else component.removeprefix('signer:')
     query=urllib.parse.urlencode({'network':release['network'],'verifier':verifier})
-    request=urllib.request.Request(api_base.rstrip('/')+'/v1/base/autonomous-bounties/verification-jobs?'+query,headers={'User-Agent':'AgentBounties-reviewed-component/1','Accept':'application/json'})
+    request=urllib.request.Request(api_base.rstrip('/')+'/v1/base/autonomous-bounties/verification-jobs?'+query,headers={'User-Agent':'Agentizable-reviewed-component/1','Accept':'application/json'})
     opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
     with opener.open(request,timeout=15) as response:
         data=response.read(2*1024*1024+1)
@@ -171,7 +171,7 @@ def main() -> None:
     parser.add_argument('--candidates',type=Path)
     parser.add_argument('--run-id',type=int)
     parser.add_argument('--download-url')
-    parser.add_argument('--api-base',default='https://api.agentbounties.app')
+    parser.add_argument('--api-base',default='https://api.agentizable.ai')
     parser.add_argument('--component',default='runner')
     parser.add_argument('--health-result',type=Path,help='Trusted component health result from the reviewed runner or isolated signer')
     args=parser.parse_args()

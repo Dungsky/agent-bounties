@@ -238,7 +238,7 @@ function AuthBridge() {
       React.createElement(
         "p",
         null,
-        "Use or recover your Coinbase embedded wallet with its original email or social sign-in. A matching Agent Bounties email alone does not connect a wallet.",
+        "Use or recover your Coinbase embedded wallet with its original email or social sign-in. A matching Agentizable email alone does not connect a wallet.",
       ),
       React.createElement(SignIn, { className: "wallet-auth-signin" },
         React.createElement(SignInBackButton, null),
@@ -269,7 +269,7 @@ function AuthBridge() {
     );
   } else if (panel.view === "ownership") {
     body = React.createElement(React.Fragment, null,
-      React.createElement("p", { className: "wallet-auth-notice", role: "status" }, "Your wallet is ready. Confirm ownership to finish linking it to your Agent Bounties account."),
+      React.createElement("p", { className: "wallet-auth-notice", role: "status" }, "Your wallet is ready. Confirm ownership to finish linking it to your Agentizable account."),
       React.createElement("div", { className: "wallet-auth-account" },
         React.createElement("span", null, "Wallet"),
         React.createElement("strong", null, address),
@@ -456,7 +456,7 @@ function mountAuthBridge() {
     secureIframeBasePath: runtimeConfig.secureIframeBasePath,
     ethereum: { createOnLogin: "eoa" },
     authMethods: [...runtimeConfig.authMethods],
-    appName: "Agent Bounties",
+    appName: "Agentizable",
     appLogoUrl: new URL("favicon.svg", document.baseURI).href,
   };
   try {
@@ -608,18 +608,18 @@ const provider = {
       if (/^0x(?:[0-9a-fA-F]{2})*$/.test(raw)) {
         message = new TextDecoder().decode(Uint8Array.from(raw.slice(2).match(/../g) || [], (byte) => parseInt(byte, 16)));
       }
-      await ensureAuthenticated({ review: message.startsWith("Agent Bounties wallet ownership verification\n\n") ? "ownership" : "review", message });
+      await ensureAuthenticated({ review: ["Agentizable wallet ownership verification\n\n", "Agent Bounties wallet ownership verification\n\n"].some(prefix => message.startsWith(prefix)) ? "ownership" : "review", message });
       return (await innerProvider()).request(args);
     }
     if (method === "wallet_addEthereumChain") {
       const requested = String(args?.params?.[0]?.chainId || "").toLowerCase();
       if (requested === "0x2105") return null;
-      throw Object.assign(new Error("The Agent Bounties embedded wallet currently supports Base mainnet only."), { code: 4902 });
+      throw Object.assign(new Error("The Agentizable embedded wallet currently supports Base mainnet only."), { code: 4902 });
     }
     if (method === "wallet_switchEthereumChain") {
       const requested = String(args?.params?.[0]?.chainId || "").toLowerCase();
       if (requested !== "0x2105") {
-        throw Object.assign(new Error("The Agent Bounties embedded wallet currently supports Base mainnet only."), { code: 4902 });
+        throw Object.assign(new Error("The Agentizable embedded wallet currently supports Base mainnet only."), { code: 4902 });
       }
       return null;
     }
@@ -649,7 +649,7 @@ function registerAdapter() {
     id: ADAPTER_ID,
     info: {
       uuid: PROVIDER_UUID,
-      name: "Agent Bounties embedded wallet",
+      name: "Agentizable embedded wallet",
       icon: ICON,
       rdns: PROVIDER_RDNS,
     },

@@ -115,7 +115,7 @@ async function account({ installed = true, linked = false, linkedAddress = ADDRE
     }
     if (pathname.endsWith("/wallet/challenge")) {
       const request = route.request().postDataJSON(); proofs.push(request);
-      body = { challenge_id: "ownership-only", message: `Agent Bounties wallet ownership verification\n\nSign this message to link the wallet to your signed-in Agent Bounties account.\nThis proves address control only. It does not authorize a transaction, token approval, or payment.\nWallet: ${request.address}` };
+      body = { challenge_id: "ownership-only", message: `Agentizable wallet ownership verification\n\nSign this message to link the wallet to your signed-in Agentizable account.\nThis proves address control only. It does not authorize a transaction, token approval, or payment.\nWallet: ${request.address}` };
     }
     if (pathname.endsWith("/wallet/verify")) {
       const request = route.request().postDataJSON(); proofs.push(request);

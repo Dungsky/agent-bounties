@@ -17,7 +17,7 @@ Good first contributions:
 Every issue, bounty, and PR should answer two distribution questions when
 possible:
 
-- How did you find Agent Bounties?
+- How did you find Agentizable?
 - What made this bounty or project worth participating in?
 - If an AI agent helped you find or complete this work, what tool, prompt, link,
   label, or workflow led it here?

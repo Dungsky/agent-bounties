@@ -9,7 +9,7 @@ npm ci --prefix tools/coinbase-embedded-wallet --ignore-scripts --no-audit --no-
 npm rebuild --prefix tools/coinbase-embedded-wallet esbuild
 npm run check --prefix tools/coinbase-embedded-wallet
 COINBASE_WALLET_OUTDIR=site/vendor npm run build --prefix tools/coinbase-embedded-wallet
-python3 scripts/configure-wallet-providers.py --verify-origin https://agentbounties.app
+python3 scripts/configure-wallet-providers.py --verify-origin https://agentizable.ai
 python3 scripts/configure-phone-wallet.py
 python3 scripts/prepare-site-fonts.py
 mkdir -p site/schemas

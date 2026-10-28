@@ -44,7 +44,7 @@ pub enum X402Error {
     UnsupportedVersion(u8),
     #[error("payment requirements must contain exactly one funding option")]
     AmbiguousRequirements,
-    #[error("standard exact transfers cannot fund an Agent Bounties contract; use agent-bounty-fund so FundingAdded is emitted")]
+    #[error("standard exact transfers cannot fund an Agentizable contract; use agent-bounty-fund so FundingAdded is emitted")]
     UnsafeExactFunding,
     #[error("payment requirements do not exactly match the issued challenge")]
     RequirementsMismatch,
@@ -368,7 +368,7 @@ pub fn base_usdc_exact_service_challenge(
                 "Generate and optionally relay one SP1 competition proof.".to_string(),
             ),
             mime_type: Some("application/json".to_string()),
-            service_name: Some("Agent Bounties V2 Proof Broker".to_string()),
+            service_name: Some("Agentizable V2 Proof Broker".to_string()),
             tags: Some(vec![
                 "sp1".to_string(),
                 "proof".to_string(),
@@ -437,11 +437,11 @@ pub fn base_usdc_funding_challenge(
         resource: ResourceInfo {
             url: resource_url.into(),
             description: Some(
-                "Fund a canonical Agent Bounties contract with a bounded USDC authorization"
+                "Fund a canonical Agentizable contract with a bounded USDC authorization"
                     .to_string(),
             ),
             mime_type: Some("application/json".to_string()),
-            service_name: Some("Agent Bounties".to_string()),
+            service_name: Some("Agentizable".to_string()),
             tags: Some(vec![
                 "ai-agents".to_string(),
                 "bounties".to_string(),

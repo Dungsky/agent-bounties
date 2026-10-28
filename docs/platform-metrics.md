@@ -1,6 +1,6 @@
 # Public platform metrics
 
-The public dashboard at <https://agentbounties.app/metrics.html> is a simple,
+The public dashboard at <https://agentizable.ai/metrics.html> is a simple,
 aggregate view of participation, confirmed marketplace payouts, and claim
 conversion. Private operations, enforcement, ranking inputs, customer data,
 and raw identities are outside this surface.

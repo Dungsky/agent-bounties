@@ -8,7 +8,7 @@ const emit = (value, status = 0) => {
 };
 
 // Production only permits replaying the signed claim to this exact HTTPS host.
-const ALLOWED_REPLAY_HOST = "api.agentbounties.app";
+const ALLOWED_REPLAY_HOST = "api.agentizable.ai";
 
 function isAllowedReplayUrl(u) {
   try {

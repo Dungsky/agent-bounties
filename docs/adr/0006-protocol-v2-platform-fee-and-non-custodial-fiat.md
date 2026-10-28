@@ -11,9 +11,9 @@ handling an onramp, a wallet, gas, and an offramp themselves.
 
 Add `agent-bounties/autonomous-v2` (`AgentBountyV2`, `AgentBountyFactoryV2`)
 with a platform fee and an optional claim-eligibility gate. Serve individual
-fiat users through wallets they own plus licensed ramps; AgentBounties does
+fiat users through wallets they own plus licensed ramps; Agentizable does
 not custody their funds. Serve business buyers through a separate invoiced
-path where AgentBounties is the seller of record.
+path where Agentizable is the seller of record.
 
 ### Fee rules
 
@@ -109,15 +109,15 @@ events change funding or payment state.
 ### Invoiced business path (seller of record)
 
 Business buyers often cannot hold crypto and need a vendor invoice. On this
-path, AgentBounties (the US entity) sells the verified outcome. It hires
+path, Agentizable (the US entity) sells the verified outcome. It hires
 solvers as its contractors, and the escrow pays them.
 
 1. **Quote and terms.** The buyer accepts business terms stating that
-   AgentBounties is the seller of record and delivers the outcome through
+   Agentizable is the seller of record and delivers the outcome through
    contractors. The quote lists the bounty work (solver plus verifier reward),
    the 7.5% platform fee, and payment-processing pass-through.
 2. **Invoice.** A Stripe Invoice is issued from the US entity's account (card,
-   ACH, or wire). Because AgentBounties provides the service it collects for,
+   ACH, or wire). Because Agentizable provides the service it collects for,
    this is not third-party payment aggregation.
 3. **Payment reconciliation.** Only a signature-verified `invoice.paid` webhook
    matching the stored invoice and amount moves the order to fundable.
@@ -130,18 +130,18 @@ solvers as its contractors, and the escrow pays them.
    chain, contract, selector and amount caps) may replace that after repeated
    clean runs. `FundingAdded` is the only funding evidence.
 5. **Contractor onboarding.** A solver accepts the contractor agreement and
-   submits a W-9 or W-8BEN through a tax-form provider. AgentBounties then
+   submits a W-9 or W-8BEN through a tax-form provider. Agentizable then
    attests the solver's wallet into the contractor registry for at most 365
    days. Requiring a tax form before attestation avoids paying a US payee
    without a TIN, which would otherwise require backup withholding that
    automatic on-chain payout cannot perform.
 6. **Settlement and reporting.** `BountySettled` pays the contractor's own
    wallet directly. The on-chain fee goes to the fee recipient like any other
-   v2 bounty. AgentBounties records contractor payments for 1099 reporting.
+   v2 bounty. Agentizable records contractor payments for 1099 reporting.
 7. **Cancellation.** Refunds return to the treasury creator, and the buyer is
    refunded through Stripe (a refund or credit note) against the same invoice.
 
-The treasury holds only AgentBounties' own funds, which it spends on its own
+The treasury holds only Agentizable' own funds, which it spends on its own
 orders. It never holds individual users' balances, so the non-custodial path's
 boundary is unchanged.
 
@@ -197,7 +197,7 @@ evidence for these properties.
 - **Fee pulled after payout in every case.** This needs a second transaction
   per bounty and leaves revenue idle in escrow. Paying at payout with a
   deferred-forward fallback keeps the normal case to one transaction.
-- **Unrestricted claims on invoiced bounties.** AgentBounties could not hold
+- **Unrestricted claims on invoiced bounties.** Agentizable could not hold
   contractor agreements or tax forms for whoever claims, and could not
   withhold from automatic payouts.
 - **Platform custody of fiat users' USDC (one shared wallet).** This turns the

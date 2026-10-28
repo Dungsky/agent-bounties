@@ -83,7 +83,7 @@ class DistributionGateTests(unittest.TestCase):
 
     def test_vendor_order_requires_current_deployed_destination_and_future_alias(self) -> None:
         orders = copy.deepcopy(ORDERS)
-        orders["orders"][0]["install_destination"] = "https://install.agentbounties.app/glama"
+        orders["orders"][0]["install_destination"] = "https://install.agentizable.ai/glama"
         with self.assertRaisesRegex(gate.DistributionGateError, "deployed rail-specific"):
             gate.validate_orders(POLICY, orders)
 
@@ -110,7 +110,7 @@ class DistributionGateTests(unittest.TestCase):
             with self.subTest(rail=paid):
                 orders = copy.deepcopy(ORDERS)
                 order = next(row for row in orders["orders"] if row["rail_id"] == paid)
-                order["source_endpoint"] = f"https://mcp.agentbounties.app/r/{organic}/mcp"
+                order["source_endpoint"] = f"https://mcp.agentizable.ai/r/{organic}/mcp"
                 with self.assertRaisesRegex(gate.DistributionGateError, "source endpoint"):
                     gate.validate_orders(POLICY, orders)
 

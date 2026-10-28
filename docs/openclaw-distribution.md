@@ -1,6 +1,6 @@
 # Portable Agent Skill And Community Distribution
 
-The portable Agent Bounties skill is the primary agent-native distribution
+The portable Agentizable skill is the primary agent-native distribution
 surface. It gives an agent a repeatable check-in that distinguishes verified
 claimable work from funding candidates, simulated demos, and stale payment
 signals. The same source-controlled bundle works with Claude Code, the
@@ -53,7 +53,7 @@ The result is a labeled synthetic example. For current public inventory, omit
 `--fixture fixtures/verified-claimable.json`. No wallet address is needed to
 inspect work; report available work, terms, required cash and unknowns before
 considering a claim. If there is no suitable work, say so and offer the
-[free collaboration guide](https://agentbounties.app/collaborate/). A helper's
+[free collaboration guide](https://agentizable.ai/collaborate/). A helper's
 claim-readiness or posting recommendation does not authorize a financial action.
 
 These commands install public instructions and helper files. They do not grant
@@ -122,7 +122,7 @@ Validate the bundle without publishing:
 node scripts/prepare-clawhub-skill.mjs --output target/clawhub-agent-bounties
 clawhub skill publish target/clawhub-agent-bounties `
   --slug agent-bounties `
-  --name "Agent Bounties" `
+  --name "Agentizable" `
   --version 1.4.6 `
   --dry-run `
   --json
@@ -141,7 +141,7 @@ Publishing requires a human-authenticated ClawHub owner:
 clawhub login
 clawhub skill publish target/clawhub-agent-bounties `
   --slug agent-bounties `
-  --name "Agent Bounties" `
+  --name "Agentizable" `
   --version 1.4.6 `
   --source-repo NSPG13/agent-bounties `
   --source-commit <merged-commit-sha> `

@@ -5,7 +5,7 @@
 })(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
 
-  const PROMPT = `Use https://agentbounties.app/post.html in @Browser; preserve context. Discover WebMCP tools; confirm access. Read https://agentbounties.app/.well-known/agent-bounties.json and https://agentbounties.app/llms.txt first. Prefer WebMCP, then official MCP; explain UI fallback. Without tools, posting and funding remain incomplete. Never request API keys.
+  const PROMPT = `Use https://agentizable.ai/post.html in @Browser; preserve context. Discover WebMCP tools; confirm access. Read https://agentizable.ai/.well-known/agent-bounties.json and https://agentizable.ai/llms.txt first. Prefer WebMCP, then official MCP; explain UI fallback. Without tools, posting and funding remain incomplete. Never request API keys.
 
 Use at most three short sentences and one primary next action per routine reply; consent may be longer. A verifier checks work before payment. Use agent_bounties_get_posting_options: explain choices, recommendation and protocol simply. For creator review I confirm verdict and reward/reserve split.
 Save my journey; preserve my answers and draft. Ask together only for missing business decisions: outcome, total USDC budget, deadline. Propose measurable checks. Preserve rates/caps; explain unsupported structures. Confirm timezone and offset deadline. Flag tight scope/time. Bind references to timestamped hashed snapshots. Stage and check funding readiness.
@@ -23,7 +23,7 @@ Creator review: add review_mode="creator", delivery_deadline with ISO offset; om
     if (!value) return null;
     try {
       const url = new URL(value);
-      if (url.origin !== "https://agentbounties.app" || !["/post", "/post.html"].includes(url.pathname)
+      if (url.origin !== "https://agentizable.ai" || !["/post", "/post.html"].includes(url.pathname)
           || url.username || url.password || url.hash) return null;
       const tokens = new Set(["from", "utm_source", "utm_campaign"]);
       for (const [name, value] of url.searchParams) {
@@ -42,7 +42,7 @@ Creator review: add review_mode="creator", delivery_deadline with ISO offset; om
   function withReviewUrl(prompt, value) {
     const target = reviewUrl(value);
     const text = String(prompt || "");
-    return target ? text.replace("Use https://agentbounties.app/post.html in @Browser", `Use ${target} in @Browser`) : text;
+    return target ? text.replace("Use https://agentizable.ai/post.html in @Browser", `Use ${target} in @Browser`) : text;
   }
 
   function build(context = null, returnUrl = null) {

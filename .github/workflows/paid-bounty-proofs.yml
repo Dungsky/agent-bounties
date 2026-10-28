@@ -10,7 +10,7 @@ on:
         description: GitHub issue number to receive the proof comment.
         required: true
       api_base_url:
-        description: Public Agent Bounties API base URL.
+        description: Public Agentizable API base URL.
         required: true
       settlement_url:
         description: Optional settlement transaction or record URL.

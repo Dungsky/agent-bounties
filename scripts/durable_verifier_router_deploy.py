@@ -18,7 +18,7 @@ from typing import Any, Mapping, Sequence
 
 BASE_CHAIN_ID = 8453
 BASE_RPC_DEFAULT = "https://mainnet.base.org"
-API_DEFAULT = "https://api.agentbounties.app"
+API_DEFAULT = "https://api.agentizable.ai"
 SINGLETON_FACTORY = "0xce0042b868300000d44a59004da54a005ffdcf9f"
 CANONICAL_FACTORY = "0x082c52131aaf0c56e76b075f895eab6fcab6d2f9"
 NATIVE_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"

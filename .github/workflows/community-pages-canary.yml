@@ -27,11 +27,11 @@ jobs:
           for attempt in $(seq 1 30); do
             nonce="${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}-${attempt}-$(date +%s)"
             args=(--fail --silent --show-error --location --connect-timeout 10 --max-time 30 --retry 2 --retry-delay 1 --header "Cache-Control: no-cache")
-            if python scripts/check-public-site-canary.py --base-url https://agentbounties.app --nonce "${nonce}" \
-              && curl "${args[@]}" "https://agentbounties.app/llms.txt?verify=${nonce}" -o /tmp/llms.txt \
-              && curl "${args[@]}" "https://agentbounties.app/.well-known/agent-bounties.json?verify=${nonce}" -o /tmp/discovery.json \
-              && curl "${args[@]}" "https://agentbounties.app/schemas/discovery-manifest.v2.json?verify=${nonce}" -o /tmp/schema.json \
-              && curl "${args[@]}" "https://agentbounties.app/protocol.json?verify=${nonce}" -o /tmp/protocol.json \
+            if python scripts/check-public-site-canary.py --base-url https://agentizable.ai --nonce "${nonce}" \
+              && curl "${args[@]}" "https://agentizable.ai/llms.txt?verify=${nonce}" -o /tmp/llms.txt \
+              && curl "${args[@]}" "https://agentizable.ai/.well-known/agent-bounties.json?verify=${nonce}" -o /tmp/discovery.json \
+              && curl "${args[@]}" "https://agentizable.ai/schemas/discovery-manifest.v2.json?verify=${nonce}" -o /tmp/schema.json \
+              && curl "${args[@]}" "https://agentizable.ai/protocol.json?verify=${nonce}" -o /tmp/protocol.json \
               && grep -q 'server/discover' /tmp/llms.txt \
               && grep -q 'earn.html' /tmp/llms.txt \
               && python - <<'PY'
@@ -42,18 +42,18 @@ jobs:
           expected = 'https://agentbounties.app/schemas/discovery-manifest.v2.json'
           assert discovery['schema'] == expected
           assert schema['$id'] == expected
-          assert discovery['default_cta']['href'] == 'https://agentbounties.app/#post-a-bounty'
+          assert discovery['default_cta']['href'] == 'https://agentizable.ai/#post-a-bounty'
           assert protocol['status'] == 'active'
           assert protocol['chain_id'] == 8453
           PY
             then
-              if ! python scripts/check-public-handoffs.py --base-url https://agentbounties.app; then
+              if ! python scripts/check-public-handoffs.py --base-url https://agentizable.ai; then
                 sleep 5
                 continue
               fi
               removed_ok=true
               for route in objective.html funding.html; do
-                status="$(curl --silent --connect-timeout 10 --max-time 30 --output /dev/null --write-out '%{http_code}' "https://agentbounties.app/${route}?verify=${nonce}")"
+                status="$(curl --silent --connect-timeout 10 --max-time 30 --output /dev/null --write-out '%{http_code}' "https://agentizable.ai/${route}?verify=${nonce}")"
                 if [[ "$status" != "404" ]]; then
                   removed_ok=false
                   break

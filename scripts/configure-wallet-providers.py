@@ -16,7 +16,7 @@ from typing import Callable
 PLACEHOLDER = "__COINBASE_CDP_PROJECT_ID__"
 CANONICAL_REPOSITORY = "NSPG13/agent-bounties"
 CANONICAL_PROJECT_ID = "9dfed88a-0b37-47e8-b867-96f1dfd0d4ee"
-CANONICAL_ORIGIN = "https://agentbounties.app"
+CANONICAL_ORIGIN = "https://agentizable.ai"
 COINBASE_API_BASE = "https://api.cdp.coinbase.com/platform"
 PROJECT_ID = re.compile(r"^[A-Za-z0-9_-]{8,128}$")
 OpenUrl = Callable[..., object]

@@ -675,7 +675,7 @@ fn plan_github_requests(
                         ("content-type".to_string(), "application/json".to_string()),
                         (
                             "user-agent".to_string(),
-                            "AgentBounties-GitHub-App".to_string(),
+                            "Agentizable-GitHub-App".to_string(),
                         ),
                         ("x-github-api-version".to_string(), "2022-11-28".to_string()),
                     ],
@@ -710,7 +710,7 @@ fn plan_github_requests(
                         ("content-type".to_string(), "application/json".to_string()),
                         (
                             "user-agent".to_string(),
-                            "AgentBounties-GitHub-App".to_string(),
+                            "Agentizable-GitHub-App".to_string(),
                         ),
                         ("x-github-api-version".to_string(), "2022-11-28".to_string()),
                     ],
@@ -843,7 +843,7 @@ fn validate_status_comment(stable_marker: &str, markdown: &str) -> Result<(), St
         || stable_marker.len() > 128
         || !markdown.ends_with(stable_marker)
     {
-        return Err("status comment is missing its valid stable Agent Bounties marker".to_string());
+        return Err("status comment is missing its valid stable Agentizable marker".to_string());
     }
     if markdown.is_empty() || markdown.len() > MAX_PROVIDER_COMMENT_BYTES {
         return Err("status comment is empty or exceeds the provider limit".to_string());

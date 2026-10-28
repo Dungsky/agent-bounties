@@ -50,7 +50,7 @@
   }
   function apiBase(location) {
     return ["localhost", "127.0.0.1", "::1", "[::1]"].includes(location?.hostname)
-      ? "http://127.0.0.1:3000" : "https://api.agentbounties.app";
+      ? "http://127.0.0.1:3000" : "https://api.agentizable.ai";
   }
   function units(amount) {
     if (!amount || amount.unit !== "base_units" || amount.decimals !== 6 || !/^\d+$/.test(String(amount.amount))) return null;

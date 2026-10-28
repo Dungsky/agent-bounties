@@ -56,7 +56,7 @@ report without placing the operator token on the command line:
 
 ```bash
 OPERATOR_API_TOKEN=... python scripts/distribution_dashboard.py \
-  --api-base https://api.agentbounties.app \
+  --api-base https://api.agentizable.ai \
   --control /path/to/operator-reviewed-distribution-control.json \
   --output target/distribution-dashboard.json
 ```

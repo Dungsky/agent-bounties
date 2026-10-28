@@ -32,7 +32,7 @@ from typing import Any, Callable, Mapping, Sequence
 import relay_autonomous_action as relay
 
 SCHEMA = "agent-bounties/autonomous-auto-verify-v1"
-DEFAULT_API = "https://api.agentbounties.app"
+DEFAULT_API = "https://api.agentizable.ai"
 NETWORK = "base-mainnet"
 MODULE = relay.LEADING_ZERO_WORK_VERIFIER_MODULE
 ENGINE = "leading_zero_work_v1"

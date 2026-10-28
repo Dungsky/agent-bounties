@@ -5,7 +5,7 @@ use serde_json::Value;
 
 #[derive(Debug, Args)]
 pub struct OpportunityArgs {
-    #[arg(long, default_value = "https://api.agentbounties.app")]
+    #[arg(long, default_value = "https://api.agentizable.ai")]
     api_base_url: String,
     #[arg(long, default_value = "base-mainnet", value_parser = ["base-mainnet", "base-sepolia"])]
     network: String,

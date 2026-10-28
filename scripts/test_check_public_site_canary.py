@@ -31,7 +31,7 @@ class PublicSiteCanaryTests(unittest.TestCase):
         return self.overrides.get(path, (SITE / path).read_bytes())
 
     def run_canary(self):
-        return guard.check_deployed("https://agentbounties.app", SITE, "fixture", self.deployed)
+        return guard.check_deployed("https://agentizable.ai", SITE, "fixture", self.deployed)
 
     def test_current_homepage_and_every_referenced_asset_pass(self):
         self.assertGreater(self.run_canary(), 10)
@@ -73,7 +73,7 @@ class PublicSiteCanaryTests(unittest.TestCase):
             "visible task input": self.home.replace('name="task" type="hidden"', 'name="task" type="text"'),
             "task outside posting form": self.home.replace('<input id="home-task"', '</form><input id="home-task"'),
             "missing assistant": self.home.replace('data-bounty-assistant="custom"', 'data-old-assistant="custom"'),
-            "wrong canonical": self.home.replace('<link rel="canonical" href="https://agentbounties.app/">',
+            "wrong canonical": self.home.replace('<link rel="canonical" href="https://agentizable.ai/">',
                                                  '<link rel="canonical" href="https://example.invalid/">'),
         }
         for name, home in mutations.items():
@@ -140,7 +140,7 @@ class PublicSiteCanaryTests(unittest.TestCase):
             next_home = self.home.replace("solarpunk.css?v=", "solarpunk.css?v=next-")
             (site / "index.html").write_text(next_home, encoding="utf-8")
             self.overrides["index.html"] = next_home.encode()
-            self.assertGreater(guard.check_deployed("https://agentbounties.app", site, "fixture", self.deployed), 10)
+            self.assertGreater(guard.check_deployed("https://agentizable.ai", site, "fixture", self.deployed), 10)
 
     def beacon(self):
         return json.loads(guard.EDGE_PROFILE.read_text(encoding="utf-8"))["script"]
@@ -153,7 +153,7 @@ class PublicSiteCanaryTests(unittest.TestCase):
             with self.subTest(beacon_present=home != self.home):
                 self.overrides["index.html"] = home.encode()
                 self.assertEqual(self.run_canary(), 23)
-        self.assertTrue(all(urlsplit(url).netloc == "agentbounties.app" for url in self.requests))
+        self.assertTrue(all(urlsplit(url).netloc == "agentizable.ai" for url in self.requests))
 
     def test_changed_edge_script_attributes_or_config_fail(self):
         beacon = self.beacon()
@@ -243,7 +243,7 @@ class PublicSiteCanaryTests(unittest.TestCase):
             return self.deployed(url)
 
         with self.assertRaises(URLError):
-            guard.check_deployed("https://agentbounties.app", SITE, "fixture", unavailable)
+            guard.check_deployed("https://agentizable.ai", SITE, "fixture", unavailable)
 
 
 if __name__ == "__main__":

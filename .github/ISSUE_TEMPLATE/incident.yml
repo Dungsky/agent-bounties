@@ -1,5 +1,5 @@
 name: Operational incident
-description: Record a public, redacted Agent Bounties incident and recovery evidence.
+description: Record a public, redacted Agentizable incident and recovery evidence.
 title: "[incident]: "
 labels: []
 body:

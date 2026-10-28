@@ -21,7 +21,7 @@ LINKED_ISSUE_RE = re.compile(
 )
 CONTRACT_RE = re.compile(r"Contract:\s*`(0x[0-9a-fA-F]{40})`")
 API_FEED = (
-    "https://api.agentbounties.app/v1/base/autonomous-bounties/feed"
+    "https://api.agentizable.ai/v1/base/autonomous-bounties/feed"
     "?network=base-mainnet&claimable_only=false"
 )
 

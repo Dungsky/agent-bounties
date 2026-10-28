@@ -33,7 +33,7 @@ immutable first touch and records the later rail separately as an assist.
 The response also returns `x-agent-bounties-attribution-rail` and
 `x-agent-bounties-first-touch-rail`, plus
 `x-agent-bounties-measurement-eligible`. The same evidence is included in MCP
-result metadata under `agentbounties.app/acquisition`. MCP `initialize` and `tools/list`
+result metadata under `agentizable.ai/acquisition`. MCP `initialize` and `tools/list`
 are safe probes: they write analytics observations only and do not prepare a
 draft, start wallet review, sign, fund, or invoke any mutation tool.
 
@@ -138,7 +138,7 @@ After deploying both services and the migration, run:
 
 ```bash
 python scripts/check-distribution-rail-mcp.py \
-  --endpoint https://mcp.agentbounties.app \
+  --endpoint https://mcp.agentizable.ai \
   --repetitions 3 --canary-kind dry-run-v1 --json
 ```
 

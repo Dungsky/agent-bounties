@@ -12,7 +12,7 @@ function responseQuote(request) {
     artifact_hash: request.artifact_hash || hash("a"), proof_system: "groth16", quote_id: hash("b"), gross_prize: "3000000", proof_fee_quote: "100000", relay_fee_quote: "10000",
     net_prize_if_win: "2890000", maximum_charge: "110000", winner_mode: "best_score", competition_risk: "Another entry can win.", quote_expiration: Math.floor(Date.now() / 1000) + 299 };
   return { proof_job_id: id, quote: q, payment_required: { x402Version: 2,
-    resource: { url: `https://api.agentbounties.app/v1/base/open-competition-v2-beta3/proof-jobs/${id}/payment` },
+    resource: { url: `https://api.agentizable.ai/v1/base/open-competition-v2-beta3/proof-jobs/${id}/payment` },
     accepts: [{ scheme: "exact", network: "eip155:8453", asset: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", amount: "110000", payTo: broker, maxTimeoutSeconds: 300,
       extra: { maximumCharge: "110000", quoteId: q.quote_id, competition: contract, solver: request.solver, artifactHash: q.artifact_hash, proofSystem: "groth16", assetTransferMethod: "eip3009", name: "USD Coin", version: "2" } }] } };
 }
@@ -35,7 +35,7 @@ function setup(storage = new Map(), server = {}) {
     }
     throw new Error(`Unexpected wallet method ${req.method}`);
   } };
-  const win = { document: doc, location: new URL(`https://agentbounties.app/competition.html?bountyContract=${contract}`), history: { replaceState() {} }, crypto: webcrypto,
+  const win = { document: doc, location: new URL(`https://agentizable.ai/competition.html?bountyContract=${contract}`), history: { replaceState() {} }, crypto: webcrypto,
     AgentBountiesEvm: evm, AgentBountiesWorkflow: flow, AgentBountiesLegal: { requireAcceptance: async () => ({ durable: true }) }, ethereum: provider,
     sessionStorage: { getItem: (k) => storage.get(k) || null, setItem: (k, v) => { if (server.noStorage) throw new Error("Storage unavailable"); storage.set(k, v); } },
     addEventListener(name, listener) { windowEvents.set(name, listener); }, dispatchEvent(event) { windowEvents.get(event.type)?.(event); }, Event: class {}, setInterval() {}, btoa: (s) => Buffer.from(s, "binary").toString("base64"),
@@ -185,7 +185,7 @@ test("an expired or altered charge, recipient resource, chain or proof binding i
   }
 });
 test("forward GMV fetches the exact published snapshot and never quotes before the scoring window closes", async () => {
-  const e = setup(); e.server.item.evidence_requirements = { program_profile: "forward-canonical-gmv-attribution-metric-v2", snapshot_url: "https://agentbounties.app/generated/gmv-snapshots/test-seed.json", scoring_window: { starts_at: new Date(Date.now() - 3600000).toISOString(), ends_at: new Date(Date.now() + 3600000).toISOString() } };
+  const e = setup(); e.server.item.evidence_requirements = { program_profile: "forward-canonical-gmv-attribution-metric-v2", snapshot_url: "https://agentizable.ai/generated/gmv-snapshots/test-seed.json", scoring_window: { starts_at: new Date(Date.now() - 3600000).toISOString(), ends_at: new Date(Date.now() + 3600000).toISOString() } };
   const api = await e.start(); await assert.rejects(api.prepareQuote({ solver: wallet }), /still open/); assert.equal(e.server.quoteCount, undefined);
   e.server.item.evidence_requirements.scoring_window.ends_at = new Date(Date.now() - 1000).toISOString(); e.server.noSnapshot = true;
   await assert.rejects(api.prepareQuote({ solver: wallet }), /not published/); assert.equal(e.server.quoteCount, undefined);
@@ -219,10 +219,10 @@ test("restoring a job from another competition fails before a payment or relay r
 test("wallet funding returns only to allowed same-origin competition and participation workspaces", () => {
   const source = fs.readFileSync(require.resolve("../site/moonpay-onramp.js"), "utf8");
   const helper = source.slice(source.indexOf("  function safeReturnUrl()"), source.indexOf("  function ", source.indexOf("  function safeReturnUrl()") + 12));
-  for (const target of ["https://agentbounties.app/competition.html?proofJob=" + id, "https://agentbounties.app/participate.html?intent=" + id, "https://evil.example/competition.html"]) {
-    const location = new URL("https://agentbounties.app/onramp.html?return=" + encodeURIComponent(target));
+  for (const target of ["https://agentizable.ai/competition.html?proofJob=" + id, "https://agentizable.ai/participate.html?intent=" + id, "https://evil.example/competition.html"]) {
+    const location = new URL("https://agentizable.ai/onramp.html?return=" + encodeURIComponent(target));
     const restored = vm.runInNewContext(helper + "\nsafeReturnUrl().href", { location, URL, URLSearchParams });
-    assert.equal(restored, target.includes("evil.example") ? "https://agentbounties.app/post.html" : target);
+    assert.equal(restored, target.includes("evil.example") ? "https://agentizable.ai/post.html" : target);
   }
 });
 

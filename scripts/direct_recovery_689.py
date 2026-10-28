@@ -219,7 +219,7 @@ def require_pull_request_url(value: object) -> str:
         text,
     ):
         raise RecoveryError(
-            "pull_request_url must identify the reviewed Agent Bounties PR"
+            "pull_request_url must identify the reviewed Agentizable PR"
         )
     return text
 

@@ -257,7 +257,7 @@ jobs:
           npm ci --prefix tools/coinbase-embedded-wallet --ignore-scripts --no-audit --no-fund
           npm rebuild --prefix tools/coinbase-embedded-wallet esbuild
           npm run build --prefix tools/coinbase-embedded-wallet
-          python scripts/configure-wallet-providers.py --verify-origin https://agentbounties.app
+          python scripts/configure-wallet-providers.py --verify-origin https://agentizable.ai
           test -s site/vendor/coinbase-embedded-wallet.bundle.js
           test -s site/vendor/coinbase-embedded-wallet.bundle.css
       - name: Configure phone-wallet pairing
@@ -316,15 +316,15 @@ jobs:
         run: |
           set -euo pipefail
           nonce="${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}-$(date +%s)"
-          curl --fail --silent --show-error --location "https://agentbounties.app/?verify=${nonce}" -o /tmp/live-index.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/earn.html?verify=${nonce}" -o /tmp/live-earn.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/funded.html?verify=${nonce}" -o /tmp/live-funded.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/participate.html?verify=${nonce}" -o /tmp/live-participate.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/competition.html?verify=${nonce}" -o /tmp/live-competition.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/metrics.html?verify=${nonce}" -o /tmp/live-metrics.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/privacy.html?verify=${nonce}" -o /tmp/live-privacy.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/terms.html?verify=${nonce}" -o /tmp/live-terms.html
-          curl --fail --silent --show-error --location "https://agentbounties.app/.well-known/agent-bounties.json?verify=${nonce}" -o /tmp/live-discovery.json
+          curl --fail --silent --show-error --location "https://agentizable.ai/?verify=${nonce}" -o /tmp/live-index.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/earn.html?verify=${nonce}" -o /tmp/live-earn.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/funded.html?verify=${nonce}" -o /tmp/live-funded.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/participate.html?verify=${nonce}" -o /tmp/live-participate.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/competition.html?verify=${nonce}" -o /tmp/live-competition.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/metrics.html?verify=${nonce}" -o /tmp/live-metrics.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/privacy.html?verify=${nonce}" -o /tmp/live-privacy.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/terms.html?verify=${nonce}" -o /tmp/live-terms.html
+          curl --fail --silent --show-error --location "https://agentizable.ai/.well-known/agent-bounties.json?verify=${nonce}" -o /tmp/live-discovery.json
           grep -q 'data-scene-root' /tmp/live-index.html
           grep -q 'data-home-task' /tmp/live-index.html
           grep -q '<option value="now" selected>Open now</option>' /tmp/live-earn.html
@@ -338,10 +338,10 @@ jobs:
           grep -q 'discovery-manifest.v2.json' /tmp/live-discovery.json
           phone_wallet_script="$(python -c 'import re; from pathlib import Path; print(re.search(r"phone-wallet\.js\?v=\d+", Path("site/index.html").read_text()).group(0))')"
           grep -Fq "${phone_wallet_script}" /tmp/live-index.html
-          curl --fail --silent --show-error "https://agentbounties.app/phone-wallet-config.js?verify=${nonce}" -o /tmp/live-phone-wallet-config.js
+          curl --fail --silent --show-error "https://agentizable.ai/phone-wallet-config.js?verify=${nonce}" -o /tmp/live-phone-wallet-config.js
           grep -Eq 'projectId: "[a-fA-F0-9]{32}"' /tmp/live-phone-wallet-config.js
-          python scripts/check-public-handoffs.py --base-url https://agentbounties.app
+          python scripts/check-public-handoffs.py --base-url https://agentizable.ai
           for route in objective.html funding.html; do
-            status="$(curl --silent --output /dev/null --write-out '%{http_code}' "https://agentbounties.app/${route}?verify=${nonce}")"
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' "https://agentizable.ai/${route}?verify=${nonce}")"
             [[ "${status}" == "404" ]]
           done

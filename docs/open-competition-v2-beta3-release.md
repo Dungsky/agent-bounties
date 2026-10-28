@@ -235,7 +235,7 @@ SP1_PLONK_PK_PATH=/mnt/agent-bounties-artifacts/sp1-safe-v5-trusted/plonk/plonk_
 
 Give the same API key only to the Render broker and point
 `OPEN_COMPETITION_V2_PROVER_URL` to
-`https://prover.agentbounties.app/v1/prove`. The service permits one proof at a
+`https://prover.agentizable.ai/v1/prove`. The service permits one proof at a
 time, stores idempotent job records durably, resumes pending records after a
 restart, rejects journal drift, and never enables GPU or network proving.
 

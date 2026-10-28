@@ -4,8 +4,8 @@ Use a deterministic, public test issue and an excluded operator wallet. The
 demo proves the product boundary; it is not external acquisition.
 
 1. Open the platform-specific page under
-   <https://agentbounties.app/install/> and connect its attributed MCP URL.
-2. Ask: `Delegate this issue through Agent Bounties. Draft binary acceptance
+   <https://agentizable.ai/install/> and connect its attributed MCP URL.
+2. Ask: `Delegate this issue through Agentizable. Draft binary acceptance
    criteria and a replayable test, then stop before any wallet action.`
 3. Show the resulting terms, reward, deadline, verifier, origin URL, and
    first-party review handoff.

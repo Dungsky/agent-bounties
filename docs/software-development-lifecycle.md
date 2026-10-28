@@ -1,6 +1,6 @@
 # Software Development Lifecycle
 
-This is the release contract for Agent Bounties. It applies to human and agent
+This is the release contract for Agentizable. It applies to human and agent
 contributors, hosted services, payment integrations, verifier policies, and
 immutable contracts. A change is complete only when its behavior, evidence,
 failure mode, recovery path, and distribution effect are measurable.

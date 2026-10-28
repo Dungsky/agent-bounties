@@ -148,7 +148,7 @@ pub(crate) async fn create_stripe_onramp_session(
         .to_string();
     let allowed = setting(
         "STRIPE_CRYPTO_ONRAMP_ALLOWED_ORIGINS",
-        "https://agentbounties.app",
+        "https://agentizable.ai,https://www.agentizable.ai,https://agentbounties.app,https://www.agentbounties.app",
     );
     if origin.is_empty()
         || !allowed

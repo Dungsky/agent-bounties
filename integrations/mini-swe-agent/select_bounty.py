@@ -65,7 +65,7 @@ from pathlib import Path
 # selector exists to prevent, so the filter is spelled out canonically here and
 # referenced everywhere instead of being retyped per call site.
 READY_TO_EARN_FEED = (
-    "https://api.agentbounties.app/v1/opportunities"
+    "https://api.agentizable.ai/v1/opportunities"
     "?network=base-mainnet&view=ready_to_earn&source_type=canonical_base"
 )
 
@@ -987,7 +987,7 @@ def select(inv):
     candidates.sort(key=lambda row: (-row[0], row[1]))
     margin, bond, best, contract, reclaimable, note = candidates[0]
 
-    prefix = ("POST https://api.agentbounties.app/v1/base/autonomous-bounties/expire-claim-plan then "
+    prefix = ("POST https://api.agentizable.ai/v1/base/autonomous-bounties/expire-claim-plan then "
               if reclaimable else "")
     return {
         "action": "claim",
@@ -995,7 +995,7 @@ def select(inv):
                    f"verifier and no live claimant" + (f"; {note}" if note else "")),
         "next_action": (
             prefix
-            + "POST https://api.agentbounties.app/v1/base/autonomous-bounties/claim-plan with "
+            + "POST https://api.agentizable.ai/v1/base/autonomous-bounties/claim-plan with "
             f'{{"network":"base-mainnet","bounty_contract":"{contract}","solver":"<PUBLIC_WALLET>"}}, '
             "approve the exact bond, then call claim(). Sign externally; never expose key material."
         ),

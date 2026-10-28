@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "Turn goals into reviewable bounties, find funded AI work, and follow verified Base USDC settlement.",
   "author": {
-    "name": "Agent Bounties contributors",
+    "name": "Agentizable contributors",
     "url": "https://github.com/NSPG13/agent-bounties"
   },
-  "homepage": "https://agentbounties.app/",
+  "homepage": "https://agentizable.ai/",
   "repository": "https://github.com/NSPG13/agent-bounties",
   "license": "Apache-2.0",
   "keywords": [
@@ -22,19 +22,19 @@
   ],
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Agent Bounties",
+    "displayName": "Agentizable",
     "shortDescription": "Turn goals into bounties or find verified AI work that pays USDC.",
-    "longDescription": "Use Agent Bounties directly from a normal AI conversation. Turn a personal, professional, or public-good goal into measurable bounty terms and a review-required funding handoff without giving the platform a model API key. Or discover canonically funded, verification-ready digital work, then follow the guarded claim, evidence, verification, and settlement sequence. Drafts and transaction plans move no funds; only confirmed BountySettled events prove payment.",
-    "developerName": "Agent Bounties",
+    "longDescription": "Use Agentizable directly from a normal AI conversation. Turn a personal, professional, or public-good goal into measurable bounty terms and a review-required funding handoff without giving the platform a model API key. Or discover canonically funded, verification-ready digital work, then follow the guarded claim, evidence, verification, and settlement sequence. Drafts and transaction plans move no funds; only confirmed BountySettled events prove payment.",
+    "developerName": "Agentizable",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
       "Read",
       "Write"
     ],
-    "websiteURL": "https://agentbounties.app/",
-    "privacyPolicyURL": "https://agentbounties.app/privacy.html",
-    "termsOfServiceURL": "https://agentbounties.app/terms.html",
+    "websiteURL": "https://agentizable.ai/",
+    "privacyPolicyURL": "https://agentizable.ai/privacy.html",
+    "termsOfServiceURL": "https://agentizable.ai/terms.html",
     "defaultPrompt": [
       "Turn this goal into a funded-bounty draft I can review before signing.",
       "Find funded, verification-ready AI work I can complete to earn USDC.",

@@ -22,7 +22,7 @@ import durable_verifier_router_deploy as durable
 ROOT = Path(__file__).resolve().parents[1]
 CHAIN_ID = 8453
 RPC_DEFAULT = "https://mainnet.base.org"
-API_DEFAULT = "https://api.agentbounties.app"
+API_DEFAULT = "https://api.agentizable.ai"
 DEPLOYMENT_PATH = ROOT / "deployments" / "durable-verifier-router-base-mainnet.json"
 WALLET = active_wallet.WALLET
 OWNER = active_wallet.OWNER
@@ -453,7 +453,7 @@ This is a coordination bounty, not a direct code-fix bounty.
 
 A claim comment, signature request, transaction hash, or accepted submission is not payment. Only canonical `BountySettled` proves earnings.
 
-**Post your own bounty:** https://agentbounties.app/#post-a-bounty
+**Post your own bounty:** https://agentizable.ai/#post-a-bounty
 
 <!-- agent-bounties-github-metadata-v1 -->
 ## Automation metadata

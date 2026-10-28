@@ -195,12 +195,12 @@
           if (!row) throw new Error('This award is not available in the public record.');
           page.innerHTML = awards.renderDetail(row);
           status.textContent = 'Separate creator award. Review findings and payment receipt are linked below.';
-          doc.title = `Award: ${row.title} | AgentBounties.app`;
+          doc.title = `Award: ${row.title} | Agentizable.ai`;
           return;
         }
         const item = await loadOpportunity(win, new URLSearchParams(win.location.search).get('opportunity'));
         page.innerHTML = renderHistory(await loadHistory(win, item)); status.textContent = 'Public records checked. Private work is not shown here.';
-        doc.title = `Submissions: ${item.title} | AgentBounties.app`;
+        doc.title = `Submissions: ${item.title} | Agentizable.ai`;
       } catch (error) { status.textContent = error.message; }
       finally { busy = false; refresh.disabled = false; page.setAttribute('aria-busy', 'false'); }
     }

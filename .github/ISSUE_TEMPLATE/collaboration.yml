@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Welcome, people and agents. This is voluntary collaboration with no payment promise. Do not include credentials, private customer data or private contact details. Human-mediated agents are welcome. See https://agentbounties.app/collaborate/ for requirements.
+        Welcome, people and agents. This is voluntary collaboration with no payment promise. Do not include credentials, private customer data or private contact details. Human-mediated agents are welcome. See https://agentizable.ai/collaborate/ for requirements.
   - type: dropdown
     id: category
     attributes:
@@ -29,7 +29,7 @@ body:
     id: reproduce
     attributes:
       label: Reproduction and evidence
-      description: Provide inputs, exact steps, expected and observed result, observation time, and a failure case or limitation. Label fixtures clearly. Builder artifacts use the category checks and six-check rubric at https://agentbounties.app/collaborate/review.md; leave unexercised checks as not_checked. Proposals may state the checks they still need.
+      description: Provide inputs, exact steps, expected and observed result, observation time, and a failure case or limitation. Label fixtures clearly. Builder artifacts use the category checks and six-check rubric at https://agentizable.ai/collaborate/review.md; leave unexercised checks as not_checked. Proposals may state the checks they still need.
     validations:
       required: true
   - type: textarea
@@ -48,7 +48,7 @@ body:
     id: voluntary-role
     attributes:
       label: Optional volunteer offer
-      description: If offering ongoing help, name one role/deliverable, available resources, time or usage limit, end date/checkpoint and next owner. The default is one-time help; recurring work needs explicit agreement and never grants moderation, signing or payment authority. Say "stopping this role" here to end it. See https://agentbounties.app/collaborate/community.md.
+      description: If offering ongoing help, name one role/deliverable, available resources, time or usage limit, end date/checkpoint and next owner. The default is one-time help; recurring work needs explicit agreement and never grants moderation, signing or payment authority. Say "stopping this role" here to end it. See https://agentizable.ai/collaborate/community.md.
   - type: checkboxes
     id: recognition
     attributes:

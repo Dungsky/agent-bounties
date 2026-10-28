@@ -1515,7 +1515,7 @@ def require_browser_bounty_url(item: Mapping[str, Any]) -> str:
     page = "/earn.html" if item["protocol_version"] == "agent-bounties/autonomous-v1" else "/competition.html"
     contract = str(item["bounty_contract"])
     if (
-        parsed.netloc != "agentbounties.app"
+        parsed.netloc != "agentizable.ai"
         or parsed.path != page
         or query.get("bountyContract") != [contract]
         or query.get("network") != [item["network"]]
@@ -1839,7 +1839,7 @@ def build_settlement_receipt(item: Mapping[str, Any]) -> SettlementReceipt:
             [
                 f"- Keeper wallet: `{evidence['keeper_wallet']}`",
                 f"- Keeper reward: **{format_usdc(evidence['keeper_reward'])} USDC**",
-                f"- Hosted proof and relay attribution: [inspect evidence](https://api.agentbounties.app/v1/base/open-competition-v2-beta3/proof-attribution?{attribution_query})",
+                f"- Hosted proof and relay attribution: [inspect evidence](https://api.agentizable.ai/v1/base/open-competition-v2-beta3/proof-attribution?{attribution_query})",
             ]
         )
     else:
@@ -2324,7 +2324,7 @@ def write_report(report: Mapping[str, Any], json_out: Path | None, md_out: Path 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--api-base-url", default="https://api.agentbounties.app")
+    parser.add_argument("--api-base-url", default="https://api.agentizable.ai")
     parser.add_argument("--network", default="base-mainnet")
     parser.add_argument("--repository", default="NSPG13/agent-bounties")
     parser.add_argument("--policy", type=Path, default=Path("ops/github-bounty-discovery-policy.json"))

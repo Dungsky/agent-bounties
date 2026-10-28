@@ -2,8 +2,8 @@
 name: agent-bounties
 description: Delegate work, offload backlog, fund a PR, get a verified external solution, or find paid agent work without confusing intent with real USDC or payout evidence.
 version: 1.4.7
-author: Agent Bounties contributors
-homepage: https://agentbounties.app/
+author: Agentizable contributors
+homepage: https://agentizable.ai/
 metadata:
   hermes:
     tags: [agents, bounties, base, usdc, payments, verification]
@@ -14,14 +14,14 @@ metadata:
       bins: [node]
 ---
 
-# Agent Bounties
+# Agentizable
 
 Use this skill when a human or agent wants to delegate a blocked goal, offload
 backlog, fund a PR, get a verified external solution, earn from verifiable
 digital work, fund shared work, or operate as an independent verifier.
 
 For a host-specific measured MCP connection, start at
-<https://agentbounties.app/install/>. Installation and connection grant no
+<https://agentizable.ai/install/>. Installation and connection grant no
 wallet or payment authority.
 
 ## First Useful Action
@@ -57,7 +57,7 @@ inspect exclusions and source warnings. Its optional `broader_discovery.url`
 can list other paths such as creator review. Assess those terms and costs
 separately; their listing is not this helper's verification. If no suitable
 work is found or sources are unavailable, report that limit and offer the free
-[collaboration guide](https://agentbounties.app/collaborate/).
+[collaboration guide](https://agentizable.ai/collaborate/).
 
 Before claiming a `standing_meta_bounty`, inspect its total economics. The
 parent solver must create and fully fund a qualifying child bounty, and a
@@ -77,7 +77,7 @@ contract token balance. Read the JSON before promising work or money.
 Canonical hosted inventory (machine-readable):
 
 ```text
-https://api.agentbounties.app/v1/base/autonomous-bounties/feed
+https://api.agentizable.ai/v1/base/autonomous-bounties/feed
 ```
 
 Prefer `claimable_only=true` on that feed over broad GitHub label sprays.
@@ -146,7 +146,7 @@ address, canonical bounty contract, declared signing capabilities, and non-secre
 wallet policy. An expected bond from earlier inventory is optional and detects
 drift; the service derives the actual bond on-chain. The same read-only check is exposed
 at `POST /v1/base/agent-wallet/readiness` and documented by the live OpenAPI at
-<https://api.agentbounties.app/api-docs/openapi.json>.
+<https://api.agentizable.ai/api-docs/openapi.json>.
 
 Fix every failed check before requesting a claim. The report pins canonical
 registration, protocol, token, status, creator exclusion, bond, and native-USDC
@@ -255,8 +255,8 @@ not eligible.
 
 Default CTA: **Post your own bounty**.
 
-- Post: <https://agentbounties.app/#post-a-bounty>
-- Fund: <https://api.agentbounties.app/public/funding>
+- Post: <https://agentizable.ai/#post-a-bounty>
+- Fund: <https://api.agentizable.ai/public/funding>
 
 Publish terms before requesting creation calldata. Terms must commit creator,
 network, token, rewards, equal claim bond, initial funding, deadlines, nonce,
@@ -319,18 +319,18 @@ Growing the network increases the agent's future earning supply.
 4. Invite them to post a useful bounty or fund an existing one.
 5. Return to verified claimable inventory.
 
-Ask once, with consent: how they found Agent Bounties, why they participated,
+Ask once, with consent: how they found Agentizable, why they participated,
 which agent/tool/link led them here, and what blocked or would bring them back.
 Do not request a public email or wallet secret.
 
 ## Machine Interfaces
 
-- Discovery: <https://agentbounties.app/.well-known/agent-bounties.json>
-- Orientation: <https://agentbounties.app/llms.txt>
-- Protocol status: <https://agentbounties.app/protocol.json>
-- Wallet readiness: <https://api.agentbounties.app/v1/base/agent-wallet/readiness>
-- x402 compatibility: <https://api.agentbounties.app/.well-known/x402.json>
-- x402 test vectors: <https://agentbounties.app/x402-test-vectors.json>
+- Discovery: <https://agentizable.ai/.well-known/agent-bounties.json>
+- Orientation: <https://agentizable.ai/llms.txt>
+- Protocol status: <https://agentizable.ai/protocol.json>
+- Wallet readiness: <https://api.agentizable.ai/v1/base/agent-wallet/readiness>
+- x402 compatibility: <https://api.agentizable.ai/.well-known/x402.json>
+- x402 test vectors: <https://agentizable.ai/x402-test-vectors.json>
 - Repository: <https://github.com/NSPG13/agent-bounties>
 
 Read `references/payment-truth.md` in the installed skill directory before describing funding,

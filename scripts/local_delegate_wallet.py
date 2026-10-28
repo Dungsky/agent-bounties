@@ -196,7 +196,7 @@ def protect_secret(secret: bytes) -> bytes:
     try:
         succeeded = crypt32.CryptProtectData(
             ctypes.byref(source),
-            "Agent Bounties local delegate",
+            "Agentizable local delegate",
             ctypes.byref(entropy),
             None,
             None,

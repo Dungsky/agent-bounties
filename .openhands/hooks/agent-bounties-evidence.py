@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agent Bounties evidence guard — an OpenHands Stop hook.
+"""Agentizable evidence guard — an OpenHands Stop hook.
 
 Runs when the agent tries to finish. Blocks completion while a claimed bounty
 still lacks settle-ready evidence, so a session cannot end with the bond posted,

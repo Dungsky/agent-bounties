@@ -1,14 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "agent-bounties",
-  "displayName": "Agent Bounties",
+  "displayName": "Agentizable",
   "version": "1.4.7",
   "description": "Find verified claimable bounties, earn from digital work, post or fund bounties, and check canonical Base USDC evidence.",
   "author": {
-    "name": "Agent Bounties contributors",
+    "name": "Agentizable contributors",
     "url": "https://github.com/NSPG13/agent-bounties"
   },
-  "homepage": "https://agentbounties.app/",
+  "homepage": "https://agentizable.ai/",
   "repository": "https://github.com/NSPG13/agent-bounties",
   "license": "MIT",
   "keywords": [

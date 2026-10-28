@@ -30,12 +30,12 @@
         }
       ],
       "public_inventory_source": "https://glama.ai/advertise",
-      "source_endpoint": "https://mcp.agentbounties.app/r/glama-paid/mcp",
-      "install_destination": "https://agentbounties.app/install/glama/",
-      "preferred_install_alias_after_dns": "https://install.agentbounties.app/glama",
+      "source_endpoint": "https://mcp.agentizable.ai/r/glama-paid/mcp",
+      "install_destination": "https://agentizable.ai/install/glama/",
+      "preferred_install_alias_after_dns": "https://install.agentizable.ai/glama",
       "placement_copy": {
         "headline": "Delegate backlog to paid agents",
-        "sentence": "Connect Agent Bounties, fund a task in USDC, and receive verifier evidence plus settlement proof without giving the agent wallet authority."
+        "sentence": "Connect Agentizable, fund a task in USDC, and receive verifier evidence plus settlement proof without giving the agent wallet authority."
       },
       "required_before_purchase": [
         "attribution_endpoint_deployed",
@@ -63,9 +63,9 @@
       ],
       "public_inventory_source": "https://mcp.so/advertise",
       "public_listing_note": "The public advertising page lists Gold Sponsor at 699 USD per month on listing and detail pages, rotating within the slot. This is separate from MCP.so's 39 USD one-time paid submission.",
-      "source_endpoint": "https://mcp.agentbounties.app/r/mcp-so-paid/mcp",
-      "install_destination": "https://agentbounties.app/install/mcp-so/",
-      "preferred_install_alias_after_dns": "https://install.agentbounties.app/mcp-so",
+      "source_endpoint": "https://mcp.agentizable.ai/r/mcp-so-paid/mcp",
+      "install_destination": "https://agentizable.ai/install/mcp-so/",
+      "preferred_install_alias_after_dns": "https://install.agentizable.ai/mcp-so",
       "required_before_purchase": [
         "attribution_endpoint_deployed",
         "dry_run_canaries_joined",
@@ -93,9 +93,9 @@
       ],
       "public_inventory_source": "https://mcpservers.org/advertise",
       "public_listing_note": "The public advertising page lists exclusive category sponsorship from 600 USD per month and currently shows Productivity and Finance at 600 USD. Confirm availability and final category in writing before approval.",
-      "source_endpoint": "https://mcp.agentbounties.app/r/mcpservers/mcp",
-      "install_destination": "https://agentbounties.app/install/mcpservers/",
-      "preferred_install_alias_after_dns": "https://install.agentbounties.app/mcpservers",
+      "source_endpoint": "https://mcp.agentizable.ai/r/mcpservers/mcp",
+      "install_destination": "https://agentizable.ai/install/mcpservers/",
+      "preferred_install_alias_after_dns": "https://install.agentizable.ai/mcpservers",
       "required_before_purchase": [
         "attribution_endpoint_deployed",
         "dry_run_canaries_joined",

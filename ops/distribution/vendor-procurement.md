@@ -8,16 +8,16 @@ complete without an inspectable vendor or canonical-chain reference.
 
 ## Send every vendor this request
 
-Subject: attributed Agent Bounties placement
+Subject: attributed Agentizable placement
 
-> Agent Bounties lets an agent or agentic engineer delegate backlog as a funded
+> Agentizable lets an agent or agentic engineer delegate backlog as a funded
 > USDC bounty and receive a verified solution with settlement proof. We want to
 > reserve native inventory next to MCP discovery, connection, or installation —
 > not impression-only brand advertising.
 >
 > Please confirm the exact surface, position, category, rotation/share of voice,
 > start behavior, duration, renewal/cancellation terms, and source reporting. The
-> placement must link to the assigned Agent Bounties install destination and the
+> placement must link to the assigned Agentizable install destination and the
 > connection must use its assigned `/r/<rail>/mcp` endpoint. We do not share
 > wallet keys, payment authority, prompt contents, or user identities. We will
 > activate only after a route-specific attribution and 2 USDC settlement canary
@@ -26,10 +26,10 @@ Subject: attributed Agent Bounties placement
 
 Until the install subdomain's DNS and edge binding pass their deployment
 checks, the order packet deliberately uses the live apex
-`https://agentbounties.app/install/<vendor>/` destination. The vendor slugs
+`https://agentizable.ai/install/<vendor>/` destination. The vendor slugs
 remain `glama`, `mcp-so`, and `mcpservers`; the first two sponsored MCP source
 IDs are `glama-paid` and `mcp-so-paid`. The preferred
-`install.agentbounties.app/<vendor>` alias is recorded separately and must never
+`install.agentizable.ai/<vendor>` alias is recorded separately and must never
 replace a working campaign URL before it resolves.
 
 Add the vendor-specific proposed inventory and maximum initial spend from the

@@ -48,7 +48,7 @@ class CodexPluginDistributionTests(unittest.TestCase):
         self.assertEqual(manifest["mcpServers"], "./.mcp.json")
         self.assertEqual(
             mcp["mcpServers"]["agent-bounties"],
-            {"type": "http", "url": "https://mcp.agentbounties.app/mcp"},
+            {"type": "http", "url": "https://mcp.agentizable.ai/mcp"},
         )
 
         interface = manifest["interface"]

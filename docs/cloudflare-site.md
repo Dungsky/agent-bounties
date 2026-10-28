@@ -3,7 +3,7 @@
 Pages builds `main` with `bash scripts/build-static-site.sh` and publishes `site`.
 The build verifies wallet assets and origin, prepares licensed fonts and schemas,
 refreshes privacy-safe public GitHub participation aggregates, and runs site tests.
-The static website manifest at [site-build.json](https://agentbounties.app/.well-known/site-build.json) identifies the source revision and
+The static website manifest at [site-build.json](https://agentizable.ai/.well-known/site-build.json) identifies the source revision and
 metrics collection time. Only aggregate counts are published; raw identities and
 comment text are kept in memory during collection. Private repository traffic
 analytics remain explicitly unavailable without administration permissions.
@@ -31,7 +31,7 @@ API/MCP hosting, mail records, account origins, budgets and signing keys are
 separate from this website cutover and remain unchanged.
 
 The public homepage canary also checks the existing account-level Web Analytics
-edge injection on `agentbounties.app`. The reviewed exact script is recorded in
+edge injection on `agentizable.ai`. The reviewed exact script is recorded in
 `ops/cloudflare/site-canary-edge.json`, including its URL, integrity, public site
 identifier, settings and attributes. The account excludes EU visitors, so zero
 or one exact beacon is allowed, only as the final direct child of the body. This

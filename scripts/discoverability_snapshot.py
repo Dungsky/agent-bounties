@@ -20,9 +20,9 @@ from urllib.parse import quote
 
 PROVIDERS = ("search_console", "github", "first_party")
 GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly"
-DEFAULT_API = "https://api.agentbounties.app"
+DEFAULT_API = "https://api.agentizable.ai"
 DEFAULT_REPOSITORY = "NSPG13/agent-bounties"
-DEFAULT_PROPERTY = "https://agentbounties.app/"
+DEFAULT_PROPERTY = "https://agentizable.ai/"
 
 
 def iso_z(value: datetime) -> str:

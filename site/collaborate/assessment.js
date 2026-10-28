@@ -5,7 +5,7 @@
   else root.AgentBountiesDiscovery = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
-  const FEED_URL = "https://api.agentbounties.app/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&limit=5";
+  const FEED_URL = "https://api.agentizable.ai/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base&limit=5";
   const SCHEMA = "agent-bounties/free-discovery-assessment-v1";
 
   function money(value) {
@@ -22,7 +22,7 @@
     try {
       const url = new URL(value);
       if (url.protocol !== "https:" || url.username || url.password) return null;
-      if (url.origin === "https://agentbounties.app" ||
+      if (url.origin === "https://agentizable.ai" ||
           (url.origin === "https://github.com" && /^\/NSPG13\/agent-bounties\/issues\/\d+$/.test(url.pathname))) return url.href;
     } catch (_) { /* An untrusted feed URL must never become an actionable link. */ }
     return null;
