@@ -792,7 +792,7 @@
     })();
     if (parent && !metaParent) parentReady = (async () => {
       if (!flow.ADDRESS.test(parent)) throw new Error("The parent competition address is invalid.");
-      const item = await client.opportunity(parent, true);
+      const item = await client.opportunity(`open-competition-v2:base-mainnet:${parent.toLowerCase()}`, true);
       if (!flow.isV2(item) || !["now", "upcoming"].includes(flow.phase(item))) throw new Error("The parent competition no longer accepts qualifying child work.");
       const context = { ...flow.summarize(item), competition_contract: item.source_id, scoring: item.evidence_requirements?.scoring_window };
       const journey = client.load() || client.start({ role: "post" });

@@ -26,7 +26,7 @@
   async function resolve(value, client) {
     const context = normalize(value);
     if (!context) return null;
-    const item = await client.opportunity(context.parent_bounty_contract, true);
+    const item = await client.opportunity(`canonical:base-mainnet:${context.parent_bounty_contract}`, true);
     const inspection = await client.inspect(item.opportunity_id);
     const record = inspection.terms, terms = record?.document, benchmark = terms?.benchmark;
     check(item.network === "base-mainnet" && item.work_state === "claimable" && item.verification_ready === true

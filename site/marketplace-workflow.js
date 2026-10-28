@@ -243,14 +243,30 @@
       return { payload, coverage, items: payload.items.filter(view === "ready_to_earn" ? ready : (item) => item.network === NETWORK && ADDRESS.test(item.source_id)) };
     }
     async function opportunity(id, requireReady = false) {
-      let { items } = await inventory(requireReady ? "ready_to_earn" : "recent");
-      let item = items.find((entry) => entry.opportunity_id === id || entry.source_id?.toLowerCase() === String(id).toLowerCase());
-      // An older funded item can be outside the recent page. Do not substitute a cached card.
-      if (!item && !requireReady) {
-        ({ items } = await inventory());
-        item = items.find((entry) => entry.opportunity_id === id || entry.source_id?.toLowerCase() === String(id).toLowerCase());
+      // The identity fixes the protocol as well as the contract. A bare address
+      // cannot safely select a protocol, and a page scan cannot prove absence.
+      if (typeof id !== "string" || !/^(?:canonical|open-competition|open-competition-v2):base-mainnet:0x[0-9a-fA-F]{40}$/.test(id)) {
+        throw new Error("Choose the full opportunity ID from the marketplace, including its protocol and network.");
       }
-      if (!item) throw new Error("This opportunity is unavailable in the current marketplace. Refresh the list and choose another; do not start or spend from an old card.");
+      const identity = id.toLowerCase(), contract = identity.split(":")[2];
+      const view = requireReady ? "ready_to_earn" : "recent";
+      const payload = await request(`/v1/opportunities?network=${NETWORK}&view=${view}&source_type=canonical_base&opportunity_id=${encodeURIComponent(identity)}&limit=1`);
+      if (payload.schema_version !== "agent-bounties/opportunity-projection-v1" || payload.network !== NETWORK
+        || payload.applied_view !== view || payload.coverage_scope !== "canonical_identity"
+        || payload.requested_opportunity_id !== identity || payload.source_statuses?.[0]?.coverage === undefined
+        || !Array.isArray(payload.items) || payload.items.length > 1) {
+        throw new Error("The marketplace returned evidence for the wrong opportunity or scope.");
+      }
+      const coverage = canonicalCoverage(payload, identity);
+      const item = payload.items[0];
+      if (coverage.state !== "complete" || coverage.limited || !item) {
+        throw new Error("This opportunity is unavailable in the current marketplace. Refresh the list and choose another; do not start or spend from an old card.");
+      }
+      if (item.opportunity_id !== identity || item.source_type !== "canonical_base" || item.network !== NETWORK
+        || !ADDRESS.test(item.source_id) || item.source_id.toLowerCase() !== contract) {
+        throw new Error("The marketplace returned evidence for a different opportunity.");
+      }
+      if (requireReady && !ready(item)) throw new Error("This opportunity is not ready for work. Refresh the list; do not start or spend from an old card.");
       return item;
     }
     function load() {

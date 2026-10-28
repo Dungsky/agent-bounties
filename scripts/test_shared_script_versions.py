@@ -14,13 +14,13 @@ class SharedScriptVersionTests(unittest.TestCase):
     def check(self, pages, omit=()):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            versions = {"marketplace.js": 10, "wallet-link.js": 14, "marketplace-workflow.js": 14,
-                        "submissions.js": 5, "review-deadline.js": 4, "analytics-config.js": 14}
+            versions = {"marketplace.js": 10, "wallet-link.js": 14, "marketplace-workflow.js": 15,
+                        "submissions.js": 5, "review-deadline.js": 4, "analytics-config.js": 15}
             supplied = "".join(pages.values())
             defaults = "".join(f'<script src="{name}?v={version}"></script>' for name, version in versions.items()
                                if name not in supplied and name not in omit)
             (root / "defaults.html").write_text(defaults)
-            (root / "analytics-config.js").write_text('new URL("webmcp.js?v=16", base);')
+            (root / "analytics-config.js").write_text('new URL("webmcp.js?v=17", base);')
             for name, text in pages.items():
                 (root / name).write_text(text)
             guard.check_shared_script_versions(root)
