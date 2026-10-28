@@ -73,7 +73,7 @@ async function main() {
           await page.goto(`${origin}/${file}`);
           await page.waitForFunction(() => document.getElementById("canary-authenticated")?.textContent === "No");
           assert.equal(await page.locator("header, nav, form").count(), 0, "private canary remains isolated");
-          assert.deepEqual(await page.locator("script").evaluateAll(els => els.map(el => el.getAttribute("src"))), ["posting-draft-canary.js"]);
+          assert.deepEqual(await page.locator("script").evaluateAll(els => els.map(el => el.getAttribute("src"))), ["posting-draft-canary.js?v=20261028"]);
           assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, nofollow");
           assert.equal(await page.locator('meta[name="referrer"]').getAttribute("content"), "no-referrer");
           assert.equal(await page.locator("#canary-enabled").innerText(), "No");
@@ -88,7 +88,7 @@ async function main() {
           // journey handlers or analytics may see quote, order or account state.
           await page.goto(`${origin}/${file}`);
           assert.equal(await page.locator("[data-site-header], .ab-footer").count(), 0, "private order page remains isolated");
-          assert.deepEqual(await page.locator("script").evaluateAll(els => els.map(el => el.getAttribute("src"))), ["managed-service-core.js", "managed-service-page.js"]);
+          assert.deepEqual(await page.locator("script").evaluateAll(els => els.map(el => el.getAttribute("src"))), ["managed-service-core.js?v=20261028", "managed-service-page.js?v=20261028"]);
           assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, nofollow");
           continue;
         }
