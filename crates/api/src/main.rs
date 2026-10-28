@@ -17670,6 +17670,7 @@ fn expected_digest_for_body(body: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    include!("postgres_status_tests.rs");
     use super::*;
 
     #[test]

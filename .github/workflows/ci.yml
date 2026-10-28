@@ -126,15 +126,15 @@ jobs:
 
       - name: Run Postgres sync regressions
         run: |
-          cargo test -p db distribution_ -- --ignored --nocapture
-          cargo test -p db site_posting_drafts -- --ignored --nocapture
-          cargo test -p worker open_competition_v2_shadow::tests::postgres_shadow_cache_certifies_full_sets_and_recovers_from_disagreement -- --ignored --exact --nocapture
-          cargo test -p db tests::x402_relay_attempt_is_idempotent_and_lease_bounded -- --ignored --exact --nocapture
-          cargo test -p api github_issue_api_sync_postgres -- --ignored --nocapture
-          cargo test -p db scoped_submission_history_reads_only_selected_bounty_postgres -- --ignored --nocapture
-          cargo test -p db tests::autonomous_v2_events_round_trip_through_postgres -- --ignored --exact --nocapture
-          cargo test -p db tests::invoice_order_events_are_sequenced_and_evidence_is_unique_postgres -- --ignored --exact --nocapture
-          cargo test -p api tests::invoiced_seller_of_record_path_runs_end_to_end_postgres -- --ignored --exact --nocapture
-          cargo test -p api opportunity_exact_unfunded_lookup_crosses_list_window_postgres -- --ignored --nocapture
-          cargo test -p api tests::bounty_status_reads_base_events_from_postgres_after_cross_process_indexing -- --ignored --exact --nocapture
-          cargo test -p mcp-server tests::mcp_bounty_status_reads_scoped_postgres_after_cross_process_funding -- --ignored --exact --nocapture
+          python3 scripts/run-required-postgres-test.py -p db distribution_
+          python3 scripts/run-required-postgres-test.py -p db site_posting_drafts
+          python3 scripts/run-required-postgres-test.py -p worker open_competition_v2_shadow::tests::postgres_shadow_cache_certifies_full_sets_and_recovers_from_disagreement --exact
+          python3 scripts/run-required-postgres-test.py -p db tests::x402_relay_attempt_is_idempotent_and_lease_bounded --exact
+          python3 scripts/run-required-postgres-test.py -p api github_issue_api_sync_postgres
+          python3 scripts/run-required-postgres-test.py -p db scoped_submission_history_reads_only_selected_bounty_postgres
+          python3 scripts/run-required-postgres-test.py -p db tests::autonomous_v2_events_round_trip_through_postgres --exact
+          python3 scripts/run-required-postgres-test.py -p db tests::invoice_order_events_are_sequenced_and_evidence_is_unique_postgres --exact
+          python3 scripts/run-required-postgres-test.py -p api tests::invoiced_seller_of_record_path_runs_end_to_end_postgres --exact
+          python3 scripts/run-required-postgres-test.py -p api opportunity_exact_unfunded_lookup_crosses_list_window_postgres
+          python3 scripts/run-required-postgres-test.py -p api tests::bounty_status_reads_scoped_postgres_after_cross_process_funding --exact
+          python3 scripts/run-required-postgres-test.py -p mcp-server tests::mcp_bounty_status_reads_scoped_postgres_after_cross_process_funding --exact
