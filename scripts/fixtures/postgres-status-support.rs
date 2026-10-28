@@ -2,9 +2,58 @@
 // Included by the API and direct MCP tests so they exercise the same persisted records.
 const WRITER_IDS: &str = "AGENT_BOUNTIES_PG_STATUS_WRITER_IDS";
 
+fn validate_test_database_url(raw: &str) -> Result<(), &'static str> {
+    let url = reqwest::Url::parse(raw).map_err(|_| "malformed PostgreSQL test URL")?;
+    if !matches!(url.scheme(), "postgres" | "postgresql")
+        || !matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "[::1]"))
+        || url.query().is_some()
+        || url.fragment().is_some()
+    {
+        return Err("PostgreSQL tests require a loopback URL without connection overrides");
+    }
+    let database = url.path().strip_prefix('/').unwrap_or_default();
+    if database.is_empty()
+        || !database
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+    {
+        return Err("PostgreSQL tests require an explicit local test database name");
+    }
+    Ok(())
+}
+
+#[test]
+fn database_url_guard_rejects_remote_or_malformed_targets_before_connecting() {
+    for url in [
+        "postgres://test:test@127.0.0.1:5432/agent_bounties",
+        "postgresql://localhost/agent_bounties_test",
+        "postgres://[::1]:5432/agent_bounties",
+    ] {
+        assert_eq!(validate_test_database_url(url), Ok(()));
+    }
+    for (case, url) in [
+        "not a URL",
+        "postgres://test:test@database.example/agent_bounties",
+        "postgres://127.0.0.1.database.example/agent_bounties",
+        "postgres://test:test@10.0.0.1/agent_bounties",
+        "postgres://test:test@127.0.0.1@database.example/agent_bounties",
+        "https://127.0.0.1/agent_bounties",
+        "postgres://127.0.0.1/",
+        "postgres://127.0.0.1/agent_bounties/other",
+        "postgres://127.0.0.1/agent_bounties?host=database.example",
+        "postgres://127.0.0.1/agent_bounties#other",
+    ]
+    .iter()
+    .enumerate()
+    {
+        assert!(validate_test_database_url(url).is_err(), "case {case}");
+    }
+}
+
 pub async fn store() -> db::PostgresStore {
     let url = std::env::var("AGENT_BOUNTIES_TEST_DATABASE_URL")
         .expect("set AGENT_BOUNTIES_TEST_DATABASE_URL to a disposable test database");
+    validate_test_database_url(&url).expect("refusing unsafe PostgreSQL test target");
     db::PostgresStore::connect(&url).await.unwrap()
 }
 

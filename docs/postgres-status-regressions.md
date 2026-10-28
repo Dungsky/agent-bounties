@@ -9,6 +9,12 @@ python3 scripts/run-required-postgres-test.py -p api tests::bounty_status_reads_
 python3 scripts/run-required-postgres-test.py -p mcp-server tests::mcp_bounty_status_reads_scoped_postgres_after_cross_process_funding --exact
 ```
 
+The cross-process fixture rejects malformed URLs, non-PostgreSQL schemes,
+remote hosts, missing database names and connection overrides before connecting.
+Use `127.0.0.1`, `localhost` or `[::1]` and an explicitly disposable local
+database. This guard prevents accidental remote access; it does not make an
+existing local database disposable. URL validation errors omit credentials.
+
 The runner first lists the actual compiled tests, then requires that every
 selected test executes successfully. An empty selection, an ignored-only run, a
 compile error or a test failure fails the gate. CI and both local PostgreSQL
