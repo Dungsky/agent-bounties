@@ -218,10 +218,12 @@
                 </details>
 
                 <p id="draft-recovery" data-draft-recovery role="status" hidden></p>
+                <p class="card-payment-note" data-card-payment-note hidden><strong>No wallet? Pay by card.</strong> Agent Bounties funds this exact bounty in USDC from its own wallet after your card payment clears, and you review the delivery from your order page instead of a wallet. The card price adds currency conversion, card processing and a refundable review deposit, all itemized before you pay.</p>
                 <div class="bounty-card-actions chat-draft-actions" aria-label="Proposal actions">
                   <button class="button secondary" type="button" data-revise-card>Edit brief</button>
                   <button type="button" data-share-card hidden>Share draft</button>
                   <button class="button secondary" type="button" data-approve-card data-approved="false">Approve</button>
+                  <button class="button secondary" type="button" data-pay-card data-card-payment-enabled="false" hidden>Pay by card (MXN)</button>
                   <button class="button primary" type="button" data-open-funding aria-describedby="draft-recovery" disabled>Connect wallet</button>
                   <a class="button primary" data-posted-bounty hidden>Open your bounty</a>
                 </div>

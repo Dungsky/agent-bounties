@@ -106,6 +106,32 @@
       || Number(m.deadline) > submission.claim_expires_at) throw new Error("The submission signature differs from your exact claim, evidence or deadline. Refresh before signing.");
     return typed;
   }
+  const V2 = "agent-bounties/autonomous-v2";
+  // The round the next claim opens: one past the highest indexed claim, as the API computes it.
+  function nextClaimRound(item) {
+    const rounds = (item.events || []).filter((event) => event.kind === "bounty_claimed" && lower(event.contract_address) === lower(item.bounty_contract))
+      .map((event) => event.data?.round).filter(Number.isSafeInteger);
+    return rounds.length ? Math.max(...rounds) + 1 : 1;
+  }
+  // AgentBountyV2.claimAuthorizationNonce: keccak256(abi.encode(keccak256(tag), bounty, solver, uint64 round)).
+  function v2ClaimNonce(evm, contract, wallet, round) {
+    const tag = evm.keccak256Hex(evm.textHex("agent-bounties/autonomous-v2/claim-bond")).slice(2);
+    return evm.keccak256Hex(`0x${tag}${evm.addressWord(contract)}${evm.addressWord(wallet)}${evm.uint256Word(round)}`);
+  }
+  // A v2 bond is a USDC ReceiveWithAuthorization only the bounty can execute, and only for the
+  // nonce bound to this solver's next round. Any other nonce could be relayed as funding instead.
+  function validateClaimBondSignature(typed, { contract, wallet, amount, item }, evm, now = Math.floor(Date.now() / 1000)) {
+    if (item.protocol_version !== V2) return validateTransferSignature(typed, { contract, wallet, amount }, evm, now);
+    const m = typed?.message, d = typed?.domain;
+    if (typed?.primaryType !== "ReceiveWithAuthorization" || stable(typed.types) !== stable(evm.receiveWithAuthorizationTypes())
+      || d?.name !== "USD Coin" || d.version !== "2" || Number(d.chainId) !== 8453 || lower(d.verifyingContract) !== TOKEN
+      || lower(m?.from) !== wallet || lower(m.to) !== contract || String(m.value) !== String(amount) || String(m.validAfter) !== "0"
+      || lower(m.nonce) !== v2ClaimNonce(evm, contract, wallet, nextClaimRound(item)) || !Number.isSafeInteger(Number(m.validBefore))
+      || Number(m.validBefore) <= now || Number(m.validBefore) > now + 3600) {
+      throw new Error("The bond signature differs from your exact USDC bond, this bounty, your next claim round or its expiry. No signature was requested.");
+    }
+    return typed;
+  }
   function validateTransferSignature(typed, { contract, wallet, amount, nonce, expiry }, evm, now = Math.floor(Date.now() / 1000)) {
     const m = typed?.message, d = typed?.domain;
     if (typed?.primaryType !== "TransferWithAuthorization" || stable(typed.types) !== stable(evm.transferWithAuthorizationTypes())
@@ -271,8 +297,8 @@
       const actionKey = { solve: "claim", fund: "contribution", complete: "submission" }[intent.action];
       const gas = await client.request("/v1/base/gas-sponsorship");
       if (!actionKey || gas?.[actionKey]?.available !== true || gas[actionKey].customer_gas_wei !== "0") throw new Error("Gas sponsorship is temporarily unavailable. Keep this review and retry; no paid wallet transaction is needed.");
-      // v2 bounties accept only USDC receive authorizations, which this page's sponsored relay does not sign yet.
-      if ((intent.action === "solve" || intent.action === "fund") && item.protocol_version === "agent-bounties/autonomous-v2") throw new Error("This page cannot sign v2 bond or funding authorizations yet. Use the MCP or API planners for this bounty. No signature was requested.");
+      // v2 funding needs a receive authorization this page does not plan yet; v2 claims are supported.
+      if (intent.action === "fund" && item.protocol_version === V2) throw new Error("This page cannot sign v2 funding authorizations yet. Use the MCP or API planners for this bounty. No signature was requested.");
       if (intent.action === "solve") {
         const body = { idempotency_key: `participate:${intentId}:${wallet}`, network, bounty_contract: contract, solver_wallet: wallet, request_bond_sponsorship: false };
         const plan = await claimRequest(body);
@@ -280,7 +306,7 @@
           || lower(plan.candidate.bounty_contract) !== contract || lower(plan.candidate.solver_wallet) !== wallet
           || String(plan.claim_bond) !== String(item.claim_bond)) throw new Error("Claim terms changed. Refresh and review the current bond.");
         if (plan.claim_transaction_hash) { record.wallet = wallet; acceptClaim(plan); await refresh(); return; }
-        validateTransferSignature(plan.signing_payload, { contract, wallet, amount: item.claim_bond }, evm);
+        validateClaimBondSignature(plan.signing_payload, { contract, wallet, amount: item.claim_bond, item }, evm);
         record.sponsoredRequest = { action: "solve", body, typed: plan.signing_payload };
       } else if (intent.action === "fund") {
         const contribution = { bounty_contract: contract, contributor: wallet, amount: { amount: intent.amount_base_units, currency: "usdc" },
@@ -371,8 +397,8 @@
     async function relayFundingOrClaim() {
       const request = record.sponsoredRequest;
       if (!request.signature) {
-        const amount = request.action === "fund" ? request.body.contribution.amount.amount : item.claim_bond;
-        validateTransferSignature(request.typed, { contract, wallet, amount }, evm);
+        if (request.action === "fund") validateTransferSignature(request.typed, { contract, wallet, amount: request.body.contribution.amount.amount }, evm);
+        else validateClaimBondSignature(request.typed, { contract, wallet, amount: item.claim_bond, item }, evm);
         request.signature = await provider.request({ method: "eth_signTypedData_v4", params: [wallet, JSON.stringify(request.typed)] });
         if (!/^0x[0-9a-f]{130}$/i.test(request.signature)) { delete request.signature; throw new Error("The wallet returned no usable signature. No relay was requested."); }
         saveRecord();
@@ -423,5 +449,5 @@
     try { await refresh(); } catch (error) { message(error); }
     win.setInterval(() => { if (!doc.hidden && !busy && (intentId || reviewVisit)) refresh().catch(message); }, 15000);
   }
-  return { validateCalls, validateSubmission, validateSubmissionSignature, validateTransferSignature, recoveryStatus, verifierReviewState, start };
+  return { validateCalls, validateSubmission, validateSubmissionSignature, validateTransferSignature, validateClaimBondSignature, nextClaimRound, v2ClaimNonce, recoveryStatus, verifierReviewState, start };
 });

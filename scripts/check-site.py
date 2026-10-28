@@ -13,6 +13,7 @@ from urllib.parse import urldefrag, urlparse
 
 CANONICAL_PAGES = {
     "blog/check-agent-work-before-committing-funds.html": "https://agentbounties.app/blog/check-agent-work-before-committing-funds.html",
+    "account.html": "https://agentbounties.app/account.html",
     "check-work.html": "https://agentbounties.app/check-work.html",
     "app-testing.html": "https://agentbounties.app/app-testing.html",
     "api-integration.html": "https://agentbounties.app/api-integration.html",
@@ -242,6 +243,10 @@ ALLOWED_UI_CODE = {
     "collaborate/collaborate.js",
     "collaborate/collaborate.css",
     "collaborate/recognition.js",
+    "managed-service-core.js",
+    "card-review-appeal.js",
+    "managed-service-page.js",
+    "managed-service.css",
     "creator-open.css",
     "creator-awards.js",
     "creator-awards.css",
@@ -1428,6 +1433,7 @@ def main() -> int:
         str(repo_root / "scripts/test-contribution-consumer.cjs"),
         str(repo_root / "scripts/test-work-history.cjs"),
         str(repo_root / "scripts/test-payout-proof.cjs"),
+        str(repo_root / "scripts/test-solver-v2.cjs"),
     ], check=True)
     for relative in sorted(REQUIRED_FILES | EXPECTED_SCENE_ASSETS):
         if not (site_dir / relative).exists():
@@ -1486,6 +1492,20 @@ def main() -> int:
                 '<meta name="referrer" content="no-referrer">',
                 'id="canary-account-id"', 'id="canary-enabled"',
                 'id="canary-run"', 'id="canary-resume"', 'id="canary-reload"',
+            ])
+        elif relative == "account.html":
+            # Service terms and prices must stay isolated from analytics and the
+            # homepage wallet onboarding. Only these reviewed scripts may run.
+            scripts = re.findall(r"<script\b[^>]*>.*?</script\s*>", text, re.IGNORECASE | re.DOTALL)
+            if scripts != ['<script src="managed-service-core.js" defer></script>', '<script src="managed-service-page.js" defer></script>']:
+                fail(f"{relative}: only the private managed-service scripts may load")
+            if re.search(r"\bon\w+\s*=|shared-navigation:|<(?:iframe|form)\b", text, re.IGNORECASE):
+                fail(f"{relative}: inline handlers, shared journey handlers, forms and frames are forbidden")
+            require_phrases(relative, text, [
+                '<meta name="referrer" content="no-referrer">',
+                '<meta http-equiv="Content-Security-Policy"',
+                "default-src 'none'", "base-uri 'none'", "form-action 'none'",
+                'id="managed-private" hidden', 'id="managed-consent"',
             ])
         else:
             require_phrases(relative, text, [

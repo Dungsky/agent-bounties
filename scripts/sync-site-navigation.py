@@ -18,9 +18,9 @@ def sync(check=False):
     changed = []
     for path in sorted((ROOT / "site").rglob("*.html")):
         relative = path.relative_to(ROOT / "site")
-        # check-site.py separately requires this diagnostic to remain isolated
-        # from account/journey handlers and to load only its canary script.
-        if relative.as_posix() == "posting-draft-canary.html":
+        # check-site.py separately checks isolated private pages, which must not
+        # load shared account/journey handlers or analytics dependencies.
+        if relative.as_posix() in {"posting-draft-canary.html", "account.html"}:
             continue
         prefix = "../" * (len(relative.parts) - 1)
         markup = template.replace("{{root}}", prefix or "./").replace("{{prefix}}", prefix)

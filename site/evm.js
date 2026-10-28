@@ -139,11 +139,18 @@
     };
   }
 
+  // USDC EIP-3009 receive authorization: only the payee contract may execute it.
+  function receiveWithAuthorizationTypes() {
+    const types = transferWithAuthorizationTypes();
+    return { EIP712Domain: types.EIP712Domain, ReceiveWithAuthorization: types.TransferWithAuthorization };
+  }
+
   window.AgentBountiesEvm = Object.freeze({
     addressWord,
     bytes32Word,
     keccak256Hex,
     randomBytes32,
+    receiveWithAuthorizationTypes,
     textHex,
     transferWithAuthorizationTypes,
     uint256Word,

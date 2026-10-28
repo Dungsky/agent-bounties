@@ -130,6 +130,8 @@
     revise: document.querySelector("[data-revise-card]"),
     share: document.querySelector("[data-share-card]"),
     fund: document.querySelector("[data-open-funding]"),
+    card: document.querySelector("[data-pay-card]"),
+    cardNote: document.querySelector("[data-card-payment-note]"),
     dialog: document.getElementById("funding-dialog"),
     closeDialog: document.querySelector("[data-close-funding]"),
     cryptoMethod: document.querySelector("[data-payment-method='crypto']"),
@@ -298,6 +300,7 @@
   }
 
   function syncPrimaryAction() {
+    syncCardPayment();
     if (!state.approved) ui.fundNow.disabled = true;
     const expired = expiredDeliveryDeadline();
     if (ui.recovery) {
@@ -1669,6 +1672,59 @@
     setStatus("Edit the saved brief above, then prepare and review the updated proposal.", "pending");
   }
 
+  // Card payment: the server composes the public terms with the platform funding wallet as
+  // creator and prices them in MXN. Acceptance and Stripe happen on the private order page.
+  function cardEligible() {
+    const benchmark = missionBenchmark(state.draft?.benchmark || {});
+    return Boolean(state.draft && !state.metaParent && state.scope !== "mission" && state.deliveryDeadline
+      && benchmark.engine === "creator_review_v1"
+      && window.AgentBountiesCreatorReview.ready(benchmark, state.draft?.evidence_schema));
+  }
+
+  function syncCardPayment() {
+    if (!ui.card) return;
+    const eligible = ui.card.dataset.cardPaymentEnabled === "true" && cardEligible();
+    ui.card.hidden = !eligible;
+    if (ui.cardNote) ui.cardNote.hidden = !eligible;
+    ui.card.disabled = !eligible || state.reviewStale || !state.imageReady;
+  }
+
+  async function payByCard() {
+    if (ui.card?.dataset.cardPaymentEnabled !== "true" || !cardEligible() || state.reviewStale || !state.imageReady) return;
+    if (state.postingAccountStatus !== "ready") { beginPostingLogin(); return; }
+    const document = {
+      title: state.draft.title,
+      goal: state.draft.goal,
+      acceptance_criteria: state.draft.acceptance_criteria,
+      benchmark: { engine: "customer_review_v1", delivery_deadline: Math.floor(Date.parse(state.deliveryDeadline) / 1000) },
+      evidence_schema: canonicalJsonValue(stripVisualExtension(state.draft.evidence_schema)),
+    };
+    if (state.sourceUrl) document.source_url = state.sourceUrl;
+    if (state.bountyImage) document.image = canonicalJsonValue(state.bountyImage);
+    ui.card.disabled = true;
+    setStatus("Preparing your card price…", "pending");
+    try {
+      const response = await fetch(`${API}/v1/managed-service/bounty-quotes`, {
+        method: "POST", credentials: "include", cache: "no-store", redirect: "error",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ document, solver_reward_micro_usdc: Number(currentRewardSplit().solver) }),
+      });
+      if (!response.ok) {
+        throw new Error(response.status === 401 ? "Sign in again to pay by card. Your draft is saved."
+          : response.status === 422 ? "This bounty is above the current card payment limit. Lower the reward or fund with a wallet."
+          : response.status === 503 ? "Card payment isn't available right now. You can still fund with a wallet."
+          : "This proposal can't be paid by card. The deadline must be at least a day after the quote and within 30 days, with public artifact evidence.");
+      }
+      const id = (await response.json())?.quote?.input?.quote_id;
+      if (!window.AgentBountiesWorkflow.UUID.test(id || "")) throw new Error("The card price could not be confirmed. Nothing was charged.");
+      setStatus("Opening your itemized card price. Nothing is charged until you accept it and pay on Stripe.", "success");
+      window.location.assign(`account.html?managed_quote=${id}`);
+    } catch (error) {
+      setStatus(error.message || String(error), "error");
+      syncCardPayment();
+    }
+  }
+
   async function openFunding() {
     if (!state.approved || expiredDeliveryDeadline()) return;
     const attribution = state.distributionAttribution;
@@ -2461,6 +2517,7 @@
   ui.revise.addEventListener("click",reviseCard);
   ui.share.addEventListener("click",shareBountyCard);
   ui.fund.addEventListener("click",openFunding);
+  ui.card?.addEventListener("click", () => payByCard().catch((error) => setStatus(error.message, "error")));
   ui.closeDialog.addEventListener("click",()=>ui.dialog.close());
   ui.cryptoMethod.addEventListener("click",chooseCryptoWallet);
   document.querySelector("[data-change-funding-wallet]")?.addEventListener("click", () => {

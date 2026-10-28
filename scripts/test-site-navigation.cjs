@@ -83,6 +83,15 @@ async function main() {
           await page.unroute(sessionUrl);
           continue;
         }
+        if (file === "account.html") {
+          // The private card order page loads only its own scripts: no shared navigation,
+          // journey handlers or analytics may see quote, order or account state.
+          await page.goto(`${origin}/${file}`);
+          assert.equal(await page.locator("[data-site-header], .ab-footer").count(), 0, "private order page remains isolated");
+          assert.deepEqual(await page.locator("script").evaluateAll(els => els.map(el => el.getAttribute("src"))), ["managed-service-core.js", "managed-service-page.js"]);
+          assert.equal(await page.locator('meta[name="robots"]').getAttribute("content"), "noindex, nofollow");
+          continue;
+        }
         await page.goto(`${origin}/${file}`);
         await page.locator(".ab-site-header.is-enhanced").waitFor();
         await assertHeadingLayout(page, `${file} at ${width}px`);

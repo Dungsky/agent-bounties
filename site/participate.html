@@ -64,6 +64,23 @@
           <details><summary>Exact prepared details</summary><pre data-action-details class="machine-block"></pre></details>
           <button class="market-button market-button-primary" type="button" data-wallet-confirm disabled>Confirm in wallet</button>
         </section>
+        <section class="card-review" data-card-review hidden aria-label="Customer review">
+          <h2>Customer review</h2>
+          <p data-card-review-summary></p>
+          <ol class="card-review-rounds" data-card-review-rounds></ol>
+          <div class="card-appeal" data-card-appeal hidden>
+            <h3>Appeal this rejection</h3>
+            <p data-card-appeal-note></p>
+            <label for="card-appeal-reason">Your public reason (20 to 2,000 characters)</label>
+            <textarea id="card-appeal-reason" data-card-appeal-reason maxlength="2000" rows="5" placeholder="Point to where the delivery meets each criterion the customer says it misses."></textarea>
+            <div class="workspace-actions">
+              <button class="market-button" type="button" data-card-appeal-connect>Connect the solver wallet</button>
+              <button class="market-button market-button-primary" type="button" data-card-appeal-sign disabled>Sign and send appeal</button>
+            </div>
+          </div>
+          <p data-card-payout></p>
+          <output data-card-review-status aria-live="polite"></output>
+        </section>
         <section data-creator-review hidden aria-label="Creator completion review">
           <h2>Review the submitted work</h2>
           <p>Your AI can prepare the checks. You decide the verdict and sign it in your wallet. Agent Bounties pays the network fee.</p>
@@ -88,9 +105,10 @@
     <script src="analytics-config.js?v=13"></script>
     <script src="analytics.js?v=6"></script>
     <script src="legal-consent.js?v=3"></script>
-    <script src="evm.js"></script>
+    <script src="evm.js?v=2"></script>
     <script src="wallet-session.js?v=1"></script>
-    <script src="participate.js?v=8"></script>
+    <script src="participate.js?v=9"></script>
+    <script src="card-review-appeal.js?v=1"></script>
     <script src="review-deadline.js?v=1" defer></script>
     <script src="creator-review-workspace.js?v=4"></script>
     <script src="marketplace-navigation.js?v=1"></script>
