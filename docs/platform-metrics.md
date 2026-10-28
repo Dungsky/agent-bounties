@@ -159,7 +159,7 @@ node examples/read-platform-payouts.cjs lifetime
 
 The result retains the aggregate, proof pages and computed audit. It never
 requests a wallet or signs/sends a transaction. Exit1 means incomplete or
-mismatched proof. Project contact: np@agentbounties.app.
+mismatched proof. Project contact: np@agentizable.ai.
 
 `/generated/github-participation.json`
 
