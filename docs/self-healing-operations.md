@@ -39,6 +39,16 @@ not authorize it to deploy private code. To promote another reviewed release,
 explicitly update or clear the pin first. A monitor's manual input only changes
 that read-only check and cannot override the deployment hold.
 
+The approved verifier uses its own optional `REGRESSION_VERIFIER_API_BASE_URL`
+setting, defaulting to `https://api.agentbounties.app`. Its pinned release only
+accepts the established compatibility service origins; changing the website's
+`PRODUCTION_API_BASE_URL` must not redirect credential-bearing checkpoints or
+break this release. Keep the compatibility alias serving the same API directly,
+without redirects. Before changing this verifier setting, qualify the selected
+origin against the exact reviewed release and verify authenticated runner and
+both signer checkpoints. A new public domain alone does not approve a new
+verifier release or change funded tests, signer authority, cadence or gas limits.
+
 ```text
 GitHub scheduled probe ----> API /health + revision ----+
                          +-> MCP /health + revision ----+-> recovery plan

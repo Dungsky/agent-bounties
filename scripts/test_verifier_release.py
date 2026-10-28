@@ -60,6 +60,15 @@ class ReleaseTests(unittest.TestCase):
             self.assertIn('scripts/verifier_release.py fetch',workflow)
         self.assertIn('7,22,37,52 * * * *',(root/'.github/workflows/regression-verifier-runner.yml').read_text())
 
+    def test_pinned_verifier_endpoint_is_independent_of_website_domain(self):
+        root=FIXTURE.parents[3]
+        for name in ['regression-verifier-runner.yml','regression-verifier-signer.yml','regression-verifier-signing-reusable.yml']:
+            with self.subTest(workflow=name):
+                workflow=(root/'.github/workflows'/name).read_text()
+                self.assertIn("API_BASE_URL: ${{ vars.REGRESSION_VERIFIER_API_BASE_URL || 'https://api.agentbounties.app' }}",workflow)
+                self.assertNotIn('vars.PRODUCTION_API_BASE_URL',workflow)
+                self.assertIn('steps.provenance.outputs.revision',workflow)
+
     def test_component_subprocesses_receive_only_their_own_signer_credential(self):
         with mock.patch.dict(release.os.environ, {'PATH':'/usr/bin','REGRESSION_VERIFIER_PRIVATE_KEY':'fixture-only','REGRESSION_CHECKPOINT_TOKEN':'health-token','BASE_KEEPER_PRIVATE_KEY':'keeper','OPENAI_API_KEY':'provider','AWS_SECRET_ACCESS_KEY':'cloud'},clear=True):
             runner=release.component_environment('runner')
