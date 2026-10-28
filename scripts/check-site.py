@@ -1415,6 +1415,30 @@ def check_install_distribution(repo_root: Path, site_dir: Path) -> None:
             fail(f"universal install discovery is missing intent phrase: {phrase}")
 
 
+def check_shared_script_versions(site_dir: Path) -> None:
+    # These keys must be newer than every key used before the Agentizable cutover.
+    # A per-page increment can collide with a key already cached by another page.
+    floors = {"marketplace.js": 10, "wallet-link.js": 14, "marketplace-workflow.js": 14,
+              "submissions.js": 5, "review-deadline.js": 4, "webmcp.js": 16, "analytics-config.js": 14}
+    versions = {name: set() for name in floors}
+    for page in [*site_dir.rglob("*.html"), site_dir / "analytics-config.js"]:
+        text = page.read_text(encoding="utf-8")
+        sources = (re.findall(r'new URL\(["\']([^"\']+)["\']', text)
+                   if page.suffix == ".js" else re.findall(r'<script\b[^>]*\bsrc=["\']([^"\']+)["\']', text))
+        for source in sources:
+            parsed = urlparse(source)
+            name = PurePosixPath(parsed.path).name
+            if name not in floors or parsed.scheme or parsed.netloc:
+                continue
+            match = re.fullmatch(r"v=(\d+)", parsed.query)
+            if not match or int(match[1]) < floors[name]:
+                fail(f"{page.name}: {name} needs a fresh cache version >= {floors[name]}")
+            versions[name].add(int(match[1]))
+    for name, found in versions.items():
+        if len(found) != 1:
+            fail(f"{name} must use one shared cache version on every page; found {sorted(found)}")
+
+
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[1]
     site_dir = repo_root / "site"
@@ -1564,6 +1588,7 @@ def main() -> int:
     check_install_distribution(repo_root, site_dir)
     check_marketplace(site_dir)
     check_transactional_handoffs(site_dir)
+    check_shared_script_versions(site_dir)
     subprocess.run([sys.executable, str(repo_root / "scripts/sync-site-navigation.py"), "--check"], check=True)
     check_metrics(site_dir)
     check_blog(site_dir)
