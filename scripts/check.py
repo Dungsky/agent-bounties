@@ -318,6 +318,7 @@ def main() -> int:
         "-v",
     )
     py("scripts/test_check_agent_discovery_contract.py", "-v")
+    py("scripts/test_required_postgres_tests.py", "-v")
     py("scripts/check-agent-discovery-contract.py")
     run(npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", cwd=ROOT / "tools/phone-wallet")
     run(npm, "run", "check", cwd=ROOT / "tools/phone-wallet")

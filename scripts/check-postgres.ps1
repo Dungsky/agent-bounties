@@ -3,6 +3,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$python = Get-Command python -ErrorAction SilentlyContinue
+$pythonArgs = @()
+if (-not $python) { $python = Get-Command py -ErrorAction SilentlyContinue; $pythonArgs = @("-3") }
+if (-not $python) { throw "python or py is required for the PostgreSQL test guard" }
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
 . (Join-Path $PSScriptRoot "_shared\powershell.ps1")
@@ -22,67 +26,73 @@ try {
     $env:AGENT_BOUNTIES_TEST_DATABASE_URL = $databaseUrl
     try {
         Invoke-Checked {
-            cargo test -p db tests::x402_relay_attempt_is_idempotent_and_lease_bounded -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::x402_relay_attempt_is_idempotent_and_lease_bounded --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::claim_funnel_counts_direct_and_atomic_sponsored_confirmations -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::claim_funnel_counts_direct_and_atomic_sponsored_confirmations --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::opportunity_lifecycle_query_executes_against_migrated_postgres -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::opportunity_lifecycle_query_executes_against_migrated_postgres --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::site_analytics_round_trip_executes_against_migrated_postgres -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::site_analytics_round_trip_executes_against_migrated_postgres --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::platform_metrics_query_separates_history_from_identity_and_cohort_boundaries -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::platform_metrics_query_separates_history_from_identity_and_cohort_boundaries --exact
         }
         Invoke-Checked {
-            cargo test -p api platform_payouts::tests::platform_payout_http_replays_real_database_selection -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api platform_payouts::tests::platform_payout_http_replays_real_database_selection --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::opportunity_comment_round_trip_is_durable_and_idempotent -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::opportunity_comment_round_trip_is_durable_and_idempotent --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::chatgpt_action_intent_replays_and_confirms_only_observed_transaction -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::chatgpt_action_intent_replays_and_confirms_only_observed_transaction --exact
         }
         Invoke-Checked {
-            cargo test -p db site_posting_drafts -- --ignored --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db site_posting_drafts
         }
         Invoke-Checked {
-            cargo test -p db tests::social_mention_ingestion_round_trip_executes_against_migrated_postgres -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::social_mention_ingestion_round_trip_executes_against_migrated_postgres --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::objective_aggregate_compare_and_swap_is_durable -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::objective_aggregate_compare_and_swap_is_durable --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::discovery_webhook_round_trip_executes_against_migrated_postgres -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::discovery_webhook_round_trip_executes_against_migrated_postgres --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::autonomous_v2_events_round_trip_through_postgres -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::autonomous_v2_events_round_trip_through_postgres --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::invoice_order_events_are_sequenced_and_evidence_is_unique_postgres -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::invoice_order_events_are_sequenced_and_evidence_is_unique_postgres --exact
         }
         Invoke-Checked {
-            cargo test -p api tests::invoiced_seller_of_record_path_runs_end_to_end_postgres -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api tests::invoiced_seller_of_record_path_runs_end_to_end_postgres --exact
         }
         Invoke-Checked {
-            cargo test -p db tests::discoverability_snapshot_idempotency_and_restart_hydration_are_durable -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p db tests::discoverability_snapshot_idempotency_and_restart_hydration_are_durable --exact
         }
         Invoke-Checked {
-            cargo test -p api open_competition_v2_api::tests::postgres_readiness_hold_blocks_new_payments_but_preserves_reconciliation -- --ignored --exact --test-threads=1 --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api open_competition_v2_api::tests::postgres_readiness_hold_blocks_new_payments_but_preserves_reconciliation --exact --test-threads=1
         }
         Invoke-Checked {
-            cargo test -p api tests::audience_audit_persists_idempotently_across_processes -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api tests::audience_audit_persists_idempotently_across_processes --exact
         }
         Invoke-Checked {
-            cargo test -p api tests::github_issue_api_sync_postgres_rejects_stale_cross_process_activity -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api tests::github_issue_api_sync_postgres_rejects_stale_cross_process_activity --exact
         }
         Invoke-Checked {
-            cargo test -p api tests::github_issue_api_sync_postgres_serializes_concurrent_initial_sync -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api tests::github_issue_api_sync_postgres_serializes_concurrent_initial_sync --exact
         }
         Invoke-Checked {
-            cargo test -p api tests::neynar_webhook_persists_one_short_draft_and_one_reply_across_retries -- --ignored --exact --nocapture
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api tests::neynar_webhook_persists_one_short_draft_and_one_reply_across_retries --exact
+        }
+        Invoke-Checked {
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p api tests::bounty_status_reads_scoped_postgres_after_cross_process_funding --exact
+        }
+        Invoke-Checked {
+            & $python.Source @pythonArgs scripts/run-required-postgres-test.py -p mcp-server tests::mcp_bounty_status_reads_scoped_postgres_after_cross_process_funding --exact
         }
     }
     finally {

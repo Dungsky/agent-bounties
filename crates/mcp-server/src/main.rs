@@ -8039,6 +8039,7 @@ async fn record_eval_run(state: &SharedState, run: EvalRun) -> Result<(), String
 #[cfg(test)]
 #[allow(clippy::items_after_test_module)]
 mod tests {
+    include!("postgres_status_tests.rs");
     use super::*;
 
     #[test]
