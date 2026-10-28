@@ -478,3 +478,22 @@ test("missing or malformed public policy makes the proof ledger unavailable", ()
     wallet_ownership_boundary: "Declared addresses only.",
   }).status, "unavailable");
 });
+
+
+test("daily GitHub snapshots keep their observation time and never make stale headlines complete", () => {
+  const saved = github({ generated_at: "2026-08-11T20:00:00Z" });
+  const original = JSON.stringify(saved);
+  const merged = metrics.mergeMetrics(platform(), saved, "7d", NOW);
+  assert.equal(merged.github_status, "delayed");
+  assert.equal(merged.active_complete, false);
+  assert.equal(JSON.stringify(saved), original);
+  const unavailable = metrics.mergeMetrics(platform(), {
+    generated_at: null, periods: {}, coverage: { status: "unavailable" },
+  }, "7d", NOW);
+  assert.equal(unavailable.github_status, "unavailable");
+  assert.equal(unavailable.active_complete, false);
+  assert.equal(metrics.mergeMetrics(platform(), github({ periods: {} }), "7d", NOW).active_complete, false);
+  const js = fs.readFileSync(path.join(__dirname, "..", "site", "metrics.js"), "utf8");
+  assert.match(js, /Reviewed daily snapshot/);
+  assert.doesNotMatch(js, /Hourly aggregate of external issues/);
+});

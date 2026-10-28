@@ -6,15 +6,19 @@ in memory. A failed collection never replaces the last successful snapshot.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from pathlib import Path
 import re
 import sys
+import tempfile
+from contextlib import contextmanager
 import urllib.error
 import urllib.request
 
 import github_audience_audit as audit
+from prepare_site_metrics import policy_digest, validate
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = "https://api.github.com/repos/NSPG13/agent-bounties/"
@@ -72,7 +76,25 @@ class Reader:
         return {"status": "unavailable"}
 
 
+@contextmanager
+def collection_lock(destination):
+    # Only the explicit collector uses this lock; website builds are offline.
+    import fcntl
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.with_suffix('.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+
+
 def refresh(destination, token):
+    with collection_lock(destination):
+        _refresh_locked(destination, token)
+
+
+def _refresh_locked(destination, token):
     reader = Reader(token)
     audit.gh_api = reader.records
     audit.collect_repository_traffic = reader.traffic
@@ -83,18 +105,35 @@ def refresh(destination, token):
         excluded_logins=set(policy["maintainer_github_logins"]))
     if result["coverage"]["status"] != "ready":
         raise ValueError("GitHub metrics collection is incomplete")
+    policy_path = ROOT / "crates/api/fixtures/public-metrics-policy.json"
+    result["coverage"]["policy_sha256"] = policy_digest(policy_path)
+    validate(result, policy_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    pending = destination.with_suffix(".pending")
-    pending.write_text(json.dumps(result, indent=2) + "\n")
-    pending.replace(destination)
+    pending = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', dir=destination.parent,
+                                         prefix='.metrics-', delete=False) as output:
+            pending = Path(output.name)
+            output.write(json.dumps(result, indent=2) + "\n")
+            output.flush()
+            os.fsync(output.fileno())
+        pending.replace(destination)
+    finally:
+        if pending is not None:
+            pending.unlink(missing_ok=True)
     print("public_metrics_refreshed=" + result["generated_at"])
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path,
+                        default=ROOT / 'site/generated/github-participation.json',
+                        help='Trusted local aggregate candidate; never raw records')
+    args = parser.parse_args()
     token = os.environ.get("GITHUB_METRICS_TOKEN", "")
     if not token:
         raise ValueError("GITHUB_METRICS_TOKEN is not configured")
-    refresh(ROOT / "site/generated/github-participation.json", token)
+    refresh(args.output, token)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
+from prepare_site_metrics import validate as validate_participation
 from pathlib import Path, PurePosixPath
 from urllib.parse import urldefrag, urlparse
 
@@ -815,6 +816,7 @@ def check_metrics(site_dir: Path) -> None:
         ["@media (prefers-reduced-motion: reduce)", ".audit-table-shell:focus-visible"],
     )
     github = json_file(site_dir / "generated" / "github-participation.json")
+    validate_participation(github, site_dir.parent / "crates/api/fixtures/public-metrics-policy.json")
     if github.get("schema_version") != "agent-bounties/github-participation-v1":
         fail("GitHub participation artifact has the wrong schema")
     if github.get("coverage", {}).get("raw_identifiers_included") is not False:
