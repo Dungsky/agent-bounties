@@ -1623,7 +1623,7 @@
       context.fillStyle = "#03110b"; context.fillRect(0,0,1200,1500);
       context.drawImage(ui.art, 0, 0, 1200, 675);
       const gradient = context.createLinearGradient(0,620,0,1500); gradient.addColorStop(0,"rgba(6,31,18,.95)"); gradient.addColorStop(1,"#020b08"); context.fillStyle = gradient; context.fillRect(0,610,1200,890);
-      context.fillStyle = "#8ee46b"; context.font = "800 29px system-ui"; context.fillText(state.scope === "mission" ? "AGENT BOUNTIES · MISSION TASK" : "AGENT BOUNTIES · BOUNTY CARD", 68, 710);
+      context.fillStyle = "#8ee46b"; context.font = "800 29px system-ui"; context.fillText(state.scope === "mission" ? "AGENTIZABLE · MISSION TASK" : "AGENTIZABLE · BOUNTY CARD", 68, 710);
       context.fillStyle = "#f4f6ef"; context.font = "850 68px system-ui";
       let y = 806; for (const line of wrapCanvasText(context,state.draft.title,1060,3)) { context.fillText(line,68,y); y += 76; }
       context.fillStyle = "#bdc8c0"; context.font = "440 31px system-ui"; y += 10; for (const line of wrapCanvasText(context,state.draft.goal,1060,5)) { context.fillText(line,68,y); y += 43; }

@@ -164,7 +164,7 @@ class PublicSiteCanaryTests(unittest.TestCase):
             ('type="module"', 'type="text/javascript"'),
             ('crossorigin="anonymous"', 'crossorigin="use-credentials"'),
             ("sha512-UKNk", "sha512-XKNk"),
-            ("b08dca6d1045493aa5fbe203e02d345a", "00000000000000000000000000000000"),
+            ("8afca1c874594e8f95646fdabc16e928", "00000000000000000000000000000000"),
             ('"version":"2024.11.0"', '"version":"2025.11.0"'),
             ('"r":1', '"r":0'), ('"spa":2', '"spa":1'),
             ('"r":1', '"r":1,"r":1'),

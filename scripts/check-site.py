@@ -703,7 +703,7 @@ def check_analytics(site_dir: Path, repo_root: Path) -> None:
             "data-card-verifier",
             "function renderVerifierTerms",
             "if (!ui.verifierSummary || !ui.verifier) return;",
-            'bounty-composer-v2.js?v=32',
+            'bounty-composer-v2.js?v=33',
             "function verificationReadiness",
             "verificationReadiness(benchmark, state.draft?.evidence_schema)",
             'sourceSnapshotDigest.pattern === "^sha256:[0-9a-f]{64}$"',
@@ -740,8 +740,8 @@ def check_analytics(site_dir: Path, repo_root: Path) -> None:
         [
             'data-post-auth-start',
             'posting-auth.js?v=3',
-            'solarpunk-home.js?v=31',
-            'bounty-composer-v2.js?v=32',
+            'solarpunk-home.js?v=32',
+            'bounty-composer-v2.js?v=33',
             'label: "LOG IN TO POST"',
             'credentials: "include"',
             'account_status === "ready" && payload.account_complete === true',
@@ -1470,7 +1470,7 @@ def main() -> int:
         if re.search(r"Agent Bounties|AgentBounties\.app|agentbounties\.app", text, re.I):
             fail(f"{relative} contains retired public branding or an active legacy URL")
         prefix = "../" * (len(PurePosixPath(relative).parts) - 1)
-        analytics_version = 6
+        analytics_version = 7
         parser = PageParser()
         parser.feed(text)
         if parser.h1_count != 1:
@@ -1489,7 +1489,7 @@ def main() -> int:
             # A private storage diagnostic must not load the production journey,
             # shared navigation/account handlers, or analytics dependencies.
             scripts = re.findall(r"<script\b[^>]*>.*?</script\s*>", text, re.IGNORECASE | re.DOTALL)
-            if scripts != ['<script src="posting-draft-canary.js" defer></script>']:
+            if scripts != ['<script src="posting-draft-canary.js?v=20261028" defer></script>']:
                 fail(f"{relative}: only the isolated canary script may load")
             if re.search(r"<(?:header|nav|form)\b|shared-navigation:|\bon\w+\s*=", text, re.IGNORECASE):
                 fail(f"{relative}: shared navigation, forms, and inline handlers are forbidden")
@@ -1502,7 +1502,7 @@ def main() -> int:
             # Service terms and prices must stay isolated from analytics and the
             # homepage wallet onboarding. Only these reviewed scripts may run.
             scripts = re.findall(r"<script\b[^>]*>.*?</script\s*>", text, re.IGNORECASE | re.DOTALL)
-            if scripts != ['<script src="managed-service-core.js" defer></script>', '<script src="managed-service-page.js" defer></script>']:
+            if scripts != ['<script src="managed-service-core.js?v=20261028" defer></script>', '<script src="managed-service-page.js?v=20261028" defer></script>']:
                 fail(f"{relative}: only the private managed-service scripts may load")
             if re.search(r"\bon\w+\s*=|shared-navigation:|<(?:iframe|form)\b", text, re.IGNORECASE):
                 fail(f"{relative}: inline handlers, shared journey handlers, forms and frames are forbidden")
