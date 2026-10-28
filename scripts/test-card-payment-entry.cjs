@@ -10,8 +10,8 @@ const start = source.indexOf('  function syncCardPayment() {');
 const end = source.indexOf('  async function openFunding() {', start);
 assert.ok(start > 0 && end > start, 'card payment controller not found');
 
-function controller(response) {
-  const button = () => ({ hidden: true, disabled: true });
+function controller(response, released = 'true') {
+  const button = () => ({ hidden: true, disabled: true, dataset: { cardPaymentEnabled: released } });
   const context = {
     API: 'https://api.agentbounties.app',
     ui: { card: button(), cardNote: button() },
@@ -38,6 +38,26 @@ function controller(response) {
 }
 
 const ID = '11111111-1111-4111-8111-111111111111';
+
+test('the published page keeps card checkout off until its separate release', () => {
+  const html = fs.readFileSync(require.resolve('../site/post.html'), 'utf8');
+  assert.match(html, /data-pay-card data-card-payment-enabled="false" hidden/);
+});
+
+for (const released of [undefined, 'false', 'TRUE', '1']) {
+  test(`an absent or inactive release flag (${released}) hides card entry and makes no request`, async () => {
+    const { syncCardPayment, payByCard, context } = controller({ ok: true });
+    context.ui.card.dataset.cardPaymentEnabled = released;
+    syncCardPayment();
+    assert.equal(context.ui.card.hidden, true);
+    assert.equal(context.ui.cardNote.hidden, true);
+    assert.equal(context.ui.card.disabled, true);
+    await payByCard();
+    assert.equal(context.requests.length, 0);
+    assert.equal(context.loggedIn, false);
+    assert.equal(context.opened, null);
+  });
+}
 
 test('a confirmed quote opens its itemized order page and sends the exact solver reward', async () => {
   const { payByCard, context } = controller({ ok: true, json: async () => ({ quote: { input: { quote_id: ID } } }) });

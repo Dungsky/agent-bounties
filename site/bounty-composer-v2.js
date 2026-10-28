@@ -1683,14 +1683,14 @@
 
   function syncCardPayment() {
     if (!ui.card) return;
-    const eligible = cardEligible();
+    const eligible = ui.card.dataset.cardPaymentEnabled === "true" && cardEligible();
     ui.card.hidden = !eligible;
     if (ui.cardNote) ui.cardNote.hidden = !eligible;
     ui.card.disabled = !eligible || state.reviewStale || !state.imageReady;
   }
 
   async function payByCard() {
-    if (!cardEligible() || state.reviewStale || !state.imageReady) return;
+    if (ui.card?.dataset.cardPaymentEnabled !== "true" || !cardEligible() || state.reviewStale || !state.imageReady) return;
     if (state.postingAccountStatus !== "ready") { beginPostingLogin(); return; }
     const document = {
       title: state.draft.title,

@@ -73,7 +73,7 @@ async function setup(options = {}) {
       if (state.quoteWait) await state.quoteWait;
       return reply(state.quote, state.readCode || 200);
     }
-    if (req.method() === 'GET' && url.pathname === '/v1/managed-service/orders/' + orderId) return reply({ order: order() }, state.readCode || 200);
+    if (req.method() === 'GET' && url.pathname === '/v1/managed-service/orders/' + orderId) return reply({ order: order(), recovered_bounty_refund: state.recovered }, state.readCode || 200);
     errors.push('Unexpected API call: ' + call.path); return reply({}, 404);
   });
   const go = (kind = 'managed_quote', suffix = '') => page.goto(base + '/account.html?' + kind + '=' + (kind === 'managed_quote' ? quoteId : orderId) + suffix);
@@ -81,6 +81,20 @@ async function setup(options = {}) {
   return { context, page, calls, requests, accepts, state, go, close };
 }
 
+test('recovered refund is separate from historical funding and never offers a new verdict', async () => {
+  const amount = fixture.quote.lines.filter(l => ['solver_reward', 'verification'].includes(l.code)).reduce((n, l) => n + l.amount_minor, 0);
+  for (const outcome of ['pending_binding', 'awaiting_signed_event', 'pending', 'succeeded', 'reconciliation_required']) {
+    const f = await setup({ status: 'funded', recovered: { status: outcome, amount_minor: amount, currency: 'mxn', reconciliation_required: false } });
+    await f.go('managed_order');
+    await f.page.waitForFunction(() => document.getElementById('managed-next').textContent.includes('Refund amount:'));
+    assert.match(await f.page.locator('#managed-next').innerText(), /Fees and the review deposit are excluded/);
+    assert.equal(await f.page.locator('#managed-review-form').isVisible(), false);
+    assert.equal(f.calls.some(c => c.path.endsWith('/review') || c.method === 'POST'), false);
+    if (outcome === 'succeeded') assert.match(await f.page.locator('#managed-status').innerText(), /Stripe confirms.*sent/);
+    else assert.doesNotMatch(await f.page.locator('#managed-status').innerText(), /confirms.*sent/);
+    await f.close();
+  }
+});
 test('sign-in preserves only the scoped offer; no wallet or analytics setup', async () => {
   const f = await setup({ account: null }); await f.go('managed_quote', '&checkout_session_id=cs_fake&paid=true'); await visible(f.page, 'Sign in to view');
   assert.equal(await f.page.locator('#managed-providers a').count(), 2);

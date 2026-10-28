@@ -141,6 +141,26 @@
       ? 'You can cancel before funding and request a full refund of ' + core.money(record.total_minor, record.input.currency) + ', including the platform fee and all listed costs. This stops funding of the service.' : '';
     controls();
   }
+  function drawRecoveredRefund(refund) {
+    if (!refund || refund.status === 'awaiting_eligible_recovery') return false;
+    const expected = record.lines.filter(line => ['solver_reward', 'verification'].includes(line.code)).reduce((sum, line) => sum + line.amount_minor, 0);
+    if (!Number.isSafeInteger(refund.amount_minor) || refund.amount_minor !== expected || refund.currency !== record.input.currency) throw new Error('Invalid recovered refund');
+    const messages = {
+      pending_binding: 'Your bounty was cancelled and its USDC recovered. Your card refund is being checked.',
+      awaiting_signed_event: 'Your recovered bounty refund is awaiting payment confirmation.',
+      reconciliation_required: 'Your recovered bounty refund needs our attention.',
+      pending: 'Your recovered bounty refund is processing.',
+      requires_action: 'Your recovered bounty refund needs additional attention.',
+      succeeded: 'Stripe confirms your recovered bounty refund was sent. Your bank may take additional time to credit it.',
+      failed: 'Your recovered bounty refund could not be completed. Contact support with this order reference.',
+      canceled: 'Your recovered bounty refund was cancelled. Contact support with this order reference.'
+    };
+    if (!messages[refund.status]) throw new Error('Unknown recovered refund');
+    status(messages[refund.status]);
+    el('next').textContent = 'Refund amount: ' + core.money(refund.amount_minor, refund.currency) + '. This returns the original solver reward and verification charges. Fees and the review deposit are excluded; the deposit follows its separate rules.' + (refund.reconciliation_required ? ' We are also checking a reconciliation issue.' : '');
+    el('bounty-link').textContent = 'View the bounty’s funding and recovery history on Basescan';
+    return true;
+  }
   function failure(error, token, action = false) {
     if (token !== epoch || document.hidden) return;
     const code = error.status;
@@ -246,7 +266,8 @@
       } else {
         const reply = await request('/v1/managed-service/orders/' + target.id, token);
         const value = await core.order(reply.order, account, target.id); current(token); drawOrder(value);
-        if (order.status === 'funded') await loadReview(token);
+        const recovered = drawRecoveredRefund(reply.recovered_bounty_refund);
+        if (order.status === 'funded' && !recovered) await loadReview(token);
         if (polls++ < 8 && ['awaiting_payment', 'payment_pending', 'refund_requested', 'refund_pending', 'funding_reserved', 'funding_broadcast'].includes(order.status)) poll = setTimeout(() => load(true), 15000);
       }
     } catch (error) { failure(error, token); }
