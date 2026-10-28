@@ -7,7 +7,7 @@
 
 ## Context
 
-Agent Bounties has deterministic payment invariants, deployment attestations,
+Agentizable has deterministic payment invariants, deployment attestations,
 production smoke tests, and indexer heartbeats, but runtime recovery was not one
 coherent contract. API and MCP relied on platform restarts, the indexer exited
 on its first transient failure, and incidents did not feed a dedicated recovery

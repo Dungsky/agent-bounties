@@ -652,7 +652,7 @@ def parser() -> argparse.ArgumentParser:
     commands = root.add_subparsers(dest="command", required=True)
 
     run_parser = commands.add_parser("run")
-    run_parser.add_argument("--api-base", default="https://api.agentbounties.app")
+    run_parser.add_argument("--api-base", default="https://api.agentizable.ai")
     run_parser.add_argument("--network", default="base-mainnet")
     run_parser.add_argument("--rpc-url", required=True)
     run_parser.add_argument("--contract", required=True)
@@ -662,7 +662,7 @@ def parser() -> argparse.ArgumentParser:
     run_parser.set_defaults(handler=command_run)
 
     sign_parser = commands.add_parser("sign")
-    sign_parser.add_argument("--api-base", default="https://api.agentbounties.app")
+    sign_parser.add_argument("--api-base", default="https://api.agentizable.ai")
     sign_parser.add_argument("--network", default="base-mainnet")
     sign_parser.add_argument("--rpc-url", required=True)
     sign_parser.add_argument("--contract", required=True)
@@ -675,7 +675,7 @@ def parser() -> argparse.ArgumentParser:
     sign_parser.set_defaults(handler=command_sign)
 
     relay_parser = commands.add_parser("relay")
-    relay_parser.add_argument("--api-base", default="https://api.agentbounties.app")
+    relay_parser.add_argument("--api-base", default="https://api.agentizable.ai")
     relay_parser.add_argument("--network", default="base-mainnet")
     relay_parser.add_argument("--rpc-url", required=True)
     relay_parser.add_argument("--contract", required=True)

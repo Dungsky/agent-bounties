@@ -28,7 +28,7 @@ await build({
     "process.env.NODE_ENV": '"production"',
   },
   banner: {
-    js: "/* Agent Bounties Coinbase embedded-wallet adapter. Generated; do not edit directly. */",
+    js: "/* Agentizable Coinbase embedded-wallet adapter. Generated; do not edit directly. */",
   },
 });
 
@@ -37,7 +37,7 @@ const bundle = await readFile(outfile, "utf8");
 for (const marker of [
   "coinbase-embedded",
   "eth_requestAccounts",
-  "Agent Bounties embedded wallet",
+  "Agentizable embedded wallet",
   "createOnLogin",
   "Use the same sign-in method",
   "Link another sign-in method",

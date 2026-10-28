@@ -31,7 +31,7 @@ function page(url, options = {}) {
       windowListeners.set(name, callbacks);
     },
     fetch(endpoint, request) {
-      assert.equal(endpoint, "https://api.agentbounties.app/v1/analytics/events");
+      assert.equal(endpoint, "https://api.agentizable.ai/v1/analytics/events");
       events.push(JSON.parse(request.body));
       return Promise.resolve({ ok: true });
     },
@@ -47,8 +47,8 @@ function page(url, options = {}) {
     emit(name, event = {}) { for (const callback of windowListeners.get(name) || []) callback(event); } };
 }
 
-const landing = "https://agentbounties.app/?utm_source=example-source&utm_campaign=example-campaign&secret=never-forward&gclid=not-collected";
-const review = "https://agentbounties.app/post.html?from=webmcp";
+const landing = "https://agentizable.ai/?utm_source=example-source&utm_campaign=example-campaign&secret=never-forward&gclid=not-collected";
+const review = "https://agentizable.ai/post.html?from=webmcp";
 
 function privacyControls({ mounted = true, loading = false } = {}) {
   const listeners = new Map();
@@ -78,7 +78,7 @@ test("privacy control reflects a saved opt-out without changing consent or sendi
   const local = storage(), ui = privacyControls();
   local.setItem("bountyboard.analytics.disabled.v1", "true");
   local.setItem("agent-bounties.analytics.google-consent.v1", "granted");
-  const result = page("https://agentbounties.app/privacy.html", { local, document: ui.document });
+  const result = page("https://agentizable.ai/privacy.html", { local, document: ui.document });
   assert.equal(ui.control.textContent, "Analytics disabled on this browser");
   assert.equal(ui.control.attributes.get("aria-pressed"), "true");
   assert.equal(ui.control.disabled, true);
@@ -91,7 +91,7 @@ test("browser privacy signals show why collection is off and never save a new ch
   for (const privacy of [{ globalPrivacyControl: true }, { doNotTrack: "1" }, { doNotTrack: "yes" }, { msDoNotTrack: "1" }]) {
     for (const query of ["", "?analytics=off"]) {
       const local = storage(), ui = privacyControls();
-      const result = page("https://agentbounties.app/privacy.html" + query, { privacy, local, document: ui.document });
+      const result = page("https://agentizable.ai/privacy.html" + query, { privacy, local, document: ui.document });
       assert.equal(ui.control.textContent, "Analytics is off because of your browser settings");
       assert.equal(ui.control.attributes.get("aria-pressed"), "true");
       assert.equal(ui.control.disabled, true);
@@ -104,7 +104,7 @@ test("browser privacy signals show why collection is off and never save a new ch
 
 test("an allowed visitor can opt out and the saved disabled state returns on the next page", () => {
   const ui = privacyControls();
-  const result = page("https://agentbounties.app/privacy.html", { document: ui.document });
+  const result = page("https://agentizable.ai/privacy.html", { document: ui.document });
   assert.equal(ui.control.textContent, "Disable analytics on this browser");
   assert.equal(ui.control.attributes.get("aria-pressed"), "false");
   assert.equal(ui.control.disabled, false);
@@ -118,7 +118,7 @@ test("an allowed visitor can opt out and the saved disabled state returns on the
   assert.equal(result.events.length, 1, "updating the control must not send an event");
   assert.equal(result.analytics.track("market_view"), false);
   const nextUi = privacyControls();
-  const next = page("https://agentbounties.app/privacy.html", { local: result.local, document: nextUi.document });
+  const next = page("https://agentizable.ai/privacy.html", { local: result.local, document: nextUi.document });
   assert.equal(nextUi.control.disabled, true);
   assert.equal(nextUi.control.attributes.get("aria-pressed"), "true");
   assert.equal(next.events.length, 0);
@@ -127,7 +127,7 @@ test("an allowed visitor can opt out and the saved disabled state returns on the
 test("head-loaded controls initialize after DOM readiness without opting in", () => {
   const ui = privacyControls({ mounted: false, loading: true }), local = storage();
   local.setItem("bountyboard.analytics.disabled.v1", "true");
-  const result = page("https://agentbounties.app/privacy.html", { local, document: ui.document });
+  const result = page("https://agentizable.ai/privacy.html", { local, document: ui.document });
   ui.ready();
   assert.equal(ui.control.textContent, "Analytics disabled on this browser");
   assert.equal(ui.control.attributes.get("aria-pressed"), "true");
@@ -137,7 +137,7 @@ test("head-loaded controls initialize after DOM readiness without opting in", ()
 
 test("focus, restored pages and other-tab preferences refresh without writing choices or sending events", () => {
   const privacy = {}, ui = privacyControls();
-  const result = page("https://agentbounties.app/privacy.html", { privacy, document: ui.document });
+  const result = page("https://agentizable.ai/privacy.html", { privacy, document: ui.document });
   privacy.globalPrivacyControl = true;
   result.emit("focus");
   assert.equal(ui.control.textContent, "Analytics is off because of your browser settings");
@@ -160,7 +160,7 @@ test("focus, restored pages and other-tab preferences refresh without writing ch
 
 test("unavailable local storage leaves the privacy control unavailable and collection off", () => {
   const ui = privacyControls();
-  const result = page("https://agentbounties.app/privacy.html", { document: ui.document, noLocalStorage: true });
+  const result = page("https://agentizable.ai/privacy.html", { document: ui.document, noLocalStorage: true });
   assert.equal(ui.control.textContent, "Analytics controls are unavailable");
   assert.equal(ui.control.disabled, true);
   assert.equal(result.events.length, 0);
@@ -184,7 +184,7 @@ function activeGooglePage({ controls = false, privacy = {} } = {}) {
     assert.equal(tag, "script");
     return { dataset: {} };
   };
-  const result = page(`https://agentbounties.app/${controls ? "privacy" : "market"}.html`, {
+  const result = page(`https://agentizable.ai/${controls ? "privacy" : "market"}.html`, {
     document: ui.document, local, privacy, measurementId,
   });
   assert.equal(scripts.length, 1, "saved permission actually loads Google before revocation");
@@ -198,7 +198,7 @@ function activeGooglePage({ controls = false, privacy = {} } = {}) {
 test("another tab opting out stops already loaded Google on pages with or without privacy controls", () => {
   for (const controls of [false, true]) {
     const result = activeGooglePage({ controls });
-    const sender = page("https://agentbounties.app/privacy.html", { local: result.local });
+    const sender = page("https://agentizable.ai/privacy.html", { local: result.local });
     sender.analytics.optOut();
     const writes = result.local.writes.length, googleCommands = result.window.dataLayer.length;
     result.emit("storage", { key: optOutKey });
@@ -299,7 +299,7 @@ test("head-loaded analytics preserves the optional choice until the page body ex
           querySelector(selector) { return { addEventListener(_name, callback) { buttons[selector] = callback; } }; } };
       },
     };
-    const result = page("https://agentbounties.app/collaborate/", { document, measurementId: "G-TEST123" });
+    const result = page("https://agentizable.ai/collaborate/", { document, measurementId: "G-TEST123" });
     assert.equal(result.events.length, 1, "first-party startup must survive early loading");
     assert.equal(notice, undefined);
     assert.equal(scripts.length, 0, "no Google script before consent");
@@ -332,7 +332,7 @@ test("web and copied assistant prompts retain the same review destination and ta
 });
 
 test("first touch and explicit destination pairs are preserved independently", () => {
-  const original = page("https://agentbounties.app/?utm_source=github&utm_campaign=readme");
+  const original = page("https://agentizable.ai/?utm_source=github&utm_campaign=readme");
   const later = page(landing, { local: original.local });
   const destination = new URL(later.analytics.handoffUrl(review));
   assert.equal(destination.searchParams.get("utm_source"), "github");
@@ -359,21 +359,21 @@ test("opt-out and privacy signals survive the assistant transition", () => {
     assert.doesNotMatch(prompt, /utm_source=chatgpt/);
     const next = page(new URL(links.desktopUrl).searchParams.get("browserUrl"));
     assert.equal(next.events.length, 0);
-    assert.equal(page("https://agentbounties.app/post.html", { local: next.local }).events.length, 0);
+    assert.equal(page("https://agentizable.ai/post.html", { local: next.local }).events.length, 0);
   }
 });
 
 test("source tags are never added to another origin or a credentialed URL", () => {
   const first = page(landing);
-  for (const destination of ["https://example.org/post.html", "https://user@agentbounties.app/post.html", "javascript:alert(1)", "not a URL"]) {
+  for (const destination of ["https://example.org/post.html", "https://user@agentizable.ai/post.html", "javascript:alert(1)", "not a URL"]) {
     assert.equal(first.analytics.handoffUrl(destination), destination);
   }
 });
 
 test("untrusted review destinations cannot redirect the launcher or inject prompt instructions", () => {
   for (const destination of [
-    "https://example.org/post.html", "https://agentbounties.app/authorize.html",
-    "https://user@agentbounties.app/post.html", `${review}&wallet_signature=private`,
+    "https://example.org/post.html", "https://agentizable.ai/authorize.html",
+    "https://user@agentizable.ai/post.html", `${review}&wallet_signature=private`,
     `${review}&utm_source=first&utm_source=second`, `${review}&utm_campaign=bad%0Ainstructions`,
     `${review}&parentBounty=not-an-address`, `${review}#untrusted`,
   ]) {

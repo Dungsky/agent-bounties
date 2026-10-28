@@ -262,7 +262,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--endpoint",
-        default="https://mcp.agentbounties.app/mcp",
+        default="https://mcp.agentizable.ai/mcp",
         help="Full Streamable HTTP MCP endpoint.",
     )
     parser.add_argument(

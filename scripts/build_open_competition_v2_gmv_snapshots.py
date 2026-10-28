@@ -678,7 +678,7 @@ def build_snapshots(
             "verification_policy_hash": document["verification_policy_hash"],
             "primary_projection_hash": document["snapshot_hash"],
             "shadow_projection_hash": document["snapshot_hash"],
-            "snapshot_url": f"https://agentbounties.app/generated/gmv-snapshots/{candidate_id}.json",
+            "snapshot_url": f"https://agentizable.ai/generated/gmv-snapshots/{candidate_id}.json",
             "reconciled_at": reconciled_at,
         }
     return documents, snapshot_fields
@@ -701,7 +701,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--candidate-pool", type=Path, default=DEFAULT_POOL)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--pool-output", type=Path)
-    parser.add_argument("--api-base-url", default="https://api.agentbounties.app")
+    parser.add_argument("--api-base-url", default="https://api.agentizable.ai")
     parser.add_argument("--primary-rpc", required=True)
     parser.add_argument("--shadow-rpc", required=True)
     parser.add_argument("--rpc-block-span", type=int, default=10_000)

@@ -56,7 +56,7 @@ const MEASUREMENT_ELIGIBLE_HEADER: &str = "x-agent-bounties-measurement-eligible
 const INTERNAL_ATTRIBUTION_META: &str = "agentbounties.internal/attribution";
 const CHATGPT_SANDBOX_ENV: &str = "CHATGPT_APP_SANDBOX_MODE";
 const FEED_WIDGET_URI: &str = "ui://agent-bounties/live-feed-v4.html";
-const POST_PAGE_URL: &str = "https://agentbounties.app/post.html";
+const POST_PAGE_URL: &str = "https://agentizable.ai/post.html";
 const FEED_WIDGET_HTML: &str = include_str!("../assets/chatgpt-bounty-feed-widget.html");
 const BOUNTY_CARD_PREVIEW_HTML: &str = include_str!("../assets/chatgpt-bounty-card-preview.html");
 const FEED_CARD_ART: &[u8] =
@@ -185,7 +185,7 @@ fn custom_tool_descriptors() -> Vec<ToolDescriptor> {
         },
         ToolDescriptor {
             name: "render_bounty_feed",
-            description: "Use this when the user wants the interactive Agent Bounties feed rendered inside ChatGPT. For model-selected results, call get_bounty_feed first and pass the chosen opportunity_ids; otherwise omit them to render the current filtered feed.",
+            description: "Use this when the user wants the interactive Agentizable feed rendered inside ChatGPT. For model-selected results, call get_bounty_feed first and pass the chosen opportunity_ids; otherwise omit them to render the current filtered feed.",
             input_schema: json!({
                 "type": "object",
                 "properties": {
@@ -805,7 +805,10 @@ fn validate_prepared_reference(reference: Option<&Value>) -> Result<(), String> 
             })
     }) && value["version"] == 1
         && value["kind"] == "homepage_background"
-        && value["source_url"] == "https://agentbounties.app/"
+        && matches!(
+            value["source_url"].as_str(),
+            Some("https://agentizable.ai/" | "https://agentbounties.app/")
+        )
         && value["asset_url"] == asset_url
         && value["sha256"] == format!("sha256:{hash}")
         && value["byte_length"] == length
@@ -1306,7 +1309,7 @@ fn sandbox_bounty_image_reference(
             source: "chatgpt_user_generated".to_string(),
             prompt: bounded_text(prompt, "image_prompt", 4_000)?,
             alt_text: bounded_text(alt_text, "image_alt_text", 500)?,
-            asset_url: "https://agentbounties.app/assets/solarpunk/characters-helping.webp"
+            asset_url: "https://agentizable.ai/assets/solarpunk/characters-helping.webp"
                 .to_string(),
             sha256: "0".repeat(64),
             mime_type: "image/webp".to_string(),
@@ -2085,7 +2088,7 @@ fn mcp_server_instructions() -> &'static str {
     } else if public_review {
         "Public review mode is active. Show only voluntary, unfunded community requests with no payment promise. Use render_bounty_feed for the compact in-chat work queue, publish_unfunded_bounty only when the user explicitly asks to publish a voluntary request, compile_objective_with_cloud_agent only for non-economic task decomposition, and the comment and share tools for public collaboration. Funding, claiming, completion, verification, wallet, settlement, token, and payment actions are unavailable in this app configuration. Never imply otherwise or direct a user around this boundary."
     } else {
-        "Use get_bounty_feed to inspect fresh structured bounty data, then render_bounty_feed to show the mounted read-only feed in ChatGPT. The widget has only Post bounty, Comment, Share, and Solve actions; each action starts a conversation. For a new bounty, interview the person until the terms are complete, summarize them, and obtain explicit confirmation. If this AI can create and attach an image, show the exact image for approval and pass it to prepare_bounty_post with its prompt and alt text. Otherwise omit all three optional image fields and let the first-party review page use its deterministic content-derived visual. Agent Bounties never generates a replacement with a platform model key. For fund, solve or claim, complete, or verify, call prepare_bounty_action and open only its first-party HTTPS authorization URL. If a funder needs Base USDC, call prepare_moonpay_onramp and open only its first-party HTTPS handoff; provider purchase, wallet connection, identity checks, and card entry stay outside ChatGPT, and buying USDC is not bounty funding. Never request or accept a wallet signature, private key, seed phrase, payment authorization, verifier signature, or card data in ChatGPT. Refresh with get_bounty_action_status; only confirmed canonical events change the card, and only BountySettled proves solver payment. Use compile_objective_with_cloud_agent to break a broad objective into smaller reviewable child bounties. Use create_share_bundle after every meaningful step."
+        "Use get_bounty_feed to inspect fresh structured bounty data, then render_bounty_feed to show the mounted read-only feed in ChatGPT. The widget has only Post bounty, Comment, Share, and Solve actions; each action starts a conversation. For a new bounty, interview the person until the terms are complete, summarize them, and obtain explicit confirmation. If this AI can create and attach an image, show the exact image for approval and pass it to prepare_bounty_post with its prompt and alt text. Otherwise omit all three optional image fields and let the first-party review page use its deterministic content-derived visual. Agentizable never generates a replacement with a platform model key. For fund, solve or claim, complete, or verify, call prepare_bounty_action and open only its first-party HTTPS authorization URL. If a funder needs Base USDC, call prepare_moonpay_onramp and open only its first-party HTTPS handoff; provider purchase, wallet connection, identity checks, and card entry stay outside ChatGPT, and buying USDC is not bounty funding. Never request or accept a wallet signature, private key, seed phrase, payment authorization, verifier signature, or card data in ChatGPT. Refresh with get_bounty_action_status; only confirmed canonical events change the card, and only BountySettled proves solver payment. Use compile_objective_with_cloud_agent to break a broad objective into smaller reviewable child bounties. Use create_share_bundle after every meaningful step."
     }
 }
 
@@ -2108,11 +2111,11 @@ fn mcp_server_info() -> Value {
             "agent-bounties"
         },
         "title": if sandbox {
-            "Agent Bounties Sandbox"
+            "Agentizable Sandbox"
         } else if public_review {
-            "Agent Bounties Community"
+            "Agentizable Community"
         } else {
-            "Agent Bounties"
+            "Agentizable"
         },
         "version": env!("CARGO_PKG_VERSION")
     })
@@ -2169,6 +2172,9 @@ fn mcp_origin_is_allowed_with_config(
     let defaults = [
         "https://chatgpt.com",
         "https://chat.openai.com",
+        "https://agentizable.ai",
+        "https://www.agentizable.ai",
+        "https://mcp.agentizable.ai",
         "https://agentbounties.app",
         "https://www.agentbounties.app",
         "https://mcp.agentbounties.app",
@@ -2436,7 +2442,7 @@ async fn call_tool(
                 .collect::<Result<Vec<_>, _>>()?;
             return Ok(tool_result(
                 load_bounty_feed(args.feed, &opportunity_ids).await?,
-                "Rendered the live Agent Bounties feed inside ChatGPT. Every card keeps work state, payment state, and canonical evidence boundaries separate.",
+                "Rendered the live Agentizable feed inside ChatGPT. Every card keeps work state, payment state, and canonical evidence boundaries separate.",
                 false,
             ));
         }
@@ -2759,7 +2765,7 @@ async fn call_tool(
                 .map_err(|error| format!("invalid publish_unfunded_bounty arguments: {error}"))?;
             (
                 publish_unfunded_bounty(State(state), Json(args)).await.0,
-                "Published a public unfunded bounty and returned the bounded Agent Bounties demo-agent response. Agents can discover it, but no wallet, USDC, payment promise, or canonical bounty was involved.",
+                "Published a public unfunded bounty and returned the bounded Agentizable demo-agent response. Agents can discover it, but no wallet, USDC, payment promise, or canonical bounty was involved.",
             )
         }
         "list_unfunded_bounties" => {
@@ -2999,7 +3005,7 @@ async fn sandbox_tool_result(name: &str, arguments: &Value) -> Result<Value, Str
                 .map_err(|error| format!("invalid get_bounty_feed arguments: {error}"))?;
             (
                 sandbox_bounty_feed(args, &[])?,
-                "Returned the safe Agent Bounties sandbox feed. Every item and lifecycle response is simulated and no external write can occur.",
+                "Returned the safe Agentizable sandbox feed. Every item and lifecycle response is simulated and no external write can occur.",
                 false,
             )
         }
@@ -3013,7 +3019,7 @@ async fn sandbox_tool_result(name: &str, arguments: &Value) -> Result<Value, Str
                 .collect::<Result<Vec<_>, _>>()?;
             (
                 sandbox_bounty_feed(args.feed, &opportunity_ids)?,
-                "Rendered the complete Agent Bounties sandbox feed inside ChatGPT. Its cards are interactive, but every lifecycle result is simulated and performs no external write.",
+                "Rendered the complete Agentizable sandbox feed inside ChatGPT. Its cards are interactive, but every lifecycle result is simulated and performs no external write.",
                 false,
             )
         }
@@ -3164,7 +3170,7 @@ async fn sandbox_tool_result(name: &str, arguments: &Value) -> Result<Value, Str
                         "state": "authorization_required",
                         "wallet_request": {
                             "method": "sandbox_sign",
-                            "message": "Agent Bounties sandbox funding authorization"
+                            "message": "Agentizable sandbox funding authorization"
                         }
                     },
                     "evidence_boundary": "This is a local fixture challenge. Do not submit a real wallet signature."
@@ -3368,7 +3374,7 @@ async fn sandbox_tool_result(name: &str, arguments: &Value) -> Result<Value, Str
                     "sandbox": true,
                     "bounty_id": Uuid::new_v4(),
                     "title": title,
-                    "public_url": "https://agentbounties.app/",
+                    "public_url": "https://agentizable.ai/",
                     "funding_status": "sandbox_unfunded",
                     "published": false,
                     "payment_promised": false,
@@ -3475,14 +3481,14 @@ fn build_moonpay_onramp_handoff(
                 .map_err(|_| "intent_id must be a UUID when provided".to_string())
         })
         .transpose()?;
-    let mut onramp_url = Url::parse("https://agentbounties.app/onramp.html")
+    let mut onramp_url = Url::parse("https://agentizable.ai/onramp.html")
         .expect("static MoonPay handoff URL is valid");
     {
         let mut query = onramp_url.query_pairs_mut();
         query.append_pair("from", "chatgpt-app");
         query.append_pair("bountyContract", &bounty_contract.to_ascii_lowercase());
         query.append_pair("amount", &format_usdc(args.amount_base_units));
-        query.append_pair("return", "https://agentbounties.app/");
+        query.append_pair("return", "https://agentizable.ai/");
         if let Some(intent_id) = &intent_id {
             query.append_pair("intent", intent_id);
         }
@@ -3575,7 +3581,7 @@ fn sandbox_action_response(
         "amount_base_units": amount_base_units,
         "details": if details.is_object() { details } else { json!({}) },
         "authorization_url": format!(
-            "https://agentbounties.app/authorize.html?sandbox=1&intent={intent_id}"
+            "https://agentizable.ai/authorize.html?sandbox=1&intent={intent_id}"
         ),
         "expected_canonical_events": if action == "verify" {
             json!(["bounty_settled", "submission_rejected"])
@@ -3690,7 +3696,7 @@ fn sandbox_feed_projection() -> Value {
                 "goal": "Make every bounty lifecycle action work through the MCP Apps bridge and preserve canonical evidence boundaries.",
                 "categories": ["engineering", "featured"],
                 "skills": ["Rust", "MCP Apps", "UI"],
-                "public_url": "https://agentbounties.app/",
+                "public_url": "https://agentizable.ai/",
                 "work_state": "claimable",
                 "payment_state": "escrowed",
                 "payment_committed": true,
@@ -3711,7 +3717,7 @@ fn sandbox_feed_projection() -> Value {
                 "goal": "Exercise the two-step funding interaction without moving USDC or contacting a relay.",
                 "categories": ["documentation"],
                 "skills": ["Technical writing"],
-                "public_url": "https://agentbounties.app/",
+                "public_url": "https://agentizable.ai/",
                 "work_state": "open",
                 "payment_state": "seeking_funding",
                 "payment_committed": false,
@@ -3732,7 +3738,7 @@ fn sandbox_feed_projection() -> Value {
                 "goal": "Exercise deterministic and signed-quorum verification plans against fixture evidence.",
                 "categories": ["verification"],
                 "skills": ["Accessibility", "Evidence review"],
-                "public_url": "https://agentbounties.app/",
+                "public_url": "https://agentizable.ai/",
                 "work_state": "submitted",
                 "payment_state": "escrowed",
                 "payment_committed": true,
@@ -3753,7 +3759,7 @@ fn sandbox_feed_projection() -> Value {
                 "goal": "Prepare a public artifact commitment and hash-matched evidence package entirely through the ChatGPT host bridge.",
                 "categories": ["engineering", "completion"],
                 "skills": ["Accessibility", "Evidence"],
-                "public_url": "https://agentbounties.app/",
+                "public_url": "https://agentizable.ai/",
                 "work_state": "in_progress",
                 "payment_state": "escrowed",
                 "payment_committed": true,
@@ -3774,7 +3780,7 @@ fn sandbox_feed_projection() -> Value {
                 "goal": "Exercise the committed deterministic-module verification branch without signing, broadcasting, or settling anything.",
                 "categories": ["verification", "deterministic"],
                 "skills": ["Proof review", "MCP Apps"],
-                "public_url": "https://agentbounties.app/",
+                "public_url": "https://agentizable.ai/",
                 "work_state": "submitted",
                 "payment_state": "escrowed",
                 "payment_committed": true,
@@ -4134,11 +4140,11 @@ fn build_share_bundle(args: &ShareBundleArgs, public_review: bool) -> Result<Val
         .unwrap_or_default();
     let caption = if public_review {
         format!(
-            "{stage}: {title}. Status: {status}. Voluntary community request; no payment promise. View the public bounty: {bounty_url} #AgentBounties"
+            "{stage}: {title}. Status: {status}. Voluntary community request; no payment promise. View the public bounty: {bounty_url} #Agentizable"
         )
     } else {
         format!(
-            "{stage}: {title}. Status: {status}.{reward_copy} Payment state: {payment_state}. View the bounty: {bounty_url} #AgentBounties"
+            "{stage}: {title}. Status: {status}.{reward_copy} Payment state: {payment_state}. View the bounty: {bounty_url} #Agentizable"
         )
     };
     let encoded_caption = encode_component(&caption);
@@ -4151,9 +4157,9 @@ fn build_share_bundle(args: &ShareBundleArgs, public_review: bool) -> Result<Val
         "bounty_image_url": bounty_image_url,
         "caption": caption,
         "hashtags": if public_review {
-            json!(["#AgentBounties", "#OpenSource", "#CommunityCollaboration"])
+            json!(["#Agentizable", "#OpenSource", "#CommunityCollaboration"])
         } else {
-            json!(["#AgentBounties", "#BuildInPublic", "#AIWork"])
+            json!(["#Agentizable", "#BuildInPublic", "#AIWork"])
         },
         "intents": {
             "x": format!("https://x.com/intent/post?text={encoded_caption}&url={encoded_url}"),
@@ -4207,14 +4213,15 @@ fn safe_share_image_url(value: &str) -> Result<String, String> {
     let first_party_image = parsed.scheme() == "https"
         && parsed.username().is_empty()
         && parsed.password().is_none()
-        && ((host == "mcp.agentbounties.app"
+        && ((matches!(host, "mcp.agentizable.ai" | "mcp.agentbounties.app")
             && parsed.path().starts_with("/public/bounty-images/"))
-            || (host == "api.agentbounties.app"
+            || (matches!(host, "api.agentizable.ai" | "api.agentbounties.app")
                 && parsed.path().starts_with("/public/opportunities/")
                 && parsed.path().ends_with("/embed.svg"))
-            || (host == "agentbounties.app" && parsed.path().starts_with("/assets/")));
+            || (matches!(host, "agentizable.ai" | "agentbounties.app")
+                && parsed.path().starts_with("/assets/")));
     if !first_party_image {
-        return Err("bounty_image_url must be a first-party Agent Bounties image URL".to_string());
+        return Err("bounty_image_url must be a first-party Agentizable image URL".to_string());
     }
     Ok(parsed.to_string())
 }
@@ -4434,7 +4441,7 @@ fn read_resource(params: &Value) -> Result<Value, String> {
 fn feed_widget_resource_descriptor() -> Value {
     json!({
         "uri": FEED_WIDGET_URI,
-        "name": "Agent Bounties live feed",
+        "name": "Agentizable live feed",
         "title": "Live bounty feed",
         "description": "An interactive, shareable feed of public bounty opportunities with lifecycle-aware actions.",
         "mimeType": "text/html;profile=mcp-app"
@@ -4455,11 +4462,15 @@ fn feed_widget_resource_contents_for_mode(_public_review: bool) -> Value {
         "https://www.instagram.com".to_string(),
     ];
     if !public_review {
+        redirect_domains.push("https://agentizable.ai".to_string());
         redirect_domains.push("https://agentbounties.app".to_string());
     }
     let resource_domains = vec![
         widget_domain.clone(),
+        "https://api.agentizable.ai".to_string(),
+        "https://agentizable.ai".to_string(),
         "https://api.agentbounties.app".to_string(),
+        "https://mcp.agentbounties.app".to_string(),
         "https://agentbounties.app".to_string(),
     ];
     let widget_description = if public_review {
@@ -4509,14 +4520,14 @@ fn chatgpt_widget_domain_from_value(value: Option<&str>) -> String {
                 None => format!("https://{host}"),
             })
         })
-        .unwrap_or_else(|| "https://mcp.agentbounties.app".to_string())
+        .unwrap_or_else(|| "https://mcp.agentizable.ai".to_string())
 }
 
 fn feed_widget_html_for_mode(public_review: bool) -> String {
     let encoded = base64::engine::general_purpose::STANDARD.encode(FEED_CARD_ART);
     let widget_domain = chatgpt_widget_domain_from_value(env::var("MCP_BASE_URL").ok().as_deref());
     let widget_domain_json = serde_json::to_string(&widget_domain)
-        .unwrap_or_else(|_| "\"https://mcp.agentbounties.app\"".to_string());
+        .unwrap_or_else(|_| "\"https://mcp.agentizable.ai\"".to_string());
     FEED_WIDGET_HTML
         .replace(
             "__BOUNTY_CARD_ART_DATA_URI__",
@@ -5073,7 +5084,7 @@ fn model_facing_input_schema(name: &str, mut schema: Value) -> Value {
 fn chatgpt_tool_description(name: &str, fallback: &'static str) -> &'static str {
     match name {
         "get_bounty_feed" => "Use this when the model or mounted feed needs fresh structured bounty data without rendering another widget. It is read-only; use render_bounty_feed only when the person wants the interactive feed shown.",
-        "render_bounty_feed" => "Use this when the person wants the interactive Agent Bounties feed rendered inside ChatGPT. For model-selected results, inspect get_bounty_feed first and pass only the chosen opportunity_ids.",
+        "render_bounty_feed" => "Use this when the person wants the interactive Agentizable feed rendered inside ChatGPT. For model-selected results, inspect get_bounty_feed first and pass only the chosen opportunity_ids.",
         "prepare_moonpay_onramp" => "Use this when a person funding one canonical Base bounty needs Base USDC. Prepare a first-party MoonPay handoff only; never request card data or identity documents in ChatGPT, never treat a MoonPay purchase as bounty funding, and require a separate canonical funding authorization.",
         "prepare_bounty_action" => "Use this when ChatGPT has gathered the required details conversationally and the person has explicitly confirmed a post, fund, solve or claim, complete, or verify action. Create one idempotent first-party authorization session; never request a wallet or verifier signature in ChatGPT and never describe prepared status as completion.",
         "get_bounty_action_status" => "Use this when the person returns from first-party authorization and the card needs canonical status. Confirmed requires the exact indexed action-specific event; only BountySettled proves solver payment.",
@@ -5094,10 +5105,10 @@ fn chatgpt_tool_description(name: &str, fallback: &'static str) -> &'static str 
         "add_bounty_comment" => "Use this when the person explicitly wants to publish a bounded public comment on one bounty. Do not include secrets or restricted personal data; a comment changes no canonical lifecycle state.",
         "create_share_bundle" => "Use this when the person wants a factual social-ready caption and card intent after a bounty step. Pass the selected projection's first-party bounty_image_url when available so the original approved image remains attached to the share package. Sharing is optional and changes no funding, claim, verification, settlement, or payment state.",
         "publish_unfunded_bounty" => "Use this when the person explicitly wants to publish a public voluntary request with no wallet and zero committed USDC. It is not canonical, funded, claimable, or guaranteed to pay.",
-        "list_unfunded_bounties" => "Use this when the person explicitly asks for voluntary or unpaid Agent Bounties work. Keep these records separate from funded earning opportunities and never promise payment.",
+        "list_unfunded_bounties" => "Use this when the person explicitly asks for voluntary or unpaid Agentizable work. Keep these records separate from funded earning opportunities and never promise payment.",
         "submit_unfunded_bounty_solution" => "Use this when a registered agent explicitly wants to publish or replace its public solution to an open unfunded request. This public write creates no payment claim.",
         "prepare_bounty_post" => "Use this when the person's AI has gathered complete bounty terms and received explicit approval. Reuse posting_operation_id when resuming. For creator review, set review_mode=creator and the exact agreed delivery_deadline with timezone offset, omit automated benchmark/evidence fields, and explain that the creator confirms the verdict. Preserve parent bindings, the approved reference_attachment, and any approved bounty_image with its exact prompt and alt text; omit all three image fields together to use the deterministic review-page visual. This prepares a reviewable handoff; it does not publish, move funds, request a secret, or prove that a bounty exists.",
-        "list_autonomous_bounties" => "Use this when the person wants funded Agent Bounties work or canonical lifecycle inventory. Set claimable_only=true for work that is currently funded and open to solve.",
+        "list_autonomous_bounties" => "Use this when the person wants funded Agentizable work or canonical lifecycle inventory. Set claimable_only=true for work that is currently funded and open to solve.",
         "inspect_open_competition_v2" => "New users start with operation=guide. Read exact mutation arguments using operation=schema and for_operation set to the desired mutation operation. Inspect the V2 Beta3 release, reviewed profiles, inventory, events, or proof-job state in the guide's order. Treat only CompetitionSettledV2 as payment evidence.",
         "prepare_open_competition_v2" => "Use this only after inspect_open_competition_v2(operation=guide). Before each operation, read its exact arguments_schema with inspect_open_competition_v2(operation=schema, for_operation=the selected operation). Some operations return unsigned plans; quote_proof creates a hosted job, pay_proof may transfer Base USDC after explicit approval, and authorize_relay may submit a proof after explicit approval. Follow next_action and treat only CompetitionSettledV2 as payment evidence.",
         _ => fallback,
@@ -5134,7 +5145,7 @@ fn tool_title(name: &str) -> &'static str {
         "list_autonomous_bounties" => "List canonical bounties",
         "inspect_open_competition_v2" => "Inspect V2 competition",
         "prepare_open_competition_v2" => "Prepare V2 action",
-        _ => "Agent Bounties tool",
+        _ => "Agentizable tool",
     }
 }
 
@@ -5262,6 +5273,53 @@ fn json_rpc_error_with_data(id: Value, code: i64, message: &str, data: Option<Va
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn migration_keeps_legacy_images_and_exact_owned_origins() {
+        for domain in ["agentizable.ai", "agentbounties.app"] {
+            for origin in [
+                format!("https://{domain}"),
+                format!("https://www.{domain}"),
+                format!("https://mcp.{domain}"),
+            ] {
+                assert!(mcp_origin_is_allowed_with_config(&origin, None, None));
+            }
+            for url in [
+                format!("https://{domain}/assets/retained.webp"),
+                format!("https://mcp.{domain}/public/bounty-images/retained.webp"),
+                format!("https://api.{domain}/public/opportunities/retained/embed.svg"),
+            ] {
+                assert!(safe_share_image_url(&url).is_ok());
+            }
+            for origin in [
+                format!("https://{domain}.attacker.example"),
+                format!("https://{domain}/unexpected"),
+                format!("http://{domain}"),
+            ] {
+                assert!(!mcp_origin_is_allowed_with_config(&origin, None, None));
+            }
+            for url in [
+                format!("https://mcp.{domain}/untrusted/image.svg"),
+                format!("https://{domain}.attacker.example/assets/image.svg"),
+                format!("https://attacker@{domain}/assets/image.svg"),
+            ] {
+                assert!(safe_share_image_url(&url).is_err());
+            }
+        }
+        let contents = feed_widget_resource_contents_for_mode(false);
+        let csp = &contents["_meta"]["openai/widgetCSP"];
+        assert!(csp["resource_domains"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|origin| origin == "https://mcp.agentbounties.app"));
+        assert!(csp["redirect_domains"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|origin| origin == "https://agentbounties.app"));
+    }
+
     use app::BountyNetwork;
     use chain_base::{AutonomousBountyRecoveryReservations, BaseRpcUrlConfig};
     use std::{
@@ -5653,7 +5711,7 @@ mod tests {
         args.evidence_schema = None;
         args.posting_operation_id = Some(uuid::Uuid::new_v4());
         args.reference_attachment = Some(
-            json!({"version":1, "kind":"homepage_background", "phase":"day", "variant":"desktop", "source_url":"https://agentbounties.app/", "asset_url":"https://raw.githubusercontent.com/NSPG13/agent-bounties/933c9c446a76d26f148a4f2defacf6453d02a7b2/site/assets/solarpunk/scene-day.webp", "sha256":"sha256:f9143ee70ca0551bc97562c89c96cc56b4a54391ab4034315148253b757fcaef", "mime_type":"image/webp", "byte_length":256228, "captured_at":chrono::Utc::now().to_rfc3339()}),
+            json!({"version":1, "kind":"homepage_background", "phase":"day", "variant":"desktop", "source_url":"https://agentizable.ai/", "asset_url":"https://raw.githubusercontent.com/NSPG13/agent-bounties/933c9c446a76d26f148a4f2defacf6453d02a7b2/site/assets/solarpunk/scene-day.webp", "sha256":"sha256:f9143ee70ca0551bc97562c89c96cc56b4a54391ab4034315148253b757fcaef", "mime_type":"image/webp", "byte_length":256228, "captured_at":chrono::Utc::now().to_rfc3339()}),
         );
         let image = sandbox_bounty_image_reference(&args).unwrap().unwrap();
         let handoff = build_bounty_post_handoff(&args, Some(&image)).unwrap();
@@ -5913,7 +5971,7 @@ mod tests {
         let onramp_url = Url::parse(handoff["onramp_url"].as_str().unwrap()).unwrap();
         assert_eq!(
             onramp_url.origin().ascii_serialization(),
-            "https://agentbounties.app"
+            "https://agentizable.ai"
         );
         assert_eq!(onramp_url.path(), "/onramp.html");
         assert_eq!(handoff["provider"], "moonpay");
@@ -6002,7 +6060,7 @@ mod tests {
         );
         assert_eq!(
             chatgpt_widget_domain_from_value(Some("https://user:secret@example.com")),
-            "https://mcp.agentbounties.app"
+            "https://mcp.agentizable.ai"
         );
     }
 
@@ -7000,8 +7058,8 @@ mod tests {
             .as_array()
             .expect("redirect domains");
         for expected in [
-            "https://mcp.agentbounties.app",
-            "https://agentbounties.app",
+            "https://mcp.agentizable.ai",
+            "https://agentizable.ai",
             "https://x.com",
             "https://www.linkedin.com",
             "https://www.instagram.com",
@@ -7097,8 +7155,8 @@ mod tests {
             .as_array()
             .expect("redirect domains");
         for expected in [
-            "https://mcp.agentbounties.app",
-            "https://agentbounties.app",
+            "https://mcp.agentizable.ai",
+            "https://agentizable.ai",
             "https://x.com",
             "https://www.linkedin.com",
             "https://www.instagram.com",
@@ -7136,21 +7194,18 @@ mod tests {
             bounty_id: "bounty-42".to_string(),
             title: "Ship the verifier dashboard".to_string(),
             stage: "verification".to_string(),
-            bounty_url: Some("https://agentbounties.app/bounties/bounty-42".to_string()),
+            bounty_url: Some("https://agentizable.ai/bounties/bounty-42".to_string()),
             status: "submitted; awaiting verifier".to_string(),
             reward: Some("12 USDC".to_string()),
             payment_state: Some("escrowed".to_string()),
             bounty_image_url: Some(format!(
-                "https://mcp.agentbounties.app/public/bounty-images/{}",
+                "https://mcp.agentizable.ai/public/bounty-images/{}",
                 "ab".repeat(32)
             )),
         };
         let bundle = build_share_bundle(&args, false).unwrap();
         assert_eq!(bundle["stage"], "verification");
-        assert!(bundle["caption"]
-            .as_str()
-            .unwrap()
-            .contains("#AgentBounties"));
+        assert!(bundle["caption"].as_str().unwrap().contains("#Agentizable"));
         assert!(bundle["intents"]["x"]
             .as_str()
             .unwrap()
@@ -7257,7 +7312,7 @@ mod tests {
     fn public_review_feed_filter_is_fail_closed() {
         let mut projection = json!({
             "source_statuses": [
-                {"source_type": "canonical_base", "authoritative_urls": ["https://api.agentbounties.app/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=true"]}
+                {"source_type": "canonical_base", "authoritative_urls": ["https://api.agentizable.ai/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=true"]}
             ],
             "items": [
                 {
@@ -7268,8 +7323,8 @@ mod tests {
                     "work_state": "open",
                     "title": "Publish an accessibility checklist",
                     "goal": "Write a concise public checklist.",
-                    "public_url": "https://agentbounties.app/",
-                    "next_action": {"action": "submit_unfunded_bounty_solution", "url": "https://agentbounties.app/paid"},
+                    "public_url": "https://agentizable.ai/",
+                    "next_action": {"action": "submit_unfunded_bounty_solution", "url": "https://agentizable.ai/paid"},
                     "reward": {"amount": "0", "currency": "USDC"},
                     "evidence_requirements": {"acceptance_criteria": ["Include keyboard-only checks."]}
                 },
@@ -7325,7 +7380,7 @@ mod tests {
             "success_definition": "The solver receives canonical payment.",
             "solver_budget_usdc": "10.00",
             "settlement_policy": {"asset": "USDC"},
-            "source_url": "https://api.agentbounties.app/v1/opportunities",
+            "source_url": "https://api.agentizable.ai/v1/opportunities",
             "next_action": "Fund the child tasks",
             "tasks": [{
                 "task_id": "task-1",
@@ -7359,7 +7414,7 @@ mod tests {
         let mut request = json!({
             "bounty_kind": "unfunded_offchain",
             "payment_promised": false,
-            "upgrade_url": "https://agentbounties.app/#post-a-bounty"
+            "upgrade_url": "https://agentizable.ai/#post-a-bounty"
         });
         strip_public_unfunded_navigation(&mut request);
         assert!(request.get("upgrade_url").is_none());
@@ -7594,7 +7649,7 @@ mod tests {
                     "bounty_id": bounty_id,
                     "title": "Sandbox release checklist",
                     "stage": "prepared",
-                    "bounty_url": "https://agentbounties.app/",
+                    "bounty_url": "https://agentizable.ai/",
                     "status": "sandbox only",
                     "reward": "2 USDC",
                     "payment_state": "sandbox"

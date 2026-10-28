@@ -80,7 +80,7 @@ test("multi-page replay requires continuous offsets and complete selection", () 
   assert.equal(proof.audit(platform, pages).status, "unavailable");
 });
 test("bounded transport rejects redirects/status/oversize and cancels the stream", async () => {
-  const url = "https://api.agentbounties.app/v1/metrics/platform?period=lifetime";
+  const url = "https://api.agentizable.ai/v1/metrics/platform?period=lifetime";
   let options;
   const response = await proof.requestJson(async (_url, opts) => { options = opts; return new Response('{}'); }, url);
   assert.deepEqual(response, {}); assert.equal(options.redirect, "error"); assert.equal(options.credentials, "omit");

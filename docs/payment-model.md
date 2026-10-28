@@ -83,7 +83,7 @@ Individuals buy and cash out USDC with their own wallet through licensed ramps;
 see [non-custodial fiat ramps](fiat-ramps.md).
 
 Business buyers who need a vendor invoice use the seller-of-record path instead:
-AgentBounties invoices the outcome through Stripe and funds a contractor-gated v2
+Agentizable invoices the outcome through Stripe and funds a contractor-gated v2
 bounty from its own treasury after verified payment. See
 [the invoiced business path](invoice-seller-of-record.md).
 

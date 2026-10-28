@@ -186,7 +186,7 @@
     const forfeit = deposit ? 'your ' + core.money(deposit.amount_minor, deposit.currency) + ' review deposit is owed to them' : 'your review deposit is owed to them';
     switch (r.appeal && r.appeal.status) {
       case 'window_open': return 'You rejected attempt ' + r.round + '. The solver can appeal until ' + when(r.appeal.window_ends_at) + '. If they don’t, the rejection becomes final and the bounty reopens for another solver.';
-      case 'appealed': return 'The solver appealed your rejection of attempt ' + r.round + '. Agent Bounties is checking the delivery against your published criteria. If your rejection is upheld, the bounty reopens; if it is reversed, the solver is paid and ' + forfeit + '.';
+      case 'appealed': return 'The solver appealed your rejection of attempt ' + r.round + '. Agentizable is checking the delivery against your published criteria. If your rejection is upheld, the bounty reopens; if it is reversed, the solver is paid and ' + forfeit + '.';
       case 'reversed': return 'On appeal, attempt ' + r.round + ' was found to meet your published criteria. The solver is paid when the bounty settles on Base, and ' + forfeit + '.';
       default: return 'Your rejection of attempt ' + r.round + ' is final. The bounty stays funded and open for another solver; only Base confirmation reopens it.';
     }
@@ -204,8 +204,8 @@
       held: 'Refundable review deposit: ' + amount + '. It returns to your card when the bounty is paid, unless an appeal reverses a rejection you made. The card processing on it is not refunded.',
       refund_pending: 'Your ' + amount + ' review deposit refund is being sent to your card.',
       refunded: 'Stripe confirms your ' + amount + ' review deposit refund was sent.',
-      refund_failed: 'Stripe could not complete your ' + amount + ' review deposit refund. Agent Bounties will contact you to send it another way.',
-      forfeited_to_solver: 'Your ' + amount + ' review deposit is owed to the solver because an appeal reversed your rejection. Agent Bounties pays it to them in USDC.'
+      refund_failed: 'Stripe could not complete your ' + amount + ' review deposit refund. Agentizable will contact you to send it another way.',
+      forfeited_to_solver: 'Your ' + amount + ' review deposit is owed to the solver because an appeal reversed your rejection. Agentizable pays it to them in USDC.'
     }[d.status];
   }
   function drawReview(v) {
@@ -332,5 +332,5 @@
     if (window.top !== window.self) throw new Error('Embedded payment page');
     target = core.target(location.search); origin = core.apiOrigin(location); history.replaceState(null, '', target.path); load();
   }
-  catch (_) { clear(); history.replaceState(null, '', '/account.html'); el('refresh').disabled = true; status('Open the quote or order link provided by Agent Bounties to view its details.'); }
+  catch (_) { clear(); history.replaceState(null, '', '/account.html'); el('refresh').disabled = true; status('Open the quote or order link provided by Agentizable to view its details.'); }
 })();

@@ -301,7 +301,7 @@ After deterministic verification:
 
 Every funding, claiming, PR, or proof interaction should ask:
 
-1. How did you find Agent Bounties?
+1. How did you find Agentizable?
 2. What made this bounty or project worth participating in?
 3. If an AI agent helped, what tool, prompt, link, label, or workflow led it
    here?

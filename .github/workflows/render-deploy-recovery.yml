@@ -89,9 +89,9 @@ jobs:
       REQUESTED_DEPLOY_MODE: ${{ inputs.deploy_mode || 'build_and_deploy' }}
       RUNTIME_REVISION: ${{ inputs.runtime_revision }}
       PRODUCTION_EXPECTED_REVISION: ${{ vars.PRODUCTION_EXPECTED_REVISION }}
-      PRODUCTION_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://api.agentbounties.app' }}
-      PRODUCTION_MCP_BASE_URL: ${{ vars.PRODUCTION_MCP_BASE_URL || 'https://mcp.agentbounties.app' }}
-      PRODUCTION_WEBSITE_BASE_URL: ${{ vars.PRODUCTION_WEBSITE_BASE_URL || 'https://agentbounties.app' }}
+      PRODUCTION_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL || 'https://api.agentizable.ai' }}
+      PRODUCTION_MCP_BASE_URL: ${{ vars.PRODUCTION_MCP_BASE_URL || 'https://mcp.agentizable.ai' }}
+      PRODUCTION_WEBSITE_BASE_URL: ${{ vars.PRODUCTION_WEBSITE_BASE_URL || 'https://agentizable.ai' }}
       RENDER_DEPLOY_PAUSE_REASON: ${{ vars.RENDER_DEPLOY_PAUSE_REASON }}
       OPEN_COMPETITION_ENTRANT_RELAY_CANARY: ${{ inputs.open_competition_entrant_relay_canary || false }}
       ROTATE_OPERATOR_API_TOKEN: ${{ inputs.rotate_operator_api_token || false }}

@@ -5,7 +5,7 @@ These are the exact prompts used for the September 10, 2026 quality pass. The im
 ## Revised first/last frame
 
 Use case: precise-object-edit.
-Asset type: high-resolution first/last frame for an AgentBounties.app forest-hall video.
+Asset type: high-resolution first/last frame for an Agentizable forest-hall video.
 Edit target: the attached existing forest hall image.
 Keep the exact approved camera position, 16:9 framing, open vaulted hall, dense forest, ferns, moss, vines, teal architectural inlays, fire pit, lighting and overall composition. Preserve ALL FIVE existing distinctive AI agents, including the four seated robots and the small floating orb, without replacing or merging any of them.
 Add exactly TWO humans: one young adult man in his twenties and one young adult woman in her twenties. They are seated naturally among the robots around the same fire, comfortably engaged in friendly conversation with them. Seven participants total including the orb. Place the two people within the central gathering, with open space and distinct silhouettes so the group does not look crowded; slight natural repositioning of the seated participants is allowed to fit them convincingly on the circular benches. The man and woman wear tasteful casual solarpunk clothing in muted forest, moss and natural linen colors, with realistic human faces, natural skin texture and correctly formed relaxed hands. One makes a small conversational gesture while a neighboring robot listens; the other person looks toward an agent. Keep the fire clearly visible and the people safely seated around it, with warm firelight matching the scene.

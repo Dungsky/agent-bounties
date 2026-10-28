@@ -84,7 +84,7 @@ jobs:
             response="$(curl --fail-with-body --silent --show-error \
               -H 'content-type: application/json' \
               --data "$payload" \
-              https://mcp.agentbounties.app/tools/publish_autonomous_submission_evidence || true)"
+              https://mcp.agentizable.ai/tools/publish_autonomous_submission_evidence || true)"
             if jq -e '.content[0].json.artifact_reference == "'"$ARTIFACT_REF"'"' >/dev/null 2>&1 <<<"$response"; then
               exit 0
             fi

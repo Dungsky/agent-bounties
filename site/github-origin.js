@@ -2,7 +2,7 @@
 (function (win, doc) {
   "use strict";
   const root = doc.querySelector("[data-github-origin]"); if (!root) return;
-  const api = ["localhost", "127.0.0.1", "[::1]"].includes(win.location.hostname) ? "http://127.0.0.1:3000" : "https://api.agentbounties.app";
+  const api = ["localhost", "127.0.0.1", "[::1]"].includes(win.location.hostname) ? "http://127.0.0.1:3000" : "https://api.agentizable.ai";
   const status = root.querySelector("[data-github-origin-status]"), items = root.querySelector("[data-github-origin-items]"), install = root.querySelector("[data-github-origin-install]"), login = root.querySelector("[data-github-origin-login]");
   login.href = `${api}/v1/site-auth/login/github?return_to=${encodeURIComponent("/install/github/")}`;
   let busy = false;

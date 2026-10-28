@@ -111,7 +111,7 @@ def main() -> None:
         "exactly three negative tests are required",
     )
     require(
-        artifact["app_info"]["display_name"] == "Agent Bounties",
+        artifact["app_info"]["display_name"] == "Agentizable",
         "single-product listing name drifted",
     )
     require(
@@ -319,7 +319,7 @@ def main() -> None:
     )
     require("MoonPay handles the purchase" in privacy, "MoonPay provider boundary is missing")
     require(
-        "Agent Bounties does not use its own OpenAI API key" in privacy
+        "Agentizable does not use its own OpenAI API key" in privacy
         and "ChatGPT-generated bounty images" in privacy,
         "ChatGPT-account image privacy disclosure is missing",
     )

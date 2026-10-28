@@ -229,7 +229,7 @@ class AgentBountiesHttpError(httpx.HTTPStatusError):
         self.retryable = problem.get("retryable", response.status_code in (429, 503))
         if self.error_code == "hosted_generation_removed":
             self.retryable = False
-            self.next_action = "Prepare or analyze the draft in your own AI account, then review it at https://agentbounties.app/post.html. Hosted generation is permanently removed."
+            self.next_action = "Prepare or analyze the draft in your own AI account, then review it at https://agentizable.ai/post.html. Hosted generation is permanently removed."
         if not self.next_action:
             self.next_action = {
                 401: "Use a current wallet session or an explicitly configured operator credential.",

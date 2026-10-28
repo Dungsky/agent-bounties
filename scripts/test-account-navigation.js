@@ -16,7 +16,7 @@ function harness({ homepage = false, payload = { authenticated: false }, href = 
   link.textContent = "Create an account";
   let calls = 0, failure = false;
   Object.assign(win, {
-    location: new URL("https://agentbounties.app/post.html"), setTimeout, clearTimeout,
+    location: new URL("https://agentizable.ai/post.html"), setTimeout, clearTimeout,
     matchMedia: () => ({ addEventListener() {} }),
     fetch: async () => { calls++; if (failure) throw new Error("offline"); return { ok: true, json: async () => payload }; },
   });
@@ -31,7 +31,7 @@ test("interior Account link uses server session and strips posting return redire
   const h = harness({ payload: { authenticated: true, user: { id: "fixture", name: "Member" } } });
   await tick();
   assert.equal(h.link.textContent, "Account");
-  assert.equal(h.link.href, "https://agentbounties.app/#account");
+  assert.equal(h.link.href, "https://agentizable.ai/#account");
   assert.equal(h.link.dataset.authenticated, "true");
   h.fail();
   h.win.dispatchEvent(new Event("focus"));

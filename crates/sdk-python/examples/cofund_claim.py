@@ -126,7 +126,7 @@ def run_example(client: AgentBountiesClient) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the Agent Bounties Python SDK co-funding example.")
+    parser = argparse.ArgumentParser(description="Run the Agentizable Python SDK co-funding example.")
     parser.add_argument("--base-url", default="http://127.0.0.1:8080")
     args = parser.parse_args()
 

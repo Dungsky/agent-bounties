@@ -6,7 +6,7 @@ import os
 import time
 import urllib.request
 
-ENDPOINT = "https://api.agentbounties.app/v1/operator/gas-sponsorship/reservations"
+ENDPOINT = "https://api.agentizable.ai/v1/operator/gas-sponsorship/reservations"
 ORACLE = "0x420000000000000000000000000000000000000f"
 MAXIMUM_FEE_PER_GAS = 100_000_000
 MAXIMUM_COST = 100_000_000_000_000

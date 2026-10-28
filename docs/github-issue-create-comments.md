@@ -1,7 +1,7 @@
 # GitHub issue-to-bounty drafts
 
 An issue author or maintainer can turn any existing GitHub issue into a
-reviewable Agent Bounties draft by commenting:
+reviewable Agentizable draft by commenting:
 
 ```text
 /agent-bounty create 25 USDC
@@ -90,7 +90,7 @@ NEYNAR_BOT_USERNAME=<bot username without @>
 
 The exact-SHA deployment controller creates or updates the Neynar subscription
 to deliver `cast.created` events filtered by the bot FID to
-`https://api.agentbounties.app/v1/social/webhooks/neynar`, reads back its
+`https://api.agentizable.ai/v1/social/webhooks/neynar`, reads back its
 active signing secret, and installs that secret directly on the API service.
 Do not copy the generated webhook secret into GitHub or test with unsigned
 production events.

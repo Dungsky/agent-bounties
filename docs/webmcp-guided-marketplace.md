@@ -37,7 +37,7 @@ sign-in link. Unavailable sources do not mean no work exists.
 
 Copyable return request:
 
-> Open my AgentBounties account and read my saved work. Show the next meaningful
+> Open my Agentizable account and read my saved work. Show the next meaningful
 > action and resume the selected operation. Preserve its ID and existing review;
 > do not create a replacement draft, claim work or request a payment just to check
 > progress. If a source is unavailable, keep my work and explain what to retry.

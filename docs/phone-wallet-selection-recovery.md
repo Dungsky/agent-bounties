@@ -83,5 +83,5 @@ verify the saved posting operation and phone session without sending a signature
 or transaction. A funded/paid claim still requires canonical Base evidence.
 
 Feedback: report which phone wallet and browser reached this flow, how you found
-Agent Bounties, and which step remained unclear. Never include pairing material,
+Agentizable, and which step remained unclear. Never include pairing material,
 credentials or private wallet information in a report.

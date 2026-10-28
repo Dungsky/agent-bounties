@@ -1,6 +1,6 @@
-# Publishing first-party Agent Bounties blog posts
+# Publishing first-party Agentizable blog posts
 
-The canonical Agent Bounties blog is a static, reviewable part of the public
+The canonical Agentizable blog is a static, reviewable part of the public
 repository. A post is published only when its page, archive entry, feeds, and
 sitemap land together. Do not edit the deployed site outside this workflow.
 
@@ -34,7 +34,7 @@ sitemap land together. Do not edit the deployed site outside this workflow.
 
 Publish the first-party canonical page before syndicating to DEV, Medium,
 Substack, or another platform. Where the platform supports it, set the imported
-post's canonical URL to the Agent Bounties page. Use descriptive, tagged links
+post's canonical URL to the Agentizable page. Use descriptive, tagged links
 with UTM parameters for campaigns; never hide the destination or fabricate
 engagement. Update first-party corrections before updating copies.
 

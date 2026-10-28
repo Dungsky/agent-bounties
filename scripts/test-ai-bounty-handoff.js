@@ -78,7 +78,7 @@ vm.runInNewContext(source, {
 }, { filename: "site/ai-bounty-handoff.js" });
 
 const api = window.AgentBountyAI;
-if (!api || api.mcpUrl !== "https://mcp.agentbounties.app/mcp") {
+if (!api || api.mcpUrl !== "https://mcp.agentizable.ai/mcp") {
   throw new Error("user-owned AI handoff API did not initialize");
 }
 
@@ -122,7 +122,7 @@ if (draft.benchmark?.source?.commit !== "0fae18cf9be464132cde52dfb9d464d836e8f02
 
 const approvedImage = {
   source: "chatgpt_user_generated",
-  asset_url: "https://agentbounties.app/public/bounty-images/approved.webp",
+  asset_url: "https://agentizable.ai/public/bounty-images/approved.webp",
   sha256: "a".repeat(64),
   mime_type: "image/webp",
   prompt: "A restrained editorial illustration of a reproducible API defect.",
@@ -195,7 +195,7 @@ async function verifyDesktopHandoff() {
   assert.equal(desktop.pathname, "/new");
   assert.equal(desktop.searchParams.get("prompt"), preparedPrompt);
   const browser = new URL(desktop.searchParams.get("browserUrl"));
-  assert.equal(browser.origin, "https://agentbounties.app");
+  assert.equal(browser.origin, "https://agentizable.ai");
   assert.equal(browser.pathname, "/post.html");
   assert.equal(browser.searchParams.get("parentBounty"), child.meta_child.parent_bounty_contract);
   const fallback = elements.get("[data-ai-web-fallback]");

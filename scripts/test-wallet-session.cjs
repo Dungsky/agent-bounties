@@ -1,12 +1,12 @@
 "use strict";
 const {test} = require("node:test"), assert = require("node:assert/strict");
 const auth = require("../site/wallet-session.js");
-const address = "0x" + "ab".repeat(20), api="https://api.agentbounties.app";
+const address = "0x" + "ab".repeat(20), api="https://api.agentizable.ai";
 const id = "11111111-2222-3333-4444-555555555555", token = "abws_"+"12".repeat(32);
 function challenge(now=Date.now()) {
  const issued = Math.floor(now/1000)*1000;
  return {challenge_id:id,chain_id:8453,address,expires_at:new Date(issued+300000).toISOString(),message:
- `${new URL(api).host} wants you to sign in with your Ethereum account:\n${address}\n\nSign in to Agent Bounties for 15 minutes. This does not link a website account or authorize a transaction, token approval, or payment.\n\nURI: ${api}/v1/auth/wallet/session\nVersion: 1\nChain ID: 8453\nNonce: ${"33".repeat(32)}\nIssued At: ${new Date(issued).toISOString()}\nExpiration Time: ${new Date(issued+900000).toISOString()}`};
+ `${new URL(api).host} wants you to sign in with your Ethereum account:\n${address}\n\nSign in to Agentizable for 15 minutes. This does not link a website account or authorize a transaction, token approval, or payment.\n\nURI: ${api}/v1/auth/wallet/session\nVersion: 1\nChain ID: 8453\nNonce: ${"33".repeat(32)}\nIssued At: ${new Date(issued).toISOString()}\nExpiration Time: ${new Date(issued+900000).toISOString()}`};
 }
 function harness(alter=value=>value) {
  const win={}, calls=[], requests=[];let account=address;
@@ -23,10 +23,20 @@ test("short wallet login sends only a checked ownership message and reuses its i
  auth.clear(h.win);await h.run();assert.equal(h.requests.length,4);
 });
 test("altered SIWE destination, authority, chain, expiry or resources cannot request a signature",async()=>{
- for(const mutate of [v=>({...v,message:v.message.replace("api.agentbounties.app wants","evil.example wants")}),v=>({...v,message:v.message.replace("does not link","does link")}),v=>({...v,chain_id:1}),v=>({...v,message:v.message+"\nResources: arbitrary"}),v=>({...v,expires_at:"invalid"}),v=>({...v,message:v.message.replace("900","901"),address:"0x"+"cc".repeat(20)})]) {
+ for(const mutate of [v=>({...v,message:v.message.replace("api.agentizable.ai wants","evil.example wants")}),v=>({...v,message:v.message.replace("does not link","does link")}),v=>({...v,chain_id:1}),v=>({...v,message:v.message+"\nResources: arbitrary"}),v=>({...v,expires_at:"invalid"}),v=>({...v,message:v.message.replace("900","901"),address:"0x"+"cc".repeat(20)})]) {
   const h=harness(mutate);await assert.rejects(h.run());assert.equal(h.calls.some(v=>v.method==="personal_sign"),false);
  }
 });
 test("account switches reject a cached login without granting the other wallet authority",async()=>{
  const h=harness();await h.run();h.switchWallet();await assert.rejects(h.run(),/wallet changed/);assert.equal(h.requests.length,2);
+});
+
+test("migration accepts exact legacy challenges without relaxing destination or authority", () => {
+ const legacy = challenge(); legacy.message = legacy.message.replace("Agentizable", "Agent Bounties");
+ assert.equal(auth.validateChallenge(legacy, api, address), legacy.message);
+ const oldApi = "https://api.agentbounties.app";
+ legacy.message = legacy.message.replaceAll("api.agentizable.ai", "api.agentbounties.app");
+ assert.equal(auth.validateChallenge(legacy, oldApi, address), legacy.message);
+ assert.throws(() => auth.validateChallenge(legacy, api, address), /different identity/);
+ assert.throws(() => auth.validateChallenge(legacy, "https://api.agentizable.ai.evil.example", address), /Unsupported/);
 });

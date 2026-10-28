@@ -369,7 +369,7 @@ enum Command {
         mcp_base_url: String,
     },
     OpenCompetitionReadiness {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
@@ -377,13 +377,13 @@ enum Command {
         bounty_contract: String,
     },
     OpenCompetitionVerifiers {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
     },
     OpenCompetitionState {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
@@ -395,7 +395,7 @@ enum Command {
         verifier_profile_id: Option<String>,
     },
     OpenCompetitionCreation {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long)]
         request_file: String,
@@ -423,7 +423,7 @@ enum Command {
         reveal_deadline: u64,
     },
     OpenCompetitionAction {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
@@ -435,7 +435,7 @@ enum Command {
         arguments_json: String,
     },
     OpenCompetitionEntrantAction {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
@@ -455,19 +455,19 @@ enum Command {
         deadline_seconds: Option<u64>,
     },
     OpenCompetitionEntrantRelay {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long)]
         request_file: String,
     },
     OpenCompetitionEntrantRelayStatus {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long)]
         relay_id: String,
     },
     OpenCompetitionV2Inspect {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long)]
         operation: String,
@@ -481,7 +481,7 @@ enum Command {
         job_id: Option<Uuid>,
     },
     OpenCompetitionV2Prepare {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long)]
         operation: String,
@@ -489,7 +489,7 @@ enum Command {
         request_file: String,
     },
     OpenCompetitionV2PayProof {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long)]
         job_id: Uuid,
@@ -497,7 +497,7 @@ enum Command {
         payment_signature: Option<String>,
     },
     OpenCompetitionV2AuthorizeRelay {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long)]
         job_id: Uuid,
@@ -507,13 +507,13 @@ enum Command {
         solver_signature: Option<String>,
     },
     StandingMetaV4Readiness {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
     },
     StandingMetaV4Action {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
@@ -524,7 +524,7 @@ enum Command {
     },
     /// Show the 3 USDC daily and 26 USDC Monday-Sunday rankings.
     Leaderboard {
-        #[arg(long, default_value = "https://api.agentbounties.app")]
+        #[arg(long, default_value = "https://api.agentizable.ai")]
         api_base_url: String,
         #[arg(long, default_value = "base-mainnet")]
         network: String,
@@ -3605,6 +3605,10 @@ fn extract_answer_after_marker(body: &str, markers: &[&str]) -> Option<String> {
 
 fn extract_found_through_answer(body: &str) -> Option<String> {
     for marker in [
+        "found agentizable through",
+        "found agentizable manually by",
+        "found agentizable by",
+        "found agentizable via",
         "found agent bounties through",
         "found agent bounties manually by",
         "found agent bounties by",
@@ -6613,7 +6617,7 @@ fn is_checked_api_path(path: &str) -> bool {
         || matches!(path, "/llms.txt" | "/docs" | "/health")
 }
 
-/// Stripe API paths that docs may cite verbatim. They are Stripe's endpoints, not Agent Bounties
+/// Stripe API paths that docs may cite verbatim. They are Stripe's endpoints, not Agentizable
 /// routes.
 fn is_external_api_path(path: &str) -> bool {
     matches!(

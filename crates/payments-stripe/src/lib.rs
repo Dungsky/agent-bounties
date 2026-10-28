@@ -267,7 +267,7 @@ impl StripePlanner {
                         "currency": request.amount.currency,
                         "unit_amount": request.amount.amount,
                         "product_data": {
-                            "name": "Agent Bounties balance top-up"
+                            "name": "Agentizable balance top-up"
                         }
                     }
                 }],

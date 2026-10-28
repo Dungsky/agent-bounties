@@ -21,7 +21,7 @@ self.addEventListener("push",event=>{
   let data;try{data=event.data?.json();}catch{return;}
   if(data?.schema==="agent-bounties/push-test-v1"){
     if(!/^[0-9a-f-]{36}$/i.test(data.id||"")||!Number.isSafeInteger(data.expires_at)||data.expires_at*1000<=Date.now()||data.expires_at*1000>Date.now()+300000)return;
-    event.waitUntil(self.registration.showNotification("Agent Bounties notification test",{
+    event.waitUntil(self.registration.showNotification("Agentizable notification test",{
       body:"This device received a test notification. No review or payment action is required.",
       tag:`ab-test-${data.id}`,renotify:false,data:{test:true,url:`${self.location.origin}/#account`}
     }));return;
@@ -36,7 +36,7 @@ self.addEventListener("push",event=>{
   const title=stage==="overdue"?"A review deadline was missed":stage!=="initial"?"Your review deadline is approaching":data.kind==="claim"?"Work has started on your bounty":"A solution is ready for your review";
   const deadline=typeof data.deadline==="string"&&/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC$/.test(data.deadline)?data.deadline:null;
   if(stage!=="initial"&&!deadline)return;
-  const body=stage==="overdue"?`Review deadline passed: ${deadline}. Open the site for current status and recovery steps.`:deadline?`${data.kind==="claim"?"Claim expires":"Review by"} ${deadline}. Open the site for current status.`:"Open Agent Bounties to check the latest work and deadline.";
+  const body=stage==="overdue"?`Review deadline passed: ${deadline}. Open the site for current status and recovery steps.`:deadline?`${data.kind==="claim"?"Claim expires":"Review by"} ${deadline}. Open the site for current status.`:"Open Agentizable to check the latest work and deadline.";
   // Each deadline stage alerts once; a duplicate of the same stage only replaces it.
   const tag=stage==="initial"?`ab-${data.id}`:`ab-${data.id}-${stage}`;
   event.waitUntil(self.registration.showNotification(title,{body,tag,renotify:false,data:{url}}));

@@ -21,7 +21,7 @@ receive a private key, seed phrase, wallet signature, or payout authority.
 
    ```bash
    python scripts/check-distribution-rail-mcp.py \
-     --endpoint https://mcp.agentbounties.app \
+     --endpoint https://mcp.agentizable.ai \
      --repetitions 3 --canary-kind dry-run-v1
    ```
 
@@ -35,7 +35,7 @@ The permanent landing pages remain `/install/glama/` and `/install/mcp-so/`.
 Their sponsored endpoints end in `/r/glama-paid/mcp` and `/r/mcp-so-paid/mcp`.
 An organic-source canary does not satisfy a sponsored-source activation check.
 
-1. Connect to `https://mcp.agentbounties.app/r/<rail>/mcp` with
+1. Connect to `https://mcp.agentizable.ai/r/<rail>/mcp` with
    `x-agent-bounties-canary: mainnet-v1` and retain the exact signed acquisition
    identifier returned by the server in a private evidence store. Confirm the
    response echoes the canary classification and marks the acquisition

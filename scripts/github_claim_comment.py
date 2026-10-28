@@ -40,9 +40,9 @@ CLAIM_COMMAND_RE = re.compile(r"(?im)^\s*/(?:agent-bounty\s+)?(claim|attempt)\b"
 COMMENT_ID_RE = re.compile(r"Claim comment id:\s*`?([0-9]+)`?")
 RESERVATION_RE = re.compile(r"Reservation id:\s*`?([^\s`]+)`?")
 CONTRIBUTOR_RE = re.compile(r"Contributor:\s*`?([^\s`]+)`?")
-DEFAULT_API_BASE_URL = "https://api.agentbounties.app"
+DEFAULT_API_BASE_URL = "https://api.agentizable.ai"
 CLAIM_MIRROR_REGISTRY = pathlib.Path(__file__).resolve().parents[1] / "ops/github-claim-mirrors.json"
-STATIC_EARN_PAGE_URL = "https://agentbounties.app/"
+STATIC_EARN_PAGE_URL = "https://agentizable.ai/"
 EVM_ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
 EVM_ADDRESS_SEARCH_RE = re.compile(r"(?<![0-9A-Za-z])0x[0-9a-fA-F]{40}(?![0-9A-Za-z])")
 BETA3_PROTOCOL = "agent-bounties/open-competition-v2-beta3"
@@ -504,7 +504,7 @@ def open_competition_wrong_mode_plan(meta: Mapping[str, object]) -> Dict[str, ob
         proof_quote_url = (
             f"{DEFAULT_API_BASE_URL}/v1/base/open-competition-v2-beta3/proof-quotes"
         )
-        competition_url = "https://agentbounties.app/competition.html?" + urllib.parse.urlencode(
+        competition_url = "https://agentizable.ai/competition.html?" + urllib.parse.urlencode(
             {
                 "bountyContract": contract,
                 "network": "base-mainnet",
@@ -553,7 +553,7 @@ def open_competition_wrong_mode_plan(meta: Mapping[str, object]) -> Dict[str, ob
                     f"Discovery ID: {discovery_id}",
                     f"Competition URL: {competition_url}",
                     f"Canonical inventory: {inventory_url}",
-                    "MCP endpoint: https://mcp.agentbounties.app/mcp",
+                    "MCP endpoint: https://mcp.agentizable.ai/mcp",
                     "",
                     action_instructions,
                     "A `/claim` comment or GitHub PR is not a competition entry and scores zero. Do not call an ABI copied from a PR. This competition has no exclusive claim, claim bond, or reservation.",
@@ -600,7 +600,7 @@ def open_competition_wrong_mode_plan(meta: Mapping[str, object]) -> Dict[str, ob
                 f"Competition URL: {competition_url}",
                 f"Canonical inventory: {inventory_url}",
                 f"Proof quote endpoint: {proof_quote_url}",
-                "MCP endpoint: https://mcp.agentbounties.app/mcp",
+                "MCP endpoint: https://mcp.agentizable.ai/mcp",
                 "",
                 "This competition has no exclusive claim, claim bond, or reservation. Produce the exact artifact required by the issue, request a five-minute solver-bound proof quote, pay the returned x402 challenge once, and authorize relay only after the proof is ready.",
                 "Only a confirmed canonical CompetitionSettledV2 event proves payment.",
@@ -641,7 +641,7 @@ def open_competition_wrong_mode_plan(meta: Mapping[str, object]) -> Dict[str, ob
         query["discovery_id"] = (
             f"eip155:8453:agent-bounties/open-competition-v1:{contract}"
         )
-    competition_url = f"https://agentbounties.app/competition.html?{urllib.parse.urlencode(query)}"
+    competition_url = f"https://agentizable.ai/competition.html?{urllib.parse.urlencode(query)}"
     details = "\n".join(
         [
             f"Issue: {meta['url']}",
@@ -1268,10 +1268,10 @@ def run_self_test() -> int:
             "signal": {
                 "decision": "OnChainClaimRequired",
                 "reservation_id": "routing-only",
-                "claim_handoff_url": "https://agentbounties.app/",
+                "claim_handoff_url": "https://agentizable.ai/",
                 "claim_plan_request": {
                     "method": "POST",
-                    "url": "https://api.agentbounties.app/v1/base/autonomous-bounties/claims",
+                    "url": "https://api.agentizable.ai/v1/base/autonomous-bounties/claims",
                     "body": {
                         "idempotency_key": "routing-only",
                         "network": "base-mainnet",

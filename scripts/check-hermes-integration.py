@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic Hermes integration smoke for Agent Bounties."""
+"""Deterministic Hermes integration smoke for Agentizable."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_DIR = ROOT / "integrations" / "hermes" / "fixtures"
 REQUIRED_STATES = ("claimable", "unfunded", "stale")
-FEED = "https://api.agentbounties.app/v1/base/autonomous-bounties/feed"
+FEED = "https://api.agentizable.ai/v1/base/autonomous-bounties/feed"
 INSTALL = (
     "hermes skills install "
     "https://raw.githubusercontent.com/NSPG13/agent-bounties/main/skills/agent-bounties/SKILL.md"

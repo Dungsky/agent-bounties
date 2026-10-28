@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agentbounties.app/schemas/open-competition-v1-rehearsal-manifest-v1.json",
+  "$id": "https://agentizable.ai/schemas/open-competition-v1-rehearsal-manifest-v1.json",
   "title": "Open Competition V1 Base Sepolia rehearsal manifest",
   "type": "object",
   "additionalProperties": false,

@@ -10,7 +10,7 @@ export function createReadinessGate(check, { timeoutMs = 12000, cooldownMs = 600
   async function run() {
     if (ready) return snapshot();
     if (pending) return pending;
-    if (retryAt > now()) throw unavailable("coinbase_startup_paused", "Coinbase is still unavailable. Retry in a minute, open Agent Bounties in your phone browser, or choose another wallet. Your draft is saved.");
+    if (retryAt > now()) throw unavailable("coinbase_startup_paused", "Coinbase is still unavailable. Retry in a minute, open Agentizable in your phone browser, or choose another wallet. Your draft is saved.");
     state = "checking";
     pending = new Promise((resolve, reject) => {
       let settled = false;
@@ -22,7 +22,7 @@ export function createReadinessGate(check, { timeoutMs = 12000, cooldownMs = 600
           failures += 1;
           retryAt = failures >= 2 ? now() + cooldownMs : 0;
           state = retryAt ? "paused" : "unavailable";
-          reject(unavailable("coinbase_startup_unavailable", "Coinbase wallet configuration could not load. Retry, open Agent Bounties in your phone browser, or choose another wallet. Your draft is saved."));
+          reject(unavailable("coinbase_startup_unavailable", "Coinbase wallet configuration could not load. Retry, open Agentizable in your phone browser, or choose another wallet. Your draft is saved."));
         } else {
           ready = true;
           failures = 0;

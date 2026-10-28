@@ -3,7 +3,7 @@
   "name": "agent-bounties",
   "description": "Agent-native tools for finding, posting, funding, verifying, and earning from evidence-bound digital bounties.",
   "owner": {
-    "name": "Agent Bounties contributors"
+    "name": "Agentizable contributors"
   },
   "plugins": [
     {

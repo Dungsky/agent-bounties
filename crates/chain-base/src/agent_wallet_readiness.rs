@@ -792,7 +792,7 @@ fn recognize_wallet_profile(requested: Option<&str>) -> AgentWalletProfileRecogn
         profile: profile.to_string(),
         label: label.to_string(),
         guidance: guidance.into_iter().map(str::to_string).collect(),
-        evidence: "Provider recognition uses the caller-declared wallet_profile only; Agent Bounties never infers custody provider from an address.".to_string(),
+        evidence: "Provider recognition uses the caller-declared wallet_profile only; Agentizable never infers custody provider from an address.".to_string(),
     }
 }
 

@@ -31,14 +31,14 @@ jobs:
           set -euo pipefail
           mkdir -p target/distribution
           {
-            echo "Agent Bounties production distribution-rail MCP dry run"
+            echo "Agentizable production distribution-rail MCP dry run"
             echo "observed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "revision=${GITHUB_SHA}"
-            echo "endpoint=https://mcp.agentbounties.app"
+            echo "endpoint=https://mcp.agentizable.ai"
             echo "scope=initialize,tools/list; analytics-only acquisition records; no product or wallet action"
             echo "evidence_boundary=dry-run only; never a substitute for the required excluded-operator 2-USDC funded-and-settled mainnet canary"
             python scripts/check-distribution-rail-mcp.py \
-              --endpoint https://mcp.agentbounties.app \
+              --endpoint https://mcp.agentizable.ai \
               --repetitions 3
           } 2>&1 | tee target/distribution/production-rail-mcp-dry-run.txt
 

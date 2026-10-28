@@ -13,7 +13,7 @@ function text(value, max, empty = false) {
 function publicURL(value, profile = false) {
   const u = new URL(value);
   requireThat(u.protocol === "https:" && !u.username && !u.password && !u.search && !u.port && u.href === value);
-  requireThat(u.hostname === "github.com" || (!profile && u.hostname === "agentbounties.app"));
+  requireThat(u.hostname === "github.com" || (!profile && u.hostname === "agentizable.ai"));
   if (profile) requireThat(/^\/[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(u.pathname) && !u.hash);
   else requireThat(u.pathname.length > 1);
 }

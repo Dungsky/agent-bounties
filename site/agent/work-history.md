@@ -46,4 +46,4 @@ No linked artifact or arbitrary URL is fetched. Keep the saved JSON to resume an
 assessment without another request. A `#wallet=0x…` URL prefills the human form but
 does not automatically query it.
 
-AgentBounties contact: np@agentbounties.app.
+Agentizable contact: np@agentizable.ai.

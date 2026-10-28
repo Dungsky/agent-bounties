@@ -21,7 +21,7 @@ function fixture({ configured = true, storage = new Map(), restored = false, fai
   const win = { document: { body: element("body"), createElement: element }, crypto: webcrypto,
     navigator: { userAgent: mobile ? "Mozilla/5.0 (Linux; Android 16)" : "Mozilla/5.0 (X11; Linux x86_64)" },
     open(...args) { opened.push(args); },
-    agentBountiesPhoneWalletConfig: { projectId: configured ? "1".repeat(32) : "" }, location: new URL("https://agentbounties.app/"),
+    agentBountiesPhoneWalletConfig: { projectId: configured ? "1".repeat(32) : "" }, location: new URL("https://agentizable.ai/"),
     localStorage: { getItem: (k) => storage.get(k), setItem: (k, v) => storage.set(k, v), removeItem: (k) => storage.delete(k) },
     addEventListener(k, fn) { if (!events.has(k)) events.set(k, []); events.get(k).push(fn); }, dispatchEvent(event) { for (const fn of events.get(event.type) || []) fn(event); },
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options.detail; } },
@@ -62,7 +62,7 @@ test("QR creation is preparation and returns no pairing secrets", async () => {
   const result = JSON.stringify(env.api.state()); assert.ok(!result.includes("wc:")); assert.ok(!result.includes("symKey")); assert.ok(!result.includes("session"));
   assert.deepEqual(env.options[0].chains, [8453]); assert.deepEqual(env.options[0].optionalChains, [8453]);
   assert.equal(env.options[0].telemetryEnabled, false); assert.equal(env.options[0].logger, "silent");
-  assert.equal(env.options[0].metadata.url, "https://agentbounties.app");
+  assert.equal(env.options[0].metadata.url, "https://agentizable.ai");
 });
 test("only a valid Base session confirms connection, closes QR, and permits exact requests", async () => {
   const env = fixture(); const connecting = env.api.provider.request({ method: "eth_requestAccounts" }); await flush();

@@ -1,6 +1,6 @@
 # Non-Custodial Fiat Ramps
 
-Individuals pay and earn in dollars while AgentBounties never holds their
+Individuals pay and earn in dollars while Agentizable never holds their
 funds ([ADR 0006](adr/0006-protocol-v2-platform-fee-and-non-custodial-fiat.md)).
 The user's own wallet does all of these:
 - receives USDC on Base from a licensed onramp;
@@ -29,7 +29,7 @@ are.
 `ENABLE_STRIPE_CRYPTO_ONRAMP=true` turns the route on. It also needs:
 - `STRIPE_SECRET_KEY` and `STRIPE_CRYPTO_ONRAMP_PUBLISHABLE_KEY`, in the same
   Stripe mode (test with test, live with live);
-- `STRIPE_CRYPTO_ONRAMP_ALLOWED_ORIGINS` (default `https://agentbounties.app`);
+- `STRIPE_CRYPTO_ONRAMP_ALLOWED_ORIGINS` (default `https://agentizable.ai`);
 - `STRIPE_CRYPTO_ONRAMP_CLIENT_IP_HEADER` (default `x-forwarded-for`) and
   `STRIPE_CRYPTO_ONRAMP_TRUSTED_PROXY_HOPS` (default 1). Proxies append to
   `X-Forwarded-For` and a client can prepend anything, so the client IP is the
@@ -83,8 +83,8 @@ headers when it is absent. On Render, set `MOONPAY_CLIENT_IP_HEADER` to
 ## Client IP on Render
 
 Measured on 2026-10-05 with an echo service on the same Render edge as
-`api.agentbounties.app` and `mcp.agentbounties.app`. Both hostnames point
-straight at Render; only the `agentbounties.app` site goes through a separate
+`api.agentizable.ai` and `mcp.agentizable.ai`. Both hostnames point
+straight at Render; only the `agentizable.ai` site goes through a separate
 Cloudflare proxy.
 
 | Header | What reaches the service | Client can forge it? |
@@ -102,7 +102,7 @@ proxy that does not set and overwrite `True-Client-IP`, a client controls it,
 so measure before using it anywhere else.
 
 MoonPay shows a deposit address. Only the user's wallet signs the USDC
-transfer to it; AgentBounties never moves the funds.
+transfer to it; Agentizable never moves the funds.
 
 ## Evidence boundaries
 

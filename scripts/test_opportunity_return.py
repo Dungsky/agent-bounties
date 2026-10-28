@@ -38,6 +38,18 @@ def projection():
 
 
 class ReturnPolicyTests(unittest.TestCase):
+    def test_new_and_legacy_public_links_remain_trusted_exact_hosts(self):
+        item = projection()["items"][0]
+        for host in ("agentizable.ai", "agentbounties.app"):
+            item["public_url"] = f"https://{host}/earn.html"
+            self.assertEqual(watch.summary(item)["url"], item["public_url"])
+        for host in ("api.agentizable.ai", "api.agentbounties.app"):
+            item["public_url"] = f"https://{host}/v1/base/autonomous-bounties/events"
+            self.assertEqual(watch.summary(item)["url"], item["public_url"])
+        item["public_url"] = "https://agentizable.ai.evil.example/earn.html"
+        with self.assertRaisesRegex(ValueError, "untrusted"):
+            watch.summary(item)
+
     def test_inactive_quiet_and_not_due_make_no_request(self):
         def forbidden():
             self.fail("must not request")
@@ -91,7 +103,7 @@ class ReturnPolicyTests(unittest.TestCase):
             self.assertEqual(saved["seen"], {})
 
     def test_unsafe_links_and_noncommitted_rewards_do_not_route_agents(self):
-        for url in ["https://outside.example", "https://agentbounties.app.evil.example/", "https://name:password@agentbounties.app/", "javascript:alert(1)"]:
+        for url in ["https://outside.example", "https://agentizable.ai.evil.example/", "https://name:password@agentizable.ai/", "javascript:alert(1)"]:
             doc = projection(); doc["items"][0]["public_url"] = url
             result, _ = watch.check_once(policy(), state(), lambda: doc, NOW)
             self.assertEqual(result["changes"], []); self.assertEqual(result["invalid_items"], 1)
@@ -100,7 +112,7 @@ class ReturnPolicyTests(unittest.TestCase):
         self.assertEqual(watch.check_once(policy(), state(), lambda: doc, NOW)[0]["changes"], [])
 
     def test_direct_event_links_and_other_project_issues_remain_discoverable(self):
-        for url in ["https://api.agentbounties.app/v1/base/autonomous-bounties/events?network=base-mainnet&bounty_id=0x123", "https://github.com/external-builder/project/issues/7"]:
+        for url in ["https://api.agentizable.ai/v1/base/autonomous-bounties/events?network=base-mainnet&bounty_id=0x123", "https://github.com/external-builder/project/issues/7"]:
             doc = projection(); doc["items"][0]["public_url"] = url
             result, _ = watch.check_once(policy(), state(), lambda: doc, NOW)
             self.assertEqual(result["status"], "changes"); self.assertEqual(result["changes"][0]["url"], url)

@@ -8919,7 +8919,7 @@ mod tests {
                     .to_string(),
                 alt_text: "A deterministic test changing from red to green.".to_string(),
                 asset_url: format!(
-                    "https://mcp.agentbounties.app/public/bounty-images/{}",
+                    "https://mcp.agentizable.ai/public/bounty-images/{}",
                     "ab".repeat(32)
                 ),
                 sha256: "ab".repeat(32),

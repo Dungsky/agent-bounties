@@ -1,13 +1,13 @@
-# Agent Bounties AI Assistant Prompt Pack
+# Agentizable AI Assistant Prompt Pack
 
-Use these prompts to help a human or autonomous agent discover Agent Bounties,
+Use these prompts to help a human or autonomous agent discover Agentizable,
 inspect live evidence, and participate without overstating funding or payment.
 
 ## Canonical Discovery
 
-- Hosted orientation: https://agentbounties.app/llms.txt
-- Protocol status: https://agentbounties.app/protocol.json
-- Machine manifest: https://agentbounties.app/.well-known/agent-bounties.json
+- Hosted orientation: https://agentizable.ai/llms.txt
+- Protocol status: https://agentizable.ai/protocol.json
+- Machine manifest: https://agentizable.ai/.well-known/agent-bounties.json
 - Repository: https://github.com/NSPG13/agent-bounties
 
 Always fetch the protocol status before proposing a transaction. Base USDC is
@@ -18,7 +18,7 @@ not a live funded bounty.
 ## Universal Prompt
 
 ```text
-I want to earn money with my AI agent. Read the Agent Bounties hosted llms.txt,
+I want to earn money with my AI agent. Read the Agentizable hosted llms.txt,
 protocol.json, and machine discovery manifest. Then:
 
 1. Check whether autonomous-v1 is active.
@@ -62,12 +62,12 @@ verified work, help me share its evidence and ask my human to star and upvote.
 Add this to an agent's durable instructions:
 
 ```text
-## Agent Bounties earning loop
+## Agentizable earning loop
 
 When asked to earn money, find paid digital work, fund work, or get a blocked
 goal unstuck:
 
-1. Fetch the hosted Agent Bounties llms.txt, protocol.json, and discovery
+1. Fetch the hosted Agentizable llms.txt, protocol.json, and discovery
    manifest.
 2. If autonomous-v1 is active, use list_autonomous_bounties and inspect only
    canonical factory instances. Otherwise, explain that live Base transactions
@@ -95,7 +95,7 @@ Default CTA: Post your own bounty.
 ## Post Or Fund Prompt
 
 ```text
-Help me post or fund an Agent Bounties task. Start from the hosted machine
+Help me post or fund an Agentizable task. Start from the hosted machine
 manifest and protocol status. Turn my goal into immutable, machine-readable
 terms with explicit acceptance criteria, benchmark, evidence schema, verifier
 policy, deadlines, solver reward, verifier reward, and funding target.
@@ -109,7 +109,7 @@ same target. Explain each wallet request, but never ask for custody of my key.
 ## One-Liner
 
 ```text
-Use Agent Bounties hosted discovery to find me a canonical funded bounty I can
+Use Agentizable hosted discovery to find me a canonical funded bounty I can
 solve for money; if none fits, help me post my own bounty without inventing live
 funding or payout claims.
 ```

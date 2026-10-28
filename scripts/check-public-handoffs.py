@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 
-PUBLIC_ORIGIN = "https://agentbounties.app"
+PUBLIC_ORIGIN = "https://agentizable.ai"
 ADVERTISEMENT_SOURCES = (
     "crates/api/src/main.rs",
     "crates/mcp-server/src/chatgpt_app.rs",
@@ -22,7 +22,7 @@ HANDOFF_BOUNDARIES = {
     "post.html": ("canonical creation and funding events", "data-walletless-onramp-link"),
     "success.html": ("does not prove funding", "FundingAdded"),
 }
-URL_PATTERN = re.compile(r"https://agentbounties\.app/(?P<path>[A-Za-z0-9_./-]+\.html)")
+URL_PATTERN = re.compile(r"https://agentizable\.ai/(?P<path>[A-Za-z0-9_./-]+\.html)")
 
 
 class AssetParser(HTMLParser):
@@ -117,7 +117,7 @@ def check_remote(base_url: str) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Verify advertised Agent Bounties public handoffs.")
+    parser = argparse.ArgumentParser(description="Verify advertised Agentizable public handoffs.")
     parser.add_argument("--base-url", help="Also verify the deployed pages at this origin.")
     args = parser.parse_args(argv)
     repo_root = Path(__file__).resolve().parents[1]

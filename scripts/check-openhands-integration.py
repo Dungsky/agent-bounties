@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for the OpenHands Agent Bounties earning integration.
+"""Smoke test for the OpenHands Agentizable earning integration.
 
 Validates the things production actually depends on:
 

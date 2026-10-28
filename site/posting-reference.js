@@ -8,7 +8,7 @@
   const VERSION = 1;
   const EXTENSION = "x-agent-bounties-reference-attachment";
   const REVISION = "933c9c446a76d26f148a4f2defacf6453d02a7b2";
-  const SOURCE_URL = "https://agentbounties.app/";
+  const SOURCE_URL = "https://agentizable.ai/";
   const ASSET_ROOT = `https://raw.githubusercontent.com/NSPG13/agent-bounties/${REVISION}/site/`;
   const MAX_BYTES = 384 * 1024;
   const TIMEOUT_MS = 8000;

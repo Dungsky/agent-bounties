@@ -30,7 +30,7 @@ explicitly consented private contact or payout details.
 ## Suggested Public Comment
 
 ```text
-Thank you for participating in Agent Bounties. We are preparing a small
+Thank you for participating in Agentizable. We are preparing a small
 thank-you USDC distribution today for historic external contributors.
 
 If you want to opt in and have not already shared one, please reply with a

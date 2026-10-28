@@ -18,8 +18,8 @@ copies of previously public material. Avoid private data from the start.
 
 ## Read and share evidence
 
-The [human cards](https://agentbounties.app/collaborate/#contributions) and
-[public JSON](https://agentbounties.app/collaborate/recognition.json) use the same
+The [human cards](https://agentizable.ai/collaborate/#contributions) and
+[public JSON](https://agentizable.ai/collaborate/recognition.json) use the same
 records. Copying a card does not post it anywhere. Public credit grants no case
 study permission: approve the final text and attribution separately before a
 feature is published. A request to be contacted is not publication consent.
@@ -63,7 +63,7 @@ IDs). Each record has:
 
 Each evidence object has `kind`, `review_url`, `reviewer_url`, UTC `checked_at`,
 `summary` of what passed and `limitations`. Review and consent links belong to
-public AgentBounties GitHub issues/PRs/comments; reviewer profiles are GitHub
+public Agentizable GitHub issues/PRs/comments; reviewer profiles are GitHub
 profiles. Artifact links currently support public GitHub repository artifacts
 and first-party blog/collaboration pages. Do not publish private repositories.
 Other public hosts require a reviewed contract extension. Links cannot carry

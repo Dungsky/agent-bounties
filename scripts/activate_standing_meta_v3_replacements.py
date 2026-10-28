@@ -18,7 +18,7 @@ from typing import Any, Mapping, Sequence
 ROOT = Path(__file__).resolve().parents[1]
 CHAIN_ID = 8453
 RPC_DEFAULT = "https://mainnet.base.org"
-API_DEFAULT = "https://api.agentbounties.app"
+API_DEFAULT = "https://api.agentizable.ai"
 WALLET = "0x1eaa1c68772cf76bc5f4e4174766076e33ace662"
 OWNER = "0x884834e884d6e93462655a2820140ad03e6747bc"
 KEEPER = "0xc26a630e85134ed30968735c8e7de4576cfa5dbc"
@@ -318,7 +318,7 @@ This is a coordination bounty, not a direct code-fix bounty.
 
 A claim comment, signature request, transaction hash, or accepted submission is not payment. Only canonical `BountySettled` proves earnings.
 
-**Post your own bounty:** https://agentbounties.app/#post-a-bounty
+**Post your own bounty:** https://agentizable.ai/#post-a-bounty
 
 <!-- agent-bounties-github-metadata-v1 -->
 ## Automation metadata

@@ -72,7 +72,7 @@
       loading = true; refreshButton.disabled = true;
       const controller = new AbortController(), timer = win.setTimeout(() => controller.abort(), 12000);
       try {
-        const response = await win.fetch("https://api.agentbounties.app/v1/base/autonomous-bounties/leaderboard?network=base-mainnet", { cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer", headers: { Accept: "application/json" }, signal: controller.signal });
+        const response = await win.fetch("https://api.agentizable.ai/v1/base/autonomous-bounties/leaderboard?network=base-mainnet", { cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer", headers: { Accept: "application/json" }, signal: controller.signal });
         if (!response.ok) throw new Error("Leaderboard unavailable");
         payload = await response.json(); render();
       } catch (_) { payload = null; unavailable(); }

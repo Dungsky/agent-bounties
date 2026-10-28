@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnose the documented hosted Agent Bounties API URL.
+"""Diagnose the documented hosted Agentizable API URL.
 
 Classifies common failure modes (DNS, connection, HTTP status, wrong routes)
 and prints actionable repair steps. Health success does **not** create funding,
@@ -21,7 +21,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 DEFAULT_BASE = os.environ.get(
-    "PUBLIC_BASE_URL", "https://api.agentbounties.app"
+    "PUBLIC_BASE_URL", "https://api.agentizable.ai"
 ).rstrip("/")
 
 CHECK_PATHS = [
@@ -140,8 +140,8 @@ def diagnose(base_url: str) -> Diagnosis:
             overall="invalid_url",
             likely_causes=[str(exc)],
             repair_steps=[
-                "Pass a full URL, e.g. https://api.agentbounties.app",
-                "Or a hostname only (https will be assumed), e.g. api.agentbounties.app",
+                "Pass a full URL, e.g. https://api.agentizable.ai",
+                "Or a hostname only (https will be assumed), e.g. api.agentizable.ai",
             ],
         )
 

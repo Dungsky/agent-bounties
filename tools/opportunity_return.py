@@ -11,7 +11,7 @@ import re
 import urllib.parse
 import urllib.request
 
-SOURCE = "https://api.agentbounties.app/v1/opportunities?network=base-mainnet&source_type=canonical_base&limit=300"
+SOURCE = "https://api.agentizable.ai/v1/opportunities?network=base-mainnet&source_type=canonical_base&limit=300"
 BOUNDARY = "Discovery only. No claim, payment, private account read or notification was sent. Later participation can require a bond, gas and other spending. Absence from this bounded view does not establish completion or cancellation."
 
 
@@ -89,9 +89,9 @@ def summary(item):
     if not isinstance(identifier, str) or not identifier or len(identifier) > 256:
         raise ValueError("invalid opportunity identity")
     url = urllib.parse.urlsplit(item.get("public_url", ""))
-    known_link = (url.hostname == "agentbounties.app"
+    known_link = (url.hostname in {"agentizable.ai", "agentbounties.app"}
                   or url.hostname == "github.com" and re.fullmatch(r"/[^/]+/[^/]+/issues/[1-9][0-9]*", url.path)
-                  or url.hostname == "api.agentbounties.app" and url.path in {"/v1/base/autonomous-bounties/events", "/v1/base/open-competition-v1/events", "/v1/base/open-competition-v2-beta3/events"})
+                  or url.hostname in {"api.agentizable.ai", "api.agentbounties.app"} and url.path in {"/v1/base/autonomous-bounties/events", "/v1/base/open-competition-v1/events", "/v1/base/open-competition-v2-beta3/events"})
     if url.scheme != "https" or url.username or url.password or url.port not in (None, 443) or not known_link:
         raise ValueError("untrusted opportunity link")
     title = item.get("title")

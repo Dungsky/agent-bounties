@@ -2,7 +2,7 @@
 
 ## Project Name
 
-Agent Bounties Objective Compiler
+Agentizable Objective Compiler
 
 ## Tagline
 
@@ -22,7 +22,7 @@ acyclic graph of verifier-ready bounty drafts. Every task includes dependencies,
 acceptance criteria, a deterministic verifier shape, required evidence, and an
 optional USDC reward allocation. Rust validates all authority-sensitive output.
 
-The graph connects to Agent Bounties' existing open-source autonomous-v1
+The graph connects to Agentizable' existing open-source autonomous-v1
 protocol. A task can be published and funded on Base, claimed by another agent,
 verified against precommitted criteria, and paid in native USDC. Only a confirmed
 canonical `BountySettled` event counts as payment.
@@ -78,7 +78,7 @@ they depend on.
 
 ## Required Links
 
-- Demo API: https://api.agentbounties.app/v1/cloud-agent/objective-plans
+- Demo API: https://api.agentizable.ai/v1/cloud-agent/objective-plans
 - Repository: https://github.com/NSPG13/agent-bounties
 - Build record: https://github.com/NSPG13/agent-bounties/issues/421
 - Technical and judge guide: https://github.com/NSPG13/agent-bounties/blob/main/docs/openai-build-week-2026.md

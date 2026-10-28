@@ -5,7 +5,7 @@
   if (root?.document) api.mount(root);
 })(typeof window !== "undefined" ? window : null, function () {
   "use strict";
-  const API = "https://api.agentbounties.app";
+  const API = "https://api.agentizable.ai";
   const KEY = "agent-bounties.private-draft-canary.v1";
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
   const HASH = /^[0-9a-f]{64}$/;
@@ -57,7 +57,7 @@
       return account;
     }
     function requireAccount(owner) {
-      if (!account?.authenticated || !account.id) throw new Error("Sign in to Agent Bounties in this browser, then refresh the account.");
+      if (!account?.authenticated || !account.id) throw new Error("Sign in to Agentizable in this browser, then refresh the account.");
       if (!account.enabled) throw new Error("Private draft storage is not enabled for this account. No test record was written.");
       if (owner && owner !== account.id) throw new Error("This canary belongs to a different account. Its record has been preserved; sign back in to read it.");
     }

@@ -33,8 +33,8 @@
   }
   function apiOrigin(location) {
     if (['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname) && ['http:', 'https:'].includes(location.protocol)) return 'http://127.0.0.1:3000';
-    requireValue(location.origin === 'https://agentbounties.app');
-    return 'https://api.agentbounties.app';
+    requireValue(location.origin === 'https://agentizable.ai');
+    return 'https://api.agentizable.ai';
   }
   function session(v) {
     requireValue(v && typeof v.authenticated === 'boolean');

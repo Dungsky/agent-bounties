@@ -149,18 +149,18 @@ impl SiteAuthService {
         }
 
         let web_origin = env::var("WEBSITE_BASE_URL")
-            .unwrap_or_else(|_| "https://agentbounties.app".to_string())
+            .unwrap_or_else(|_| "https://agentizable.ai".to_string())
             .trim_end_matches('/')
             .to_string();
         let api_origin = env::var("PUBLIC_BASE_URL")
-            .unwrap_or_else(|_| "https://api.agentbounties.app".to_string())
+            .unwrap_or_else(|_| "https://api.agentizable.ai".to_string())
             .trim_end_matches('/')
             .to_string();
         validate_origin(&web_origin, "WEBSITE_BASE_URL")?;
         validate_origin(&api_origin, "PUBLIC_BASE_URL")?;
 
-        let configured_origins =
-            env::var("SITE_AUTH_ALLOWED_ORIGINS").unwrap_or_else(|_| web_origin.clone());
+        let configured_origins = env::var("SITE_AUTH_ALLOWED_ORIGINS")
+            .unwrap_or_else(|_| default_site_auth_origins(&web_origin));
         let mut allowed_origins = Vec::new();
         for value in configured_origins
             .split(',')
@@ -177,7 +177,7 @@ impl SiteAuthService {
         let providers = provider_configs(&api_origin)?;
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(15))
-            .user_agent("AgentBounties-SiteAuth/1.0")
+            .user_agent("Agentizable-SiteAuth/1.0")
             .build()?;
         Ok(Self {
             inner: Arc::new(SiteAuthInner {
@@ -1827,7 +1827,7 @@ fn wallet_link_message(
     expires_at: DateTime<Utc>,
 ) -> String {
     format!(
-        "Agent Bounties wallet ownership verification\n\nSign this message to link the wallet to your signed-in Agent Bounties account.\nThis proves address control only. It does not authorize a transaction, token approval, or payment.\n\nOrigin: {origin}\nAccount: {account_id}\nWallet: {address}\nChain ID: {BASE_CHAIN_ID}\nNonce: {nonce}\nIssued At: {}\nExpiration Time: {}",
+        "Agentizable wallet ownership verification\n\nSign this message to link the wallet to your signed-in Agentizable account.\nThis proves address control only. It does not authorize a transaction, token approval, or payment.\n\nOrigin: {origin}\nAccount: {account_id}\nWallet: {address}\nChain ID: {BASE_CHAIN_ID}\nNonce: {nonce}\nIssued At: {}\nExpiration Time: {}",
         issued_at.to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         expires_at.to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
     )
@@ -1937,6 +1937,17 @@ fn no_store_json(status: StatusCode, payload: Value) -> Response {
 
 fn error_json(status: StatusCode, error: &str) -> Response {
     no_store_json(status, json!({ "error": error }))
+}
+
+// Keep both owned websites usable during the domain migration. An explicit
+// SITE_AUTH_ALLOWED_ORIGINS continues to override this bounded default.
+fn default_site_auth_origins(web_origin: &str) -> String {
+    match web_origin {
+        "https://agentizable.ai" | "https://www.agentizable.ai"
+        | "https://agentbounties.app" | "https://www.agentbounties.app" =>
+            "https://agentizable.ai,https://www.agentizable.ai,https://agentbounties.app,https://www.agentbounties.app".to_string(),
+        _ => web_origin.to_string(),
+    }
 }
 
 fn validate_origin(value: &str, name: &str) -> anyhow::Result<()> {
@@ -2096,6 +2107,33 @@ fn usdc_from_base_units(value: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn migration_auth_defaults_keep_both_owned_origins_and_isolate_custom_sites() {
+        for configured in ["https://agentizable.ai", "https://agentbounties.app"] {
+            let origins = default_site_auth_origins(configured);
+            let allowed: Vec<_> = origins.split(',').collect();
+            for origin in [
+                "https://agentizable.ai",
+                "https://www.agentizable.ai",
+                "https://agentbounties.app",
+                "https://www.agentbounties.app",
+            ] {
+                assert!(allowed.contains(&origin));
+            }
+            assert!(!allowed.contains(&"https://agentizable.ai.attacker.example"));
+            assert!(!allowed.contains(&"http://agentizable.ai"));
+        }
+        assert_eq!(
+            default_site_auth_origins("http://localhost:5173"),
+            "http://localhost:5173"
+        );
+        assert_eq!(
+            default_site_auth_origins("https://custom.example"),
+            "https://custom.example"
+        );
+    }
+
     use alloy::signers::{local::PrivateKeySigner, SignerSync};
     use chrono::TimeZone;
     use tower::ServiceExt;
@@ -2212,9 +2250,9 @@ mod tests {
             inner: Arc::new(SiteAuthInner {
                 session_secret: Some(vec![7; 32]),
                 wallet_secret: Some(vec![8; 32]),
-                web_origin: "https://agentbounties.app".to_string(),
-                api_origin: "https://api.agentbounties.app".to_string(),
-                allowed_origins: vec![HeaderValue::from_static("https://agentbounties.app")],
+                web_origin: "https://agentizable.ai".to_string(),
+                api_origin: "https://api.agentizable.ai".to_string(),
+                allowed_origins: vec![HeaderValue::from_static("https://agentizable.ai")],
                 providers: BTreeMap::new(),
                 store: None,
                 client: reqwest::Client::new(),
@@ -2276,7 +2314,7 @@ mod tests {
         );
         headers.insert(
             header::ORIGIN,
-            HeaderValue::from_static("https://agentbounties.app"),
+            HeaderValue::from_static("https://agentizable.ai"),
         );
         assert_eq!(
             save_posting_draft(
@@ -2329,9 +2367,9 @@ mod tests {
             inner: Arc::new(SiteAuthInner {
                 session_secret: Some(vec![7; 32]),
                 wallet_secret: Some(vec![8; 32]),
-                web_origin: "https://agentbounties.app".to_string(),
-                api_origin: "https://api.agentbounties.app".to_string(),
-                allowed_origins: vec![HeaderValue::from_static("https://agentbounties.app")],
+                web_origin: "https://agentizable.ai".to_string(),
+                api_origin: "https://api.agentizable.ai".to_string(),
+                allowed_origins: vec![HeaderValue::from_static("https://agentizable.ai")],
                 providers: BTreeMap::new(),
                 store: Some(store.clone()),
                 client: reqwest::Client::new(),
@@ -2443,7 +2481,7 @@ mod tests {
             bounty_contract: None,
             bounty_id: None,
         };
-        let payload = draft_list_payload("https://agentbounties.app", vec![draft.clone()], 0);
+        let payload = draft_list_payload("https://agentizable.ai", vec![draft.clone()], 0);
         assert_eq!(payload["items"][0]["group"], "drafts");
         assert_eq!(payload["items"][0]["payment_state"], "unverified");
         assert!(payload["items"][0]["continuation_url"]
@@ -2454,7 +2492,7 @@ mod tests {
             needs_reconciliation: true,
             ..draft
         };
-        let payload = draft_list_payload("https://agentbounties.app", vec![pending; 51], 50);
+        let payload = draft_list_payload("https://agentizable.ai", vec![pending; 51], 50);
         assert_eq!(payload["items"].as_array().unwrap().len(), 50);
         assert_eq!(payload["next_offset"], 100);
         assert_eq!(payload["items"][0]["group"], "needs_action");
@@ -2545,7 +2583,7 @@ mod tests {
         let address = format!("{:#x}", signer.address());
         let issued = Utc.timestamp_opt(1_800_000_000, 0).unwrap();
         let message = wallet_link_message(
-            "https://agentbounties.app",
+            "https://agentizable.ai",
             &"a".repeat(64),
             &address,
             "nonce",

@@ -1,6 +1,6 @@
 //! Stripe Invoicing for the seller-of-record business path (ADR 0006).
 //!
-//! AgentBounties (the US entity) invoices a business buyer for a verified outcome. Invoices accept
+//! Agentizable (the US entity) invoices a business buyer for a verified outcome. Invoices accept
 //! only US bank transfers (`customer_balance`). Those payments cannot be charged back, so a paid
 //! invoice is final when the signature-verified `invoice.paid` webhook arrives. Card and ACH debit
 //! stay disabled until dispute reconciliation exists.
@@ -146,7 +146,7 @@ impl StripeInvoiceOrder {
                 },
                 "description": format!("Order {order}"),
                 "footer": format!(
-                    "AgentBounties is the seller of record for this verified outcome and delivers it through independent contractors. Paying this invoice accepts the business terms at {} ({}).",
+                    "Agentizable is the seller of record for this verified outcome and delivers it through independent contractors. Paying this invoice accepts the business terms at {} ({}).",
                     self.terms_url, self.terms_sha256
                 ),
                 "metadata": self.metadata(&order),
@@ -469,7 +469,7 @@ mod tests {
                 },
             ],
             days_until_due: 14,
-            terms_url: "https://agentbounties.app/terms/business".to_string(),
+            terms_url: "https://agentizable.ai/terms/business".to_string(),
             terms_sha256: format!("sha256:{}", "2".repeat(64)),
         }
     }
@@ -530,7 +530,7 @@ mod tests {
         bad.lines[0].amount_cents = 0;
         assert!(bad.plan_customer().is_err());
         let mut insecure = order.clone();
-        insecure.terms_url = "http://agentbounties.app/terms".to_string();
+        insecure.terms_url = "http://agentizable.ai/terms".to_string();
         assert!(insecure.plan_draft_invoice("cus_1").is_err());
     }
 

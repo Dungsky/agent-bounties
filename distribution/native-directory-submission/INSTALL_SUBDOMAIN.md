@@ -2,10 +2,10 @@
 
 ## Current Truth State
 
-`https://install.agentbounties.app/{rail}` is **not deployed**. The current
-GitHub Pages static site owns the apex `agentbounties.app` CNAME and provides
+`https://install.agentizable.ai/{rail}` is **not deployed**. The current
+GitHub Pages static site owns the apex `agentizable.ai` CNAME and provides
 the deployable source routes at
-`https://agentbounties.app/install/{rail}/`. A second custom hostname cannot be
+`https://agentizable.ai/install/{rail}/`. A second custom hostname cannot be
 claimed from this repository until DNS and an edge/static-host binding are
 configured outside the Pages CNAME.
 
@@ -14,7 +14,7 @@ the install-subdomain URLs in listings until all acceptance checks below pass.
 
 ## Required Edge Behavior
 
-- Bind TLS and DNS for `install.agentbounties.app` to an approved edge/static
+- Bind TLS and DNS for `install.agentizable.ai` to an approved edge/static
   deployment without changing `site/CNAME`.
 - Serve or reverse-proxy `/{rail}` and `/{rail}/` from the matching
   `/install/{rail}/` source page. A permanent redirect is acceptable only if it
@@ -27,7 +27,7 @@ the install-subdomain URLs in listings until all acceptance checks below pass.
 Supported rails are `bankr`, `openclaw`, `vscode`, `cursor`, `cline`, `github`,
 `linear`, `claude-custom`, `chatgpt-dev`, `glama`, `mcp-so`, and `mcpservers`.
 The page route selects content only. Its copy/install action must retain the
-exact `https://mcp.agentbounties.app/r/{rail}/mcp` endpoint.
+exact `https://mcp.agentizable.ai/r/{rail}/mcp` endpoint.
 
 ## Activation Acceptance
 
@@ -36,7 +36,7 @@ exact `https://mcp.agentbounties.app/r/{rail}/mcp` endpoint.
    matching apex source page.
 3. Every unknown rail returns 404.
 4. Each page exposes the exact attributed MCP URL and never substitutes
-   `https://mcp.agentbounties.app/mcp`.
+   `https://mcp.agentizable.ai/mcp`.
 5. The attributed endpoint passes MCP negotiation plus the excluded-operator
    lifecycle canary.
 

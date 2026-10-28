@@ -97,7 +97,7 @@ The phone continuation copies the exact account-saved posting operation only
 after a successful save; sign-in, a draft conflict or a failed save blocks copying.
 
 The Base app no longer supports cross-device QR sign-in. Use its app browser
-and sign in to the same AgentBounties account. See
+and sign in to the same Agentizable account. See
 [Coinbase's current connection guide](https://help.coinbase.com/en/wallet/other-topics/mobile-app-sign-in-discontinued).
 MetaMask uses its detected provider or the existing supported phone pairing.
 The top-up page keeps the chosen destination visible, shows only the selected

@@ -175,8 +175,8 @@ The same activation gate applies to a local run:
 ```bash
 python scripts/self_heal.py observe \
   --policy ops/self-healing-policy.json \
-  --api-url https://api.agentbounties.app \
-  --mcp-url https://mcp.agentbounties.app \
+  --api-url https://api.agentizable.ai \
+  --mcp-url https://mcp.agentizable.ai \
   --expected-revision "$VERIFIED_RELEASE" \
   --marketplace-readiness-verified-revision "$VERIFIED_RELEASE" \
   --snapshot-out target/operations/snapshot.json \
@@ -288,8 +288,8 @@ Run read-only public probes:
 ```powershell
 python scripts/self_heal.py observe `
   --policy ops/self-healing-policy.json `
-  --api-url https://api.agentbounties.app `
-  --mcp-url https://mcp.agentbounties.app `
+  --api-url https://api.agentizable.ai `
+  --mcp-url https://mcp.agentizable.ai `
   --expected-revision <40-character-git-sha> `
   --snapshot-out target/operations/snapshot.json `
   --plan-out target/operations/recovery-plan.json

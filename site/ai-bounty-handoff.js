@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const MCP_URL = "https://mcp.agentbounties.app/mcp";
+  const MCP_URL = "https://mcp.agentizable.ai/mcp";
   const PROVIDERS = {
     chatgpt: "https://chatgpt.com/",
     claude: "https://claude.ai/new",
@@ -25,7 +25,7 @@
   let currentPrompt = "";
 
   function reviewDestination(context) {
-    const browserUrl = new URL("https://agentbounties.app/post.html?from=webmcp");
+    const browserUrl = new URL("https://agentizable.ai/post.html?from=webmcp");
     const parent = context?.meta_child?.parent_bounty_contract;
     if (parent != null) {
       if (!/^0x[0-9a-fA-F]{40}$/.test(parent)) throw new Error("The parent bounty address is invalid.");
@@ -89,7 +89,7 @@
       if (Object.prototype.hasOwnProperty.call(raw, "deadline_days")) {
         throw new Error("Use task_window_days instead of deadline_days so the work window is imported exactly.");
       }
-      throw new Error("task_window_days is required so Agent Bounties does not guess or change the work window.");
+      throw new Error("task_window_days is required so Agentizable does not guess or change the work window.");
     }
     const days = Number(raw.task_window_days);
     if (!Number.isInteger(days) || days < 1 || days > 30) throw new Error("task_window_days must be a whole number from 1 to 30.");

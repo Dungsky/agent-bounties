@@ -12,7 +12,7 @@ from urllib.parse import urlencode, urljoin, urlsplit
 from urllib.request import Request, urlopen
 
 
-PUBLIC_ORIGIN = "https://agentbounties.app"
+PUBLIC_ORIGIN = "https://agentizable.ai"
 EDGE_PROFILE = Path(__file__).resolve().parents[1] / "ops/cloudflare/site-canary-edge.json"
 VOID_TAGS = set("area base br col embed hr img input link meta param source track wbr".split())
 # Pages intentionally substitutes these public configuration files at deployment.

@@ -110,7 +110,7 @@
     // A separate browsing context preserves this pending operation on return.
     try {
       win.open(`${wallet.url}?uri=${encodeURIComponent(pairingUri)}`, "_blank", "noopener,noreferrer");
-      setState("pairing", `Approve the connection to agentbounties.app in ${wallet.name}, then return here. If the app did not open, allow the browser to open it or use this page in your phone’s regular browser. This does not authorize a payment.`);
+      setState("pairing", `Approve the connection to agentizable.ai in ${wallet.name}, then return here. If the app did not open, allow the browser to open it or use this page in your phone’s regular browser. This does not authorize a payment.`);
     } catch (_) {
       setState("pairing", "This browser could not open your wallet app. Open the saved journey in your phone’s regular browser, or use a second device for QR pairing. Your draft is saved.");
     }
@@ -131,7 +131,7 @@
         const library = await vendor();
         const provider = await library.createProvider({ projectId, chains: [BASE], optionalChains: [BASE], optionalMethods, showQrModal: false, telemetryEnabled: false, logger: "silent",
           rpcMap: { [BASE]: "https://mainnet.base.org" }, customStoragePrefix: prefix,
-          metadata: { name: "Agent Bounties", description: "Review marketplace work. Approve each signature and payment on your phone.", url: win.location.origin, icons: [new URL("/favicon.svg", win.location.origin).href] } });
+          metadata: { name: "Agentizable", description: "Review marketplace work. Approve each signature and payment on your phone.", url: win.location.origin, icons: [new URL("/favicon.svg", win.location.origin).href] } });
         if (version === generation) { sdk = provider; activePrefix = prefix; }
         provider.on("display_uri", async (uri) => {
           const current = attempt;
@@ -186,7 +186,7 @@
     deviceToggle.addEventListener("click", () => { showMobile = !showMobile; showQr = !showMobile; if (phase === "pairing") setState("pairing", pairingInstructions()); else render(); });
     const note = node("p", "Connecting does not spend money.", "ab-phone-note");
     const security = node("details", "", "ab-phone-details");
-    security.append(node("summary", "Connection help"), node("p", "Keep this page open. Check that your wallet shows agentbounties.app. Never share this code or your recovery phrase. To recover a Coinbase account wallet, choose email or social sign-in in the wallet chooser.", "ab-phone-note"));
+    security.append(node("summary", "Connection help"), node("p", "Keep this page open. Check that your wallet shows agentizable.ai. Never share this code or your recovery phrase. To recover a Coinbase account wallet, choose email or social sign-in in the wallet chooser.", "ab-phone-note"));
     const address = addressNode = node("p", "", "ab-phone-address"); address.hidden = true;
     const actions = node("div", "", "ab-phone-actions");
     retry = node("button", "Start a new connection"); retry.type = "button"; retry.addEventListener("click", () => { void begin().catch(() => {}); });
@@ -303,7 +303,7 @@
     cancel(undefined, undefined, keepSelection);
     setState("disconnecting", "Disconnecting your phone wallet…");
     try { if (sdk?.session) await sdk.disconnect(); clearConnection(); }
-    catch (_) { setState("error", "The relay could not confirm disconnection. Disconnect Agent Bounties inside your phone wallet, then retry here."); }
+    catch (_) { setState("error", "The relay could not confirm disconnection. Disconnect Agentizable inside your phone wallet, then retry here."); }
     return state();
   }
   const provider = Object.freeze({

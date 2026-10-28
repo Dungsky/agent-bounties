@@ -1,4 +1,4 @@
-(function installAgentBounties(documentObject, windowObject) {
+(function installAgentizable(documentObject, windowObject) {
   "use strict";
 
   const body = documentObject.body;
@@ -148,7 +148,7 @@
     endpointPanel.appendChild(element(taskOwner ? "summary" : "h2", "", taskOwner ? "Use another assistant" : "Connect your AI assistant"));
     endpointPanel.appendChild(element("p", "", taskOwner
       ? "Add this URL in your assistant’s remote MCP settings."
-      : (platform.connection_description || "Add Agent Bounties to an assistant that supports remote MCP servers. Then give it a task, define how success will be checked, and ask for a bounty draft to review.")));
+      : (platform.connection_description || "Add Agentizable to an assistant that supports remote MCP servers. Then give it a task, define how success will be checked, and ask for a bounty draft to review.")));
     const endpointRow = element("div", "endpoint-row");
     endpointRow.appendChild(element("code", "", platform.mcp_url));
     const endpointButton = element("button", "", "Copy endpoint");

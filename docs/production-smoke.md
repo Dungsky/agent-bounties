@@ -28,8 +28,8 @@ PowerShell:
 
 ```powershell
 .\scripts\check-production-smoke.ps1 `
-  -ApiBaseUrl https://api.agentbounties.app `
-  -McpBaseUrl https://mcp.agentbounties.app `
+  -ApiBaseUrl https://api.agentizable.ai `
+  -McpBaseUrl https://mcp.agentizable.ai `
   -ExpectedRevision 0123456789abcdef0123456789abcdef01234567
 ```
 
@@ -37,8 +37,8 @@ Unix-like shells:
 
 ```bash
 bash scripts/check-production-smoke.sh \
-  --api-base-url https://api.agentbounties.app \
-  --mcp-base-url https://mcp.agentbounties.app \
+  --api-base-url https://api.agentizable.ai \
+  --mcp-base-url https://mcp.agentizable.ai \
   --expected-revision 0123456789abcdef0123456789abcdef01234567
 ```
 
@@ -90,7 +90,7 @@ For a faster MCP-only deployment diagnosis, run:
 
 ```bash
 python scripts/check-mcp-protocol-eras.py \
-  --endpoint https://mcp.agentbounties.app/mcp \
+  --endpoint https://mcp.agentizable.ai/mcp \
   --expect dual
 ```
 

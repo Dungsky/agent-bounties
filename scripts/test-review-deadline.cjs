@@ -7,7 +7,10 @@ test("review calendar binds the canonical round and UTC deadline", () => {
   assert.ok(raw.split("\r\n").every(line => Buffer.byteLength(line) <= 75));
   const body = raw.replace(/\r\n /g, "");
   assert.match(body, /DTEND:20330518T033320Z\r\n/);
-  assert.match(body, /-2-2000000000@agentbounties.app/);
+  assert.match(body, /-2-2000000000@agentbounties\.app/);
+  assert.match(body, /URL:https:\/\/agentizable\.ai\/participate\.html/);
+  assert.match(body, /SUMMARY:Review your Agentizable submission/);
+  assert.match(body, /PRODID:-\/\/Agentizable\/\/Creator Review\/\/EN/);
   assert.match(body, /TRIGGER:-PT1H/);
   assert.match(body, /not payment evidence/);
   assert.ok(body.endsWith("END:VCALENDAR\r\n"));

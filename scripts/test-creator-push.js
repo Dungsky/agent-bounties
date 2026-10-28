@@ -6,11 +6,11 @@ const id="11111111-1111-4111-8111-111111111111";
 function fixture(){
   let subscription=null,config={configured:true,public_key:key},permission="granted",device=new Map(),testStatus="accepted",received=true,testId=null;
   const calls=[],messages=[];
-  const reg={active:{scriptURL:"https://agentbounties.app/creator-push-sw.js"},update:async()=>{calls.push(["update"]);},getNotifications:async()=>received&&testId?[{tag:`ab-test-${testId}`,close:()=>{}}]:[],pushManager:{
+  const reg={active:{scriptURL:"https://agentizable.ai/creator-push-sw.js"},update:async()=>{calls.push(["update"]);},getNotifications:async()=>received&&testId?[{tag:`ab-test-${testId}`,close:()=>{}}]:[],pushManager:{
     getSubscription:async()=>subscription,
     subscribe:async(value)=>{calls.push(["subscribe",value]);subscription={toJSON:()=>({endpoint:"https://fcm.googleapis.com/wp/fixture",keys:{p256dh:key,auth:Buffer.alloc(16,2).toString("base64url")},expirationTime:null}),unsubscribe:async()=>{calls.push(["unsubscribe"]);subscription=null;return true;}};return subscription;}
   }};
-  const win={isSecureContext:true,PushManager:function(){},crypto:{randomUUID:()=>id},location:{origin:"https://agentbounties.app"},atob:value=>Buffer.from(value,"base64").toString("binary"),setTimeout:fn=>setTimeout(fn,0),clearTimeout,
+  const win={isSecureContext:true,PushManager:function(){},crypto:{randomUUID:()=>id},location:{origin:"https://agentizable.ai"},atob:value=>Buffer.from(value,"base64").toString("binary"),setTimeout:fn=>setTimeout(fn,0),clearTimeout,
     localStorage:{getItem:k=>device.get(k)||null,setItem:(k,v)=>device.set(k,v),removeItem:k=>device.delete(k)},
     Notification:{requestPermission:async()=>{calls.push(["permission"]);return permission;}},
     navigator:{serviceWorker:{getRegistration:async()=>reg,register:async(path,options)=>{calls.push(["register",path,options]);return reg;}}},
@@ -18,7 +18,7 @@ function fixture(){
       if(body?.action==="test")testId=body.request_id;
       return {ok:true,json:async()=>options.method==="GET"?config:body.action==="subscribe"?{subscribed:true,id}:body.action==="test"?{request_id:body.request_id,status:testStatus}:{subscribed:false}};}
   };
-  const controller=push.create(win,"https://api.agentbounties.app/v1/site-auth/push-notifications",value=>messages.push(value));
+  const controller=push.create(win,"https://api.agentizable.ai/v1/site-auth/push-notifications",value=>messages.push(value));
   return {controller,win,calls,messages,reg,permission:value=>permission=value,config:value=>config=value,received:value=>received=value,testStatus:value=>testStatus=value};
 }
 (async()=>{
@@ -81,13 +81,13 @@ function fixture(){
   finishOldAccount({ok:true,json:async()=>({subscribed:true,id})});await new Promise(resolve=>setImmediate(resolve));
   assert.equal(switched.calls.filter(v=>v[0]==="fetch"&&v[2].body?.includes('"unsubscribe"')).length,0,"old account cleanup is not sent under a new account session");
   assert.deepEqual(JSON.parse(switched.win.localStorage.getItem("ab.creator-push-cleanup.v1")),[{account:"account-1",id}]);
-  const resumed=push.create(switched.win,"https://api.agentbounties.app/v1/site-auth/push-notifications",()=>{});
+  const resumed=push.create(switched.win,"https://api.agentizable.ai/v1/site-auth/push-notifications",()=>{});
   resumed.setAccount("account-1");await resumed.load();
   assert.equal(switched.calls.filter(v=>v[0]==="fetch"&&v[2].body?.includes('"unsubscribe"')).length,1,"cleanup survives controller reload and resumes only for the owning account");
   assert.deepEqual(JSON.parse(switched.win.localStorage.getItem("ab.creator-push-cleanup.v1")),[]);
   assert.throws(()=>push.publicKey("https://evil.example",f.win));
   const events={},notifications=[],opened=[];
-  const self={location:{origin:"https://agentbounties.app"},addEventListener:(name,fn)=>events[name]=fn,skipWaiting:()=>{},registration:{showNotification:async(...value)=>notifications.push(value)},clients:{openWindow:async value=>opened.push(value)}};
+  const self={location:{origin:"https://agentizable.ai"},addEventListener:(name,fn)=>events[name]=fn,skipWaiting:()=>{},registration:{showNotification:async(...value)=>notifications.push(value)},clients:{openWindow:async value=>opened.push(value)}};
   vm.runInNewContext(fs.readFileSync(require.resolve("../site/creator-push-sw.js"),"utf8"),{self,URL});
   const data={schema:"agent-bounties/creator-push-v1",id,kind:"submission",title:"untrusted override",deadline:"2026-10-01 12:00:00 UTC",url:"/participate.html?bountyContract=0x"+"11".repeat(20)+"&network=base-mainnet"};
   let pending;events.push({data:{json:()=>data},waitUntil:p=>pending=p});await pending;
@@ -95,7 +95,7 @@ function fixture(){
   assert.equal(notifications[0][1].tag,`ab-${id}`);
   events.push({data:{json:()=>({...data,url:"https://evil.example/participate.html"})},waitUntil:()=>{throw Error("foreign notification");}});
   events.notificationclick({notification:{close:()=>{},data:{url:"https://evil.example/"}},waitUntil:()=>{throw Error("foreign navigation");}});assert.equal(opened.length,0);
-  events.notificationclick({notification:{close:()=>{},data:notifications[0][1].data},waitUntil:p=>pending=p});await pending;assert.match(opened[0],/^https:\/\/agentbounties.app\/participate.html\?/);
+  events.notificationclick({notification:{close:()=>{},data:notifications[0][1].data},waitUntil:p=>pending=p});await pending;assert.match(opened[0],/^https:\/\/agentizable.ai\/participate.html\?/);
   const creator={...data,kind:"creator_open_submission",url:"/creator-open.html?network=base-mainnet&bounty=0x"+"11".repeat(20)+"&entry=3"};
   events.push({data:{json:()=>creator},waitUntil:p=>pending=p});await pending;assert.equal(notifications.length,2);
   events.notificationclick({notification:{close:()=>{},data:notifications[1][1].data},waitUntil:p=>pending=p});await pending;assert.match(opened[1],/creator-open.html\?network=base-mainnet&bounty=0x[0-9a-f]{40}&entry=3$/);
@@ -120,10 +120,10 @@ function fixture(){
   for(const invalid of [{...reminder,expires_at:Math.floor(Date.now()/1000)-1},{...reminder,expires_at:null},{...reminder,schema:"agent-bounties/creator-push-v1"},{...reminder,stage:"initial"}])events.push({data:{json:()=>invalid},waitUntil:()=>{throw Error("expired or mismatched deadline notification");}});
   const test={schema:"agent-bounties/push-test-v1",id,expires_at:Math.floor(Date.now()/1000)+60,title:"Review required",url:"https://evil.example"};
   events.push({data:{json:()=>test},waitUntil:p=>pending=p});await pending;
-  assert.equal(notifications.at(-1)[0],"Agent Bounties notification test");
+  assert.equal(notifications.at(-1)[0],"Agentizable notification test");
   assert.match(notifications.at(-1)[1].body,/No review or payment action is required/);
   events.notificationclick({notification:{close:()=>{},data:notifications.at(-1)[1].data},waitUntil:p=>pending=p});await pending;
-  assert.equal(opened.at(-1),"https://agentbounties.app/#account");
+  assert.equal(opened.at(-1),"https://agentizable.ai/#account");
   for(const invalid of [{...test,id:"bad"},{...test,expires_at:null},{...test,expires_at:0},{...test,expires_at:Math.floor(Date.now()/1000)+3600}])events.push({data:{json:()=>invalid},waitUntil:()=>{throw Error("invalid delivery test");}});
   events.notificationclick({notification:{close:()=>{},data:{test:true,url:data.url}},waitUntil:()=>{throw Error("test navigated to a bounty");}});
   const calendar=require("../site/review-deadline.js"),deadline=Math.floor(Date.now()/1000)+3600;

@@ -97,7 +97,7 @@
     const reopens = "Once the signed rejection is confirmed on chain, the solver's bond goes to the verifier and the bounty reopens for another attempt.";
     switch (r.appeal?.status) {
       case "window_open": return `${base} The solver can appeal until ${when(r.appeal.window_ends_at)}. Without an appeal the rejection becomes final.`;
-      case "appealed": return `${base} The solver appealed. Agent Bounties is checking the delivery against the published criteria.`;
+      case "appealed": return `${base} The solver appealed. Agentizable is checking the delivery against the published criteria.`;
       case "upheld": return `${base} On appeal the rejection was upheld: ${r.ruling?.reason || ""} ${reopens}`;
       case "reversed": {
         const latest = r.round === Math.max(...model.reviews.map((x) => x.round));
@@ -150,7 +150,7 @@
       if (model.payout) {
         payout.append(model.payout.status === "paid"
           ? `Review deposit paid to the solver: ${usdc(model.payout.amount)}. `
-          : `Review deposit owed to the solver: ${usdc(model.payout.amount)}. Agent Bounties sends it in USDC.`);
+          : `Review deposit owed to the solver: ${usdc(model.payout.amount)}. Agentizable sends it in USDC.`);
         if (model.payout.tx_hash) {
           const link = doc.createElement("a");
           link.href = `https://${model.network === "base-sepolia" ? "sepolia." : ""}basescan.org/tx/${model.payout.tx_hash}`;
@@ -209,7 +209,7 @@
       }
       await client.request(`/v1/managed-service/bounties/${network}/${contract}/appeal`,
         { round: review.round, solver: wallet, reason: signed.reason, signature: signed.signature });
-      put("[data-card-review-status]", "Appeal recorded. The rejection stays unsigned until Agent Bounties rules.");
+      put("[data-card-review-status]", "Appeal recorded. The rejection stays unsigned until Agentizable rules.");
       await refresh();
     }
     const fail = (error) => put("[data-card-review-status]", error.message || String(error));

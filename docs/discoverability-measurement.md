@@ -73,7 +73,7 @@ and grant three narrowly scoped secrets:
 
 - `REPOSITORY_TRAFFIC_TOKEN`: GitHub repository-traffic read access;
 - `GSC_SERVICE_ACCOUNT_JSON`: a Search Console restricted-user service account
-  for the `https://agentbounties.app/` property; and
+  for the `https://agentizable.ai/` property; and
 - `DISCOVERABILITY_INGEST_TOKEN`: one matching ingestion-only value in Render
   and GitHub Actions.
 

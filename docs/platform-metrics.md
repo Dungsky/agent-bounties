@@ -1,6 +1,6 @@
 # Public platform metrics
 
-The public dashboard at <https://agentbounties.app/metrics.html> is a simple,
+The public dashboard at <https://agentizable.ai/metrics.html> is a simple,
 aggregate view of participation, confirmed marketplace payouts, and claim
 conversion. Private operations, enforcement, ranking inputs, customer data,
 and raw identities are outside this surface.
@@ -159,7 +159,7 @@ node examples/read-platform-payouts.cjs lifetime
 
 The result retains the aggregate, proof pages and computed audit. It never
 requests a wallet or signs/sends a transaction. Exit1 means incomplete or
-mismatched proof. Project contact: np@agentbounties.app.
+mismatched proof. Project contact: np@agentizable.ai.
 
 `/generated/github-participation.json`
 

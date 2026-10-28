@@ -88,7 +88,7 @@
       }
       if (["signed", "relay_pending"].includes(operation?.phase)) {
         staged = operation.assessment; if (job && staged) renderAssessment(); confirm.disabled = !job || !staged;
-        output.textContent = "Your verdict is already signed. Continue to reconcile and relay this same verdict; Agent Bounties pays the network fee.";
+        output.textContent = "Your verdict is already signed. Continue to reconcile and relay this same verdict; Agentizable pays the network fee.";
       } else if (operation) output.textContent = "A verdict wallet step is recorded. Check its canonical status; do not repeat it.";
       else if (!staged) output.textContent = job ? "A submission is ready. Your AI can check every criterion and prepare your verdict here." : "The creator will confirm the verdict here after a submission arrives.";
       return { status: operation ? "pending_confirmation" : job ? "review_available" : "waiting_for_submission", paid: false, job, operation: operation ? { phase: operation.phase, transaction_hash: operation.hash || null } : null, user_confirmation_required: false };
@@ -97,7 +97,7 @@
       const list = root.querySelector("ol"); list.replaceChildren();
       for (const check of staged.checks) { const li = doc.createElement("li"); li.textContent = `${check.passed ? "Pass" : "Fail"}: ${check.criterion} — ${check.reason}`; list.append(li); }
       output.textContent = `${staged.passed ? "Proposed pass" : "Proposed rejection"}. ${staged.on_time ? "Submitted by the delivery deadline." : "The submission missed the delivery deadline."} Review every check before confirming.`;
-      root.querySelector("[data-review-cost]").textContent = `On Base: a pass pays ${Number(job.current_solver_payout) / 1e6} USDC to solver ${job.solver_wallet}; either verdict pays ${Number(job.verifier_reward) / 1e6} USDC to reviewer ${job.eligible_verifiers[0]}. A rejection forfeits the solver bond. Review expires ${new Date(job.verification_expires_at * 1000).toLocaleString()}. Agent Bounties pays the network fee. If sponsorship is unavailable, the verdict stays saved.`;
+      root.querySelector("[data-review-cost]").textContent = `On Base: a pass pays ${Number(job.current_solver_payout) / 1e6} USDC to solver ${job.solver_wallet}; either verdict pays ${Number(job.verifier_reward) / 1e6} USDC to reviewer ${job.eligible_verifiers[0]}. A rejection forfeits the solver bond. Review expires ${new Date(job.verification_expires_at * 1000).toLocaleString()}. Agentizable pays the network fee. If sponsorship is unavailable, the verdict stays saved.`;
     }
     async function importDraft(id) {
       if (!/^[0-9a-f-]{36}$/i.test(id) || busy || load()) throw new Error("Check the existing wallet step before opening another review.");

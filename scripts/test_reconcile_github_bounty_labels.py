@@ -122,7 +122,7 @@ def item(
         "categories": ["engineering"],
         "skills": ["testing"],
         "difficulty": difficulty,
-        "public_url": f"https://agentbounties.app/{'competition' if mode == 'first_valid_submission' else 'earn'}.html?bountyContract={contract}&network={NETWORK}",
+        "public_url": f"https://agentizable.ai/{'competition' if mode == 'first_valid_submission' else 'earn'}.html?bountyContract={contract}&network={NETWORK}",
         "source_url": source_url,
         "competition_mode": mode,
         "lifecycle_state": state,
@@ -150,9 +150,9 @@ def item(
             "kind": "enter_competition" if mode == "first_valid_submission" else "claim",
             "label": "Enter competition" if mode == "first_valid_submission" else "Claim this bounty",
             "method": "POST",
-            "url": "https://api.agentbounties.app/v1/base/open-competition-v1/commit-preparation"
+            "url": "https://api.agentizable.ai/v1/base/open-competition-v1/commit-preparation"
             if mode == "first_valid_submission"
-            else "https://api.agentbounties.app/v1/base/autonomous-bounties/claim-plan",
+            else "https://api.agentizable.ai/v1/base/autonomous-bounties/claim-plan",
             "instructions": "Prepare the exact canonical action.",
         },
         "recovery_action_available": recovery,
@@ -354,20 +354,20 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
                 link = next_section.split("](", 1)[1].split(")", 1)[0]
                 parsed = urllib.parse.urlsplit(link)
                 query = urllib.parse.parse_qs(parsed.query)
-                self.assertEqual(parsed.netloc, "agentbounties.app")
+                self.assertEqual(parsed.netloc, "agentizable.ai")
                 self.assertEqual(parsed.path, "/participate.html" if mode == "exclusive_claim" else "/competition.html")
                 self.assertEqual(query["bountyContract"], [record["bounty_contract"]])
                 self.assertEqual(query["network"], [NETWORK])
                 self.assertIn('"method": "POST"', next_section)
                 self.assertIn('"url": "' + record["next_action"]["url"] + '"', next_section)
                 self.assertIn("This is not a complete request.", next_section)
-                self.assertNotIn("](https://api.agentbounties.app/", next_section)
+                self.assertNotIn("](https://api.agentizable.ai/", next_section)
 
     def test_browser_action_rejects_wrong_page_identity_or_host(self) -> None:
         baseline = item(90)
         contract = baseline["bounty_contract"]
         for url in (
-            baseline["public_url"].replace("agentbounties.app", "example.com"),
+            baseline["public_url"].replace("agentizable.ai", "example.com"),
             baseline["public_url"].replace("/earn.html", "/competition.html"),
             baseline["public_url"].replace(contract, "0x" + "f" * 40),
             baseline["public_url"].replace(NETWORK, "base-sepolia"),
@@ -622,7 +622,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
             "goal": "Create and fund useful demand. Highest eligible score wins.",
             "categories": ["research"],
             "skills": ["browser"],
-            "public_url": f"https://agentbounties.app/competition.html?bountyContract={contract}&network=base-mainnet",
+            "public_url": f"https://agentizable.ai/competition.html?bountyContract={contract}&network=base-mainnet",
             "verification_ready": True,
             "winner_mode": "best_score",
             "reward": amount(6_000_000),
@@ -654,7 +654,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
             "next_action": {
                 "action": "prepare_open_competition_v2_score",
                 "method": "GET",
-                "url": f"https://agentbounties.app/competition.html?bountyContract={contract}&network=base-mainnet",
+                "url": f"https://agentizable.ai/competition.html?bountyContract={contract}&network=base-mainnet",
                 "instructions": "Prepare the exact child-bounty brief.",
             },
         }
@@ -687,7 +687,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
 
         augmented = augment_projection_with_beta3(
             request,
-            "https://api.agentbounties.app",
+            "https://api.agentizable.ai",
             NETWORK,
             REPOSITORY,
             base,
@@ -707,7 +707,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
         opportunity["next_action"]["action"] = "await_open_competition_v2_verification"
         opportunity["next_action"]["instructions"] = "Do not fund child demand or pay for a proof."
         contained = augment_projection_with_beta3(
-            request, "https://api.agentbounties.app", NETWORK, REPOSITORY, base,
+            request, "https://api.agentizable.ai", NETWORK, REPOSITORY, base,
         )
         beta3 = [record for record in contained["items"]
                  if record["protocol_version"] == BETA3_PROTOCOL]
@@ -739,7 +739,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
 
         augmented = augment_projection_with_beta3(
             request,
-            "https://api.agentbounties.app",
+            "https://api.agentizable.ai",
             NETWORK,
             REPOSITORY,
             base,
@@ -817,7 +817,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
                 ),
                 "competition_mode": "best_score",
                 "title": "6 USDC prize — Highest externally funded canonical GMV — daily 20260825",
-                "public_url": f"https://agentbounties.app/competition.html?bountyContract={contract}&network=base-mainnet",
+                "public_url": f"https://agentizable.ai/competition.html?bountyContract={contract}&network=base-mainnet",
                 "reward_usdc_base_units": "6000000",
                 "verifier_reward_usdc_base_units": "40000",
                 "bond_usdc_base_units": "0",
@@ -847,7 +847,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
                     "kind": "prepare_open_competition_v2_score",
                     "label": "Prepare scoring work",
                     "method": "GET",
-                    "url": f"https://agentbounties.app/competition.html?bountyContract={contract}&network=base-mainnet",
+                    "url": f"https://agentizable.ai/competition.html?bountyContract={contract}&network=base-mainnet",
                     "instructions": "Prepare now; do not fund score before the UTC window starts.",
                 },
             }
@@ -881,7 +881,7 @@ class GitHubDiscoveryReconciliationTests(unittest.TestCase):
         recovery = open_competition_wrong_mode_plan(
             {
                 "url": f"https://github.com/{REPOSITORY}/issues/88",
-                "issue_body": f"https://agentbounties.app/competition.html?bountyContract={contract}",
+                "issue_body": f"https://agentizable.ai/competition.html?bountyContract={contract}",
             }
         )
         self.assertFalse(recovery["ready"])

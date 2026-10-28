@@ -1817,7 +1817,7 @@ async fn deliver_discovery_webhook(
     let response = client
         .post(url)
         .header("content-type", "application/json")
-        .header("user-agent", "Agent Bounties-Discovery-Webhook/1.0")
+        .header("user-agent", "Agentizable-Discovery-Webhook/1.0")
         .header("x-bountyboard-timestamp", &timestamp)
         .header("x-bountyboard-signature", signature)
         .header("x-bountyboard-event-id", delivery.event_id.to_string())

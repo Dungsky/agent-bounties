@@ -183,7 +183,7 @@ def exercise_surface(client: AgentBountiesClient) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the Agent Bounties Python SDK smoke.")
+    parser = argparse.ArgumentParser(description="Run the Agentizable Python SDK smoke.")
     parser.add_argument("--base-url", default="http://127.0.0.1:8080")
     args = parser.parse_args()
     print(

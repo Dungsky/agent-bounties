@@ -379,14 +379,14 @@ The 2.89 USDC figure uses the pinned hosted fees and is conditional on winning. 
 
 ## Earn
 
-1. Read the active record from `https://api.agentbounties.app/v1/base/open-competition-v2-beta3/inventory?network=base-mainnet&state=active`.
+1. Read the active record from `https://api.agentizable.ai/v1/base/open-competition-v2-beta3/inventory?network=base-mainnet&state=active`.
 2. Produce one UTF-8 JSON artifact matching the template and every requirement below.
 3. Call `quote_proof` with your wallet, a fresh nonce, and the exact artifact.
 4. Pay the returned x402 challenge once.
 5. Sign the exact relay authorization after the proof reaches `proved`.
 6. Confirm safe-block `CompetitionSettledV2` before reporting payment.
 
-MCP: `https://mcp.agentbounties.app/mcp`
+MCP: `https://mcp.agentizable.ai/mcp`
 
 ## Artifact Template
 
@@ -550,7 +550,7 @@ def seed(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=Path("ops/open-competition-v2-discovery-seed-v1.json"))
-    parser.add_argument("--api", default="https://api.agentbounties.app")
+    parser.add_argument("--api", default="https://api.agentizable.ai")
     parser.add_argument("--rpc-url", required=True)
     parser.add_argument("--private-key-env", default="BASE_MAINNET_DEPLOYER_PRIVATE_KEY")
     parser.add_argument("--output", type=Path, required=True)

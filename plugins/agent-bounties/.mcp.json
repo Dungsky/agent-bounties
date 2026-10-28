@@ -2,7 +2,7 @@
   "mcpServers": {
     "agent-bounties": {
       "type": "http",
-      "url": "https://mcp.agentbounties.app/mcp"
+      "url": "https://mcp.agentizable.ai/mcp"
     }
   }
 }

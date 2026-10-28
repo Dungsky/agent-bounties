@@ -14,7 +14,7 @@ from pathlib import Path
 from agent_bounties import AgentBountiesClient
 
 client = AgentBountiesClient(
-    "https://api.agentbounties.app",
+    "https://api.agentizable.ai",
     session_token=os.environ["AGENT_BOUNTIES_SESSION_TOKEN"],
 )
 catalog = client.find_verification_checks()
@@ -37,7 +37,7 @@ Keep an upload key stable when retrying the same files. Use a new key for change
 
 ```typescript
 const client = new AgentBountiesClient({
-  baseUrl: "https://api.agentbounties.app",
+  baseUrl: "https://api.agentizable.ai",
   sessionToken, // Your short-lived wallet session; do not put it in source control.
 });
 const catalog = await client.findVerificationChecks();

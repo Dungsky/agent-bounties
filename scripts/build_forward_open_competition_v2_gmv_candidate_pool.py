@@ -184,7 +184,7 @@ def build(
                 "analysis_sources": [
                     {
                         "kind": "canonical_platform_metric",
-                        "url": "https://api.agentbounties.app/v1/metrics/platform?period=28d",
+                        "url": "https://api.agentizable.ai/v1/metrics/platform?period=28d",
                     }
                 ],
                 "feedback_sources": [

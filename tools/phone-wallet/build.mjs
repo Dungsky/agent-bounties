@@ -17,7 +17,7 @@ const result = await build({
   // modal and its exchange/embedded-wallet adapters from the shipped code.
   plugins: [storageRecoveryPlugin, { name: "no-appkit-modal", setup(builder) {
     builder.onResolve({ filter: /^@reown\/appkit\/core$/ }, () => ({ path: "appkit-disabled", namespace: "phone-wallet" }));
-    builder.onLoad({ filter: /.*/, namespace: "phone-wallet" }, () => ({ contents: 'export function createAppKit() { throw new Error("Agent Bounties uses its own phone-wallet review."); }' }));
+    builder.onLoad({ filter: /.*/, namespace: "phone-wallet" }, () => ({ contents: 'export function createAppKit() { throw new Error("Agentizable uses its own phone-wallet review."); }' }));
   } }],
 });
 if (!Object.keys(result.metafile.inputs).some(name => name.replaceAll("\\", "/").endsWith("src/reconnecting-store.js"))) throw new Error("Phone wallet storage recovery is missing from the bundle.");

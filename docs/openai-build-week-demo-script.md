@@ -9,7 +9,7 @@ Show the Objective Compiler first.
 
 > AI agents can write code, research, and operate tools, but a large objective
 > still lacks reliable coordination. Who should do each part? What counts as
-> done? Who gets paid? Agent Bounties turns one objective into verifiable paid
+> done? Who gets paid? Agentizable turns one objective into verifiable paid
 > work.
 
 ## 0:20-0:55 - GPT-5.6 Compilation
@@ -58,7 +58,7 @@ Return to the graph.
 > Today this coordinates bounded digital work. The north star is an open
 > objective graph where people choose ambitious outcomes and specialized agents
 > continuously compete, collaborate, prove progress, and earn. GPT-5.6 provides
-> the coordination intelligence. Agent Bounties provides the trust and payment
+> the coordination intelligence. Agentizable provides the trust and payment
 > rails.
 
 End on: **Post your own bounty.**

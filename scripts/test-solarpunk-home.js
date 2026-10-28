@@ -38,7 +38,7 @@ test("review emails require an explicit verified contact, linked wallet, and con
 test("review preference sends only a boolean with the account cookie and no redirects", async () => {
   const calls = [], renders = [];
   const controller = home.createReviewNotificationController({
-    location: { hostname: "agentbounties.app" },
+    location: { hostname: "agentizable.ai" },
     fetch: async (url, options) => {
       calls.push({ url, options });
       return { ok: true, json: async () => ({ ...reviewEmailReady, enabled: options.method === "GET" }) };
@@ -50,7 +50,7 @@ test("review preference sends only a boolean with the account cookie and no redi
   assert.equal(await controller.save(false), true);
   assert.equal(calls.length, 2);
   for (const { url, options } of calls) {
-    assert.equal(url, "https://api.agentbounties.app/v1/site-auth/review-notifications");
+    assert.equal(url, "https://api.agentizable.ai/v1/site-auth/review-notifications");
     assert.equal(options.credentials, "include");
     assert.equal(options.redirect, "error");
     assert.equal(options.cache, "no-store");
@@ -157,7 +157,7 @@ test("scene lighting follows the declared local-time bands", () => {
 test("scene review overrides are localhost-only", () => {
   assert.equal(home.sceneTimeOverride("?sceneTime=23:30", "localhost"), 1410);
   assert.equal(home.sceneTimeOverride("?sceneTime=05:15", "127.0.0.1"), 315);
-  assert.equal(home.sceneTimeOverride("?sceneTime=23:30", "agentbounties.app"), null);
+  assert.equal(home.sceneTimeOverride("?sceneTime=23:30", "agentizable.ai"), null);
   assert.equal(home.sceneTimeOverride("?sceneTime=25:00", "localhost"), null);
 });
 
@@ -166,12 +166,12 @@ test("OAuth provider routes and callback messages are bounded", () => {
   assert.equal(home.authProviderPath("github"), "/auth/login/github");
   assert.equal(home.authProviderPath("unknown"), null);
   assert.equal(
-    home.authProviderPath("microsoft", { hostname: "agentbounties.app" }),
-    "https://api.agentbounties.app/v1/site-auth/login/microsoft",
+    home.authProviderPath("microsoft", { hostname: "agentizable.ai" }),
+    "https://api.agentizable.ai/v1/site-auth/login/microsoft",
   );
   assert.equal(
-    home.authApiPath("/session", { hostname: "agentbounties.app" }),
-    "https://api.agentbounties.app/v1/site-auth/session",
+    home.authApiPath("/session", { hostname: "agentizable.ai" }),
+    "https://api.agentizable.ai/v1/site-auth/session",
   );
   assert.equal(home.authResultMessage("success", "github"), "Signed in with GitHub.");
   assert.match(home.authResultMessage("error", null, "invalid_state"), /could not be verified/i);
@@ -181,8 +181,8 @@ test("OAuth provider routes and callback messages are bounded", () => {
 test("bounty assistant handoffs carry one bounded initialization message", () => {
   const prompt = home.BOUNTY_POSTING_PROMPT;
   assert.equal(prompt, postingPrompt.build());
-  assert.match(prompt, /agentbounties\.app\/.well-known\/agent-bounties\.json/i);
-  assert.match(prompt, /agentbounties\.app\/llms\.txt/i);
+  assert.match(prompt, /agentizable\.ai\/.well-known\/agent-bounties\.json/i);
+  assert.match(prompt, /agentizable\.ai\/llms\.txt/i);
   assert.match(prompt, /Leave publication, legal, funding and payment consent to me/i);
   assert.match(prompt, /Leave wallet confirmations to me/i);
   assert.match(prompt, /discover WebMCP tools/i);
@@ -208,7 +208,7 @@ test("bounty assistant handoffs carry one bounded initialization message", () =>
   assert.equal(desktop.protocol, "codex:");
   assert.equal(desktop.hostname, "threads");
   assert.equal(desktop.pathname, "/new");
-  assert.equal(desktop.searchParams.get("browserUrl"), "https://agentbounties.app/post.html?from=webmcp");
+  assert.equal(desktop.searchParams.get("browserUrl"), "https://agentizable.ai/post.html?from=webmcp");
   assert.equal(new URL(gpt.webUrl).origin, "https://chatgpt.com");
   const gptPrompt = new URL(gpt.webUrl).searchParams.get("prompt");
   assert.ok(gptPrompt.startsWith(prompt));
@@ -487,7 +487,7 @@ test("partial, delayed, malformed, and non-ready evidence fail closed", () => {
 });
 
 test("saved work stays resumable without wallet statistics and rejects unsafe links or draft payment claims", () => {
-  const saved = { id: "draft:a", title: "My saved draft", status: "Saved draft", group: "drafts", continuation_url: "https://agentbounties.app/post.html?operation_id=a", payment_state: "unverified", next_actor: "you", next_action: "Continue review", updated_at: "2026-09-25T10:00:00Z" };
+  const saved = { id: "draft:a", title: "My saved draft", status: "Saved draft", group: "drafts", continuation_url: "https://agentizable.ai/post.html?operation_id=a", payment_state: "unverified", next_actor: "you", next_action: "Continue review", updated_at: "2026-09-25T10:00:00Z" };
   const view = home.accountInboxView({ data_status: "unavailable", reason: "marketplace_identity_unlinked", saved_drafts: {status: "available", items: [saved, {...saved,id:"unsafe",continuation_url:"https://attacker.example/post.html"}, {...saved,id:"fakepaid",group:"paid",payment_state:"paid"}]} });
   assert.equal(view.draftsAvailable, true);
   assert.equal(view.activityAvailable, false);

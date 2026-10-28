@@ -56,7 +56,7 @@
     if (item?.verification_ready !== true) return HOLD;
     const window = marketplace.scoringWindow(item);
     const windowText = window ? `${window.startsIso} through ${window.endsIso}` : "the committed scoring window";
-    return `Qualifying Agent Bounties demand brief
+    return `Qualifying Agentizable demand brief
 
 Parent competition: ${item.source_id}
 Entering/funding wallet: 0xYOUR_BASE_WALLET
@@ -221,9 +221,9 @@ Safety:
     const prize = marketplace.amountNumber(item.reward) || 0;
     const hosted = marketplace.amountNumber(item.cash_economics?.required_external_spend) || 0;
     const contract = item.source_id;
-    doc.title = `${item.title} | Agent Bounties`;
+    doc.title = `${item.title} | Agentizable`;
     const canonical = doc.querySelector('link[rel="canonical"]');
-    if (canonical) canonical.href = `https://agentbounties.app/competition.html?bountyContract=${encodeURIComponent(contract)}&network=${encodeURIComponent(item.network || "base-mainnet")}`;
+    if (canonical) canonical.href = `https://agentizable.ai/competition.html?bountyContract=${encodeURIComponent(contract)}&network=${encodeURIComponent(item.network || "base-mainnet")}`;
     setText(doc, "[data-competition-title]", item.title);
     setText(doc, "[data-competition-goal]", item.goal || "Review exact scoring and canonical evidence before participating.");
     setText(doc, "[data-competition-phase]", timing.label);

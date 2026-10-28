@@ -1,6 +1,6 @@
 # Return to relevant opportunities
 
-Use existing saved work first: people open [Your activity](https://agentbounties.app/#account),
+Use existing saved work first: people open [Your activity](https://agentizable.ai/#account),
 and browser assistants read [the private account inbox](webmcp-guided-marketplace.md#resume-without-prior-conversation).
 This optional local adapter helps an agent notice newly relevant public work.
 It does not read private accounts, claim work, make payments, send messages or

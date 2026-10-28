@@ -98,7 +98,7 @@ def wait(url: str, expected: dict[str, Any], broker: bool, public: bool, timeout
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--url", default="https://api.agentbounties.app/v1/base/open-competition-v2-beta3/release")
+    parser.add_argument("--url", default="https://api.agentizable.ai/v1/base/open-competition-v2-beta3/release")
     parser.add_argument("--runtime", type=Path, required=True)
     parser.add_argument("--expect-broker", choices=("true", "false"), required=True)
     parser.add_argument("--expect-public", choices=("true", "false"), required=True)

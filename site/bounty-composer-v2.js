@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const API = "https://api.agentbounties.app";
+  const API = "https://api.agentizable.ai";
   const MAX_AI_ROUNDS = 3;
   const MAX_PLAN_TASKS = 6;
   const MAX_TASK_DAYS = 30;
@@ -291,7 +291,7 @@
       return "You are signed in. Restoring your saved draft before review; nothing has been posted or funded.";
     }
     if (state.postingAccountStatus === "checking") {
-      return "Checking your Agent Bounties login. Your prepared bounty remains in this tab.";
+      return "Checking your Agentizable login. Your prepared bounty remains in this tab.";
     }
     if (state.postingAccountStatus === "unavailable") {
       return "We couldn’t confirm that your account is ready. Check the account screen, then return to this exact prepared bounty. Nothing has been posted or funded.";
@@ -733,7 +733,7 @@
     ui.input.value = prepared.goal;
     ui.prompt.textContent = state.handoffReview
       ? (state.bountyImage
-          ? "Review the exact image and bounty terms you approved in your AI conversation. Agent Bounties cannot edit or replace them."
+          ? "Review the exact image and bounty terms you approved in your AI conversation. Agentizable cannot edit or replace them."
           : "Review the exact bounty terms you approved in your AI conversation. This card uses a deterministic content-derived visual.")
       : "Review the bounty terms below. You can approve them or edit your brief.";
     const client = window.AgentBountiesWorkflow.createClient(window);
@@ -1164,7 +1164,7 @@
     if (state.handoffReview && state.bountyImage) {
       ui.approve.textContent = "Loading approved image…";
       setStatus(
-        "Loading the exact image approved in your AI conversation. Agent Bounties will not generate or substitute an image.",
+        "Loading the exact image approved in your AI conversation. Agentizable will not generate or substitute an image.",
         "pending",
       );
     }
@@ -1634,7 +1634,7 @@
       const blob = await new Promise((resolve) => canvas.toBlob(resolve,"image/png"));
       if (!blob) throw new Error("The share image could not be created.");
       const file = new File([blob],"agent-bounties-card.png",{type:"image/png"});
-      const data = { title: state.draft.title, text: `${state.draft.title} — ${formatUsdc(state.fundingUsdc)} USDC bounty draft on Agent Bounties.`, ...(state.bountyContract ? {url:`https://agentbounties.app/earn.html?bountyContract=${encodeURIComponent(state.bountyContract)}`} : {}) };
+      const data = { title: state.draft.title, text: `${state.draft.title} — ${formatUsdc(state.fundingUsdc)} USDC bounty draft on Agentizable.`, ...(state.bountyContract ? {url:`https://agentizable.ai/earn.html?bountyContract=${encodeURIComponent(state.bountyContract)}`} : {}) };
       if (navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({...data,files:[file]});
       else { const url=URL.createObjectURL(file); const link=document.createElement("a"); link.href=url; link.download=file.name; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1500); if(state.bountyContract&&navigator.clipboard) await navigator.clipboard.writeText(data.url); setStatus(state.bountyContract?"Card downloaded and the funded bounty link was copied.":"Draft card downloaded. It makes no funding claim.","success"); }
     } catch (error) { if (error?.name !== "AbortError") setStatus(error.message || String(error),"error"); }
@@ -1984,21 +1984,21 @@
     ui.missingUsdc.textContent = `${window.AgentBountiesFundingReadiness.formatUnits(required > usdc ? required - usdc : 0n)} USDC`;
     ui.fundNow.disabled = !state.approved || !provider || (!postingSession.canContinue() && (!usdcReady || !gasAvailable || Boolean(postingJournal.load()))) || postingSession.snapshot().conflict;
     ui.fundNow.textContent = postingSession.canContinue() ? "Continue funding" : "Review and post";
-    walletState.textContent = `${connection} · ${usdcReady ? "USDC available" : "USDC shortfall"}. ${gasAvailable ? "Network fees paid by Agent Bounties." : "Gas sponsorship is temporarily unavailable. Recheck to continue; no ETH purchase is required."}`;
+    walletState.textContent = `${connection} · ${usdcReady ? "USDC available" : "USDC shortfall"}. ${gasAvailable ? "Network fees paid by Agentizable." : "Gas sponsorship is temporarily unavailable. Recheck to continue; no ETH purchase is required."}`;
     for (const link of ui.onramps) { const url = new URL(link.href); url.searchParams.set("wallet", account); url.searchParams.set("operation_id", window.AgentBountiesWorkflow.createClient(window).load()?.id || ""); link.href = url.href; link.target = "_self"; }
     updatePostingTracker(); updatePostingCost();
     if (!provider) setPaymentStatus("Choose your wallet to connect it. No money will move.", "pending");
     else if (postingSession.canContinue()) setPaymentStatus("Your signed request is saved. Continue funding to reconcile this same payment; no additional funds or new authorization are needed to check its status.", "pending");
     else if (!gasAvailable) setPaymentStatus("Gas sponsorship is unavailable for this operation. Your draft is saved. Recheck to continue; no wallet transaction will be requested.", "error");
-    else if (!usdcReady) setPaymentStatus("Add the displayed Base USDC shortfall, then return here. Agent Bounties pays the network fee.", "pending");
-    else setPaymentStatus("USDC is available. Sign the exact funding authorization in your wallet; Agent Bounties pays all gas for this creation.", "success");
+    else if (!usdcReady) setPaymentStatus("Add the displayed Base USDC shortfall, then return here. Agentizable pays the network fee.", "pending");
+    else setPaymentStatus("USDC is available. Sign the exact funding authorization in your wallet; Agentizable pays all gas for this creation.", "success");
   }
 
   function updatePostingCost(fees = null, request = null) {
     if (state.fundingUsdc == null) return;
     const cost = `Bounty budget — rewards: ${formatUsdc(state.fundingUsdc)} USDC + platform fee: 0.00 USDC.`;
     const debit = request ? ` This request transfers ${window.AgentBountiesFundingReadiness.formatUnits(request.transferUsdcUnits)} USDC.` : "";
-    const gas = state.gasSponsored ? " Network fee paid by Agent Bounties: 0 ETH charged to you." : fees?.estimatedTotalWei != null
+    const gas = state.gasSponsored ? " Network fee paid by Agentizable: 0 ETH charged to you." : fees?.estimatedTotalWei != null
       ? ` Estimated network fee for this request: ${window.AgentBountiesFundingReadiness.formatUnits(fees.estimatedTotalWei, 18, 18)} ETH. Your wallet confirms the final network fee; this is not a guaranteed maximum.`
       : " Gas sponsorship is checked before signing. Posting pauses if it is unavailable; you will not be asked to pay gas.";
     for (const selector of ["[data-posting-cost]", "[data-wallet-cost]"]) { const output = document.querySelector(selector); if (output) output.textContent = cost + debit + gas; }
@@ -2149,7 +2149,7 @@
     postingJournal.reserveHostedRelay();
     await postingSession.flush({ requireServer: true });
     await assertPostingBinding();
-    setPaymentStatus("Agent Bounties is verifying your signed request on Base and paying the network fee. You do not need ETH.", "pending");
+    setPaymentStatus("Agentizable is verifying your signed request on Base and paying the network fee. You do not need ETH.", "pending");
     const response = await fetch(`${api}/v1/base/autonomous-bounties/creation-relay`, {
       method: "POST", headers: { "content-type": "application/json" }, cache: "no-store",
       body: JSON.stringify({ network: "base-mainnet", create: saved.create, signature: signatureParts(saved.signature), authorization_valid_before: saved.authorization_valid_before }),

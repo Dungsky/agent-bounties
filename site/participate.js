@@ -173,7 +173,7 @@
       put("[data-work-reward]", `${Number(item.solver_reward) / 1e6} USDC`);
       put("[data-work-bond]", `${Number(item.claim_bond) / 1e6} USDC`);
       put("[data-work-funding]", `${Number(item.funded_amount) / 1e6} / ${Number(item.target_amount) / 1e6} USDC`);
-      put("[data-work-costs]", "The claim bond is at risk if you miss the work deadline. Agent Bounties pays transaction gas. Any required child-bounty funding is part of your approved USDC commitment.");
+      put("[data-work-costs]", "The claim bond is at risk if you miss the work deadline. Agentizable pays transaction gas. Any required child-bounty funding is part of your approved USDC commitment.");
       const criteria = find("[data-work-criteria]"); criteria.replaceChildren();
       for (const criterion of terms.acceptance_criteria) { const li = doc.createElement("li"); li.textContent = criterion; criteria.append(li); }
       const events = scopeEvents(item.events || []);
@@ -200,9 +200,9 @@
         intent = await client.progress(intentId);
         if (lower(intent.bounty_contract) !== contract || intent.network !== network) throw new Error("This review belongs to another bounty or network.");
         find("[data-action-review]").hidden = (intent.status !== "review_required" && !record.submissionRequest && !record.sponsoredRequest?.signature) || intent.action === "verify" || Boolean(record.finalHash || record.sending);
-        put("[data-review-summary]", intent.action === "complete" ? "Review the exact public artifact and evidence, then sign your submission. Agent Bounties pays gas."
-          : intent.action === "fund" ? `Contribute exactly ${intent.amount_base_units / 1e6} USDC to this bounty. Sign the exact contribution; Agent Bounties pays gas.`
-          : `Claim this work with a ${Number(item.claim_bond) / 1e6} USDC bond. Sign the exact bond authorization; Agent Bounties pays gas.`);
+        put("[data-review-summary]", intent.action === "complete" ? "Review the exact public artifact and evidence, then sign your submission. Agentizable pays gas."
+          : intent.action === "fund" ? `Contribute exactly ${intent.amount_base_units / 1e6} USDC to this bounty. Sign the exact contribution; Agentizable pays gas.`
+          : `Claim this work with a ${Number(item.claim_bond) / 1e6} USDC bond. Sign the exact bond authorization; Agentizable pays gas.`);
         find("[data-public-evidence-note]").hidden = intent.action !== "complete";
         put("[data-action-details]", JSON.stringify(intent.details, null, 2));
         const help = new URL("onramp.html", win.location.href);
@@ -289,7 +289,7 @@
       if (record.submissionRequest || record.sponsoredRequest?.signature) {
         calls = []; submission = record.submission;
         find("[data-wallet-confirm]").disabled = false;
-        put("[data-wallet-status]", "Your signed request is preserved. Continue with the same signature; Agent Bounties pays gas.");
+        put("[data-wallet-status]", "Your signed request is preserved. Continue with the same signature; Agentizable pays gas.");
         return;
       }
       if (intent.status !== "review_required") throw new Error("Refresh the current action before preparing a new signature.");
@@ -327,7 +327,7 @@
       calls = []; record.calls = []; record.wallet = wallet; record.submission = submission;
       record.reviewedIntent = { action: intent.action, network, bounty_contract: contract, details: intent.details, amount_base_units: intent.amount_base_units };
       saveRecord();
-      put("[data-wallet-status]", submission?.checked_artifact ? "Your files were checked. Review the file hash below, then sign. This does not mean the work passed its tests." : "Sign the exact action once. Agent Bounties pays the network fee.");
+      put("[data-wallet-status]", submission?.checked_artifact ? "Your files were checked. Review the file hash below, then sign. This does not mean the work passed its tests." : "Sign the exact action once. Agentizable pays the network fee.");
       find("[data-wallet-confirm]").disabled = false;
     }
     const providers = [];

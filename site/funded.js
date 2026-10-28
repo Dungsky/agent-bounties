@@ -80,7 +80,7 @@
           // Keep the child prerequisites visible until the person chooses where to continue.
           stop();
         }
-        doc.title = "Bounty funded | Agent Bounties";
+        doc.title = "Bounty funded | Agentizable";
         get("[data-funded-heading]").focus({ preventScroll: true });
         if (!cancelled && timer === null && item.status === "claimable" && item.verification_ready === true) {
           get("[data-funded-redirect]").hidden = false;

@@ -5,7 +5,7 @@ platform-reported figures, not audited market-share claims.
 
 ## Executive View
 
-Agent Bounties should remain an open, wallet-neutral outcome market for
+Agentizable should remain an open, wallet-neutral outcome market for
 verifiable digital work. Its defensible center is the combination of canonical
 escrow, explicit verification policy, machine-first discovery, evidence-bound
 reputation, and completed payment loops. Competitors show that distribution and
@@ -244,7 +244,7 @@ Sources: [OpenServ Agent Builder](https://www.openserv.ai/agent-builder),
   contract allowlists.
 - **Adoption evidence:** the observed marketplace listed dozens of services;
   listing is curated and compliance-gated.
-- **Implement/integrate:** publish Agent Bounties as outcome infrastructure in
+- **Implement/integrate:** publish Agentizable as outcome infrastructure in
   the marketplace; support Circle wallet policy guidance; use Gateway only for
   service/nanopayment settlement, never as proof that a bounty outcome paid.
 

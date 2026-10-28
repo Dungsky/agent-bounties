@@ -38,7 +38,7 @@ class Reader:
         request = urllib.request.Request(url, headers={
             "Accept": accept or "application/vnd.github+json",
             "Authorization": "Bearer " + self.token,
-            "User-Agent": "AgentBounties-PublicMetrics/1.0",
+            "User-Agent": "Agentizable-PublicMetrics/1.0",
             "X-GitHub-Api-Version": "2022-11-28",
         })
         with self.opener.open(request, timeout=30) as response:

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const API_URL = "https://api.agentbounties.app/v1/analytics/events";
+  const API_URL = "https://api.agentizable.ai/v1/analytics/events";
   const VISITOR_KEY = "bountyboard.analytics.visitor.v1";
   const SESSION_KEY = "bountyboard.analytics.session.v1";
   const ATTRIBUTION_KEY = "bountyboard.analytics.attribution.v1";
@@ -9,6 +9,8 @@
   const GOOGLE_CONSENT_KEY = "agent-bounties.analytics.google-consent.v1";
   const VISITOR_TTL_MS = 90 * 24 * 60 * 60 * 1000;
   const HOSTS = new Set([
+    "agentizable.ai",
+    "www.agentizable.ai",
     "agentbounties.app",
     "www.agentbounties.app",
     "bountyboard.global",
@@ -204,7 +206,7 @@
     notice.dataset.googleAnalyticsConsent = "";
     notice.setAttribute("aria-label", "Optional analytics choice");
     notice.innerHTML =
-      '<p><strong>Help improve Agent Bounties?</strong> Allow Google Analytics for anonymous traffic and page-use measurement. Wallets, bounty evidence, and payment data are not sent.</p>' +
+      '<p><strong>Help improve Agentizable?</strong> Allow Google Analytics for anonymous traffic and page-use measurement. Wallets, bounty evidence, and payment data are not sent.</p>' +
       '<div class="actions"><button class="button primary" type="button" data-google-analytics-allow>Allow</button><button class="button secondary" type="button" data-google-analytics-deny>No thanks</button><span>Optional and privacy-signal aware</span></div>';
     document.body.appendChild(notice);
     notice.querySelector("[data-google-analytics-allow]").addEventListener("click", function () {
@@ -296,7 +298,7 @@
   function handoffUrl(value) {
     try {
       const url = new URL(value);
-      if (url.origin !== "https://agentbounties.app" || url.username || url.password) return value;
+      if (url.origin !== "https://agentizable.ai" || url.username || url.password) return value;
       if (!enabled()) {
         if (privacySignalEnabled() || explicitOptOut()) url.searchParams.set("analytics", "off");
         return url.href;
@@ -445,7 +447,7 @@
     try {
       const target = new URL(link.href, window.location.href);
       if (
-        target.hostname === "api.agentbounties.app" &&
+        target.hostname === "api.agentizable.ai" &&
         /^\/v1\/opportunities\/feed\.(rss|atom|json)$/.test(target.pathname)
       ) {
         track("opportunity_feed_click");

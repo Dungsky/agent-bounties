@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build deterministic, bounded recovery plans for Agent Bounties.
+"""Build deterministic, bounded recovery plans for Agentizable.
 
 The controller can restore availability and rebuild read models from canonical
 evidence. It never signs, funds, verifies, settles, rewrites financial state,

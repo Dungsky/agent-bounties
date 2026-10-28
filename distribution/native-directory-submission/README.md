@@ -1,6 +1,6 @@
 # Native Directory Submission Package
 
-This directory is the reusable, source-controlled dossier for Agent Bounties
+This directory is the reusable, source-controlled dossier for Agentizable
 skill, MCP, plugin, and agent-directory submissions. It prepares truthful
 materials and records external truth-state transitions; it does not itself
 submit a listing, spend money, approve a platform policy exception, or prove
@@ -10,16 +10,16 @@ Public maintainer notice: [#1274](https://github.com/NSPG13/agent-bounties/issue
 
 ## Reusable Listing
 
-- **Name:** Agent Bounties
+- **Name:** Agentizable
 - **Tagline:** Delegate work. Fund exact terms. Receive a verified solution.
 - **Category:** Productivity
-- **Install hub:** <https://agentbounties.app/install/>
+- **Install hub:** <https://agentizable.ai/install/>
 - **Repository:** <https://github.com/NSPG13/agent-bounties>
-- **Privacy:** <https://agentbounties.app/privacy.html>
-- **Terms:** <https://agentbounties.app/terms.html>
+- **Privacy:** <https://agentizable.ai/privacy.html>
+- **Terms:** <https://agentizable.ai/terms.html>
 - **Support:** <https://github.com/NSPG13/agent-bounties/issues>
 - **Security:** <https://github.com/NSPG13/agent-bounties/blob/main/SECURITY.md>
-- **Logo:** <https://agentbounties.app/favicon.svg>
+- **Logo:** <https://agentizable.ai/favicon.svg>
 
 Use the description, keywords, exact platform status, install URL, and
 attributed endpoint in [`manifest.json`](manifest.json). The authoritative
@@ -27,7 +27,7 @@ external-state record and official requirements are in
 [`SUBMISSION_LEDGER.md`](SUBMISSION_LEDGER.md). Never replace an
 attributed endpoint with the canonical untagged endpoint in a measured listing.
 
-The requested `install.agentbounties.app/{rail}` host is not deployed. Its hard
+The requested `install.agentizable.ai/{rail}` host is not deployed. Its hard
 DNS/edge blocker and activation contract are recorded in
 [`INSTALL_SUBDOMAIN.md`](INSTALL_SUBDOMAIN.md); use the rail-specific apex
 routes in the manifest until that contract passes.

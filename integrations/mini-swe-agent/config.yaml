@@ -1,7 +1,7 @@
 # mini-SWE-agent paid-work environment
 #
 # Versioned configuration for selecting and completing canonically claimable
-# coding bounties on Agent Bounties (Base mainnet).
+# coding bounties on Agentizable (Base mainnet).
 #
 # WALLET SAFETY IS A HARD REQUIREMENT OF THIS CONFIG:
 # this environment never handles key material. It prepares transaction intents
@@ -30,8 +30,8 @@ invocation:
 # The inventory is the discovery snapshot the selector reasons over: the set of
 # canonical opportunities with their lifecycle, reward, bond and margin fields.
 inventory:
-  source: https://api.agentbounties.app/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base
-  canonical_events: https://api.agentbounties.app/v1/base/autonomous-bounties/events
+  source: https://api.agentizable.ai/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base
+  canonical_events: https://api.agentizable.ai/v1/base/autonomous-bounties/events
   network: base-mainnet
   required_fields:
     - opportunity_id
@@ -49,8 +49,8 @@ inventory:
 # Claim planning is advisory: this environment emits the exact next action and
 # never broadcasts. Signing happens outside, under operator control.
 claim:
-  plan_endpoint: https://api.agentbounties.app/v1/base/autonomous-bounties/claim-plan
-  expire_endpoint: https://api.agentbounties.app/v1/base/autonomous-bounties/expire-claim-plan
+  plan_endpoint: https://api.agentizable.ai/v1/base/autonomous-bounties/claim-plan
+  expire_endpoint: https://api.agentizable.ai/v1/base/autonomous-bounties/expire-claim-plan
   bond_currency: USDC
   bond_decimals: 6
   respect_exclusive_claimants: true
@@ -115,7 +115,7 @@ settlement:
     Only a confirmed canonical BountySettled event proves payment. A passing
     verifier run, a plan, a signature, a transaction hash, a database row or an
     AI assistant's assertion is not settlement.
-  verify_via: https://api.agentbounties.app/v1/base/autonomous-bounties/events
+  verify_via: https://api.agentizable.ai/v1/base/autonomous-bounties/events
   on_reject: >
     Read the verifier output, fix the specific failing criterion, and resubmit
     within the claim window. Do not resubmit unchanged work.
@@ -141,7 +141,7 @@ canonical_requirements:
     hexadecimal contract address (0x + 40 HEX digits — "0x" plus 40 arbitrary
     characters is not an address). Absence of contrary evidence is not evidence
     of canonicity.
-  ready_to_earn_view: https://api.agentbounties.app/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base
+  ready_to_earn_view: https://api.agentizable.ai/v1/opportunities?network=base-mainnet&view=ready_to_earn&source_type=canonical_base
   claimability: >
     work_state must be exactly `claimable`. Upstream emits `claimable` only when
     the bounty is also fully funded, verification-ready and free of validation

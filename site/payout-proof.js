@@ -5,7 +5,7 @@
   if (root) root.AgentBountiesPayoutProof = api;
 })(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
-  const API = "https://api.agentbounties.app";
+  const API = "https://api.agentizable.ai";
   const PATH = "/v1/metrics/platform/payouts";
   const MAX_ROWS = 5000, MAX_PAGES = 25, MAX_BYTES = 262144;
   const FIELDS = ["solver_base_units", "verifier_base_units", "keeper_base_units", "bonus_base_units", "total_base_units"];

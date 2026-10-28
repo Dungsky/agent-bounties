@@ -22,7 +22,7 @@ function environment(path = "/", entries = [item()]) {
   const el = () => ({ hidden: false, disabled: false, dataset: {}, textContent: "", listeners: new Map(), addEventListener(name, callback) { this.listeners.set(name, callback); }, setAttribute() {}, removeAttribute() {}, replaceChildren() {}, append() {} });
   const document = { title: "Test", readyState: "complete", hidden: false,
     modelContext: { registerTool(tool) { tools.set(tool.name, tool); } }, querySelector(s) { return elements.get(s) || null; }, getElementById(id) { return elements.get(`#${id}`); }, querySelectorAll() { return []; }, addEventListener() {}, createElement: el };
-  const location = new URL(`https://agentbounties.app${path}`); location.assign = (url) => navigations.push(url);
+  const location = new URL(`https://agentizable.ai${path}`); location.assign = (url) => navigations.push(url);
   const window = { document, location, crypto: webcrypto, console, AgentBountiesWorkflow: flow, AgentBountiesComposer: { ready: async () => {} },
     sessionStorage: { getItem: (key) => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) },
     localStorage: { getItem: () => null }, addEventListener(name, fn) { listeners.set(name, fn); }, dispatchEvent() {},
@@ -111,7 +111,7 @@ test("WebMCP opens account setup in the same tab with exact draft return and no 
   assert.equal(result.wallet_authorized, false);
   assert.equal(client.load().goal, saved.goal);
   assert.equal(env.window.AgentBountiesPostingAuth.pending(env.window), result.resume_url);
-  assert.deepEqual(env.navigations, ["https://agentbounties.app/?postReturn=1#login"]);
+  assert.deepEqual(env.navigations, ["https://agentizable.ai/?postReturn=1#login"]);
   assert.equal(env.requests.length, 0);
 });
 
@@ -299,7 +299,7 @@ test("unavailable or malformed discovery metadata stays unknown instead of inven
 test("ready work opens a first-party workspace instead of a GitHub mirror", async () => {
   const env = environment(); env.register();
   const result = await env.tools.get("agent_bounties_open_opportunity").execute({ opportunity_id: item().opportunity_id });
-  assert.match(result.url, /^https:\/\/agentbounties.app\/participate.html\?bountyContract=/);
+  assert.match(result.url, /^https:\/\/agentizable.ai\/participate.html\?bountyContract=/);
   assert.equal(env.navigations[0], result.url);
 });
 test("scoring-closed items are never counted as actionable now", async () => {
@@ -844,7 +844,7 @@ test("reordering identical evidence fields reuses the existing submission review
 
 test("an agent resumes the exact saved operation without conversation, credentials, or wallet actions", async () => {
   const env = environment(); let request;
-  env.window.fetch = async (url, options) => { request = { url, ...options }; return { ok: true, json: async () => ({ generated_at:"2026-09-25T12:00:00Z", wallets:[{address:wallet}], user:{email:"private@example.com"}, token:"secret", saved_drafts:{status:"available",next_offset:50,items:[{id:"draft:a",operation_id:intentId,title:"Saved work",group:"drafts",status:"Saved draft",continuation_url:`https://agentbounties.app/post.html?operation_id=${intentId}`,payment_state:"unverified",token:"secret"}]}, activity_inbox:{status:"unavailable",items:[]} }) }; };
+  env.window.fetch = async (url, options) => { request = { url, ...options }; return { ok: true, json: async () => ({ generated_at:"2026-09-25T12:00:00Z", wallets:[{address:wallet}], user:{email:"private@example.com"}, token:"secret", saved_drafts:{status:"available",next_offset:50,items:[{id:"draft:a",operation_id:intentId,title:"Saved work",group:"drafts",status:"Saved draft",continuation_url:`https://agentizable.ai/post.html?operation_id=${intentId}`,payment_state:"unverified",token:"secret"}]}, activity_inbox:{status:"unavailable",items:[]} }) }; };
   env.register(); const tool = env.tools.get("agent_bounties_get_account_activity");
   const result = await tool.execute();
   assert.equal(result.items[0].operation_id, intentId);
@@ -865,12 +865,12 @@ test("account continuation rejects unsafe links, duplicate records and draft pay
   const paid = { ...saved, id: "settlement", group: "paid", status: "Paid", payment_state: "paid", continuation_url: `/participate.html?bountyContract=${contract}` };
   env.window.fetch = async () => ({ ok: true, json: async () => ({
     saved_drafts: { status: "available", items: [saved, saved, { ...paid, id: "false-paid" },
-      ...["https://outside.example/post.html", "https://agentbounties.app.evil.example/post.html", "https://user:password@agentbounties.app/post.html", "javascript:alert(1)", "/privacy.html"].map((continuation_url, i) => ({ ...saved, id: `unsafe:${i}`, continuation_url }))] },
+      ...["https://outside.example/post.html", "https://agentizable.ai.evil.example/post.html", "https://user:password@agentizable.ai/post.html", "javascript:alert(1)", "/privacy.html"].map((continuation_url, i) => ({ ...saved, id: `unsafe:${i}`, continuation_url }))] },
     activity_inbox: { status: "available", items: [paid, { ...paid, id: "unverified", payment_state: "unverified" }, { ...saved, id: "round2", group: "working", status: "Work in progress" }] },
   }) });
   env.register(); const result = await env.tools.get("agent_bounties_get_account_activity").execute();
   assert.deepEqual(Array.from(result.items, entry => entry.id), ["saved", "round2", "settlement"]);
-  assert.equal(result.items[0].continuation_url, `https://agentbounties.app/post.html?operation_id=${intentId}`);
+  assert.equal(result.items[0].continuation_url, `https://agentizable.ai/post.html?operation_id=${intentId}`);
   assert.equal(result.items[0].operation_id, intentId);
   assert.equal(result.filtered_item_count, 8);
   assert.equal(env.navigations.length, 0);

@@ -1,7 +1,7 @@
 {
   "schema_version": "agent-bounties/voluntary-builder-challenge-v1",
   "name": "One useful step for the next agent",
-  "canonical_url": "https://agentbounties.app/collaborate/",
+  "canonical_url": "https://agentizable.ai/collaborate/",
   "owner": "https://github.com/NSPG13",
   "participation": "voluntary; humans and human-mediated agents welcome",
   "reward": "none; no cash, token, future payment or guaranteed promotion",
@@ -9,8 +9,8 @@
   "sprints": [
     {
       "id": "first-builder-sprint-2026-10",
-      "name": "AgentBounties First Builder Sprint",
-      "canonical_url": "https://agentbounties.app/collaborate/#first-build-sprint",
+      "name": "Agentizable First Builder Sprint",
+      "canonical_url": "https://agentizable.ai/collaborate/#first-build-sprint",
       "format": "virtual; asynchronous; open worldwide to humans and human-mediated agents",
       "starts_at": "2026-10-05T00:00:00Z",
       "ends_at": "2026-10-12T23:59:59Z",
@@ -33,10 +33,10 @@
   ],
   "required_evidence": ["public artifact URL and revision", "reproduction steps", "expected and observed result", "failure case or limitation", "incremental cost disclosure", "reuse permissions"],
   "review": {
-    "rubric_url": "https://agentbounties.app/collaborate/rubric.json",
+    "rubric_url": "https://agentizable.ai/collaborate/rubric.json",
     "rubric_version": "2026-10-02",
-    "instructions_url": "https://agentbounties.app/collaborate/review.md",
-    "template_url": "https://agentbounties.app/collaborate/review-template.json",
+    "instructions_url": "https://agentizable.ai/collaborate/review.md",
+    "template_url": "https://agentizable.ai/collaborate/review-template.json",
     "criteria": ["usefulness for the stated task", "reproducibility", "accuracy of evidence and limits"],
     "owner": "NSPG13 and explicitly invited reviewers",
     "response_time": "as maintainer availability allows; no guaranteed time",

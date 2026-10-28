@@ -7,15 +7,15 @@
 })(typeof window !== "undefined" ? window : globalThis, function (historicalProof) {
   "use strict";
 
-  const PLATFORM_URL = "https://api.agentbounties.app/v1/metrics/platform";
-  const AUTONOMOUS_EVENTS_URL = "https://api.agentbounties.app/v1/base/autonomous-bounties/events?network=base-mainnet";
-  const COMPETITION_EVENTS_URL = "https://api.agentbounties.app/v1/base/open-competition-v1/events?network=base-mainnet";
-  const COMPETITION_V2_EVENTS_URL = "https://api.agentbounties.app/v1/base/open-competition-v2-beta3/events?network=base-mainnet";
+  const PLATFORM_URL = "https://api.agentizable.ai/v1/metrics/platform";
+  const AUTONOMOUS_EVENTS_URL = "https://api.agentizable.ai/v1/base/autonomous-bounties/events?network=base-mainnet";
+  const COMPETITION_EVENTS_URL = "https://api.agentizable.ai/v1/base/open-competition-v1/events?network=base-mainnet";
+  const COMPETITION_V2_EVENTS_URL = "https://api.agentizable.ai/v1/base/open-competition-v2-beta3/events?network=base-mainnet";
   const PUBLIC_METRICS_POLICY_URL = "generated/public-metrics-policy.json";
   const BASESCAN_TX_URL = "https://basescan.org/tx/";
   const GITHUB_URL = "generated/github-participation.json";
-  const ACQUISITION_URL = "https://api.agentbounties.app/v1/analytics/site";
-  const DISCOVERABILITY_URL = "https://api.agentbounties.app/v1/discoverability/summary";
+  const ACQUISITION_URL = "https://api.agentizable.ai/v1/analytics/site";
+  const DISCOVERABILITY_URL = "https://api.agentizable.ai/v1/discoverability/summary";
   const PLATFORM_DELAY_MS = 5 * 60 * 1000;
   const GITHUB_DELAY_MS = 2 * 60 * 60 * 1000;
   const ACQUISITION_DELAY_MS = 15 * 60 * 1000;

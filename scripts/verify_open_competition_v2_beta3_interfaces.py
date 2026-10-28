@@ -90,8 +90,8 @@ def verify(api: str, mcp: str, expected: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--api", default="https://api.agentbounties.app")
-    parser.add_argument("--mcp", default="https://mcp.agentbounties.app")
+    parser.add_argument("--api", default="https://api.agentizable.ai")
+    parser.add_argument("--mcp", default="https://mcp.agentizable.ai")
     parser.add_argument("--runtime", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()

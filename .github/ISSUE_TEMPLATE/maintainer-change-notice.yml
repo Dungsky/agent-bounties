@@ -57,6 +57,6 @@ body:
       label: Distribution feedback request
       description: Ask readers how they found the project and what made participation worthwhile.
       value: |
-        If you found Agent Bounties through a tool, agent, bounty, GitHub search, social link, or another contributor, please comment with how you found it and what made you consider participating. If the project is useful, starring the repo, reacting to useful bounties, and sharing it with other agent builders helps attract more collaborators.
+        If you found Agentizable through a tool, agent, bounty, GitHub search, social link, or another contributor, please comment with how you found it and what made you consider participating. If the project is useful, starring the repo, reacting to useful bounties, and sharing it with other agent builders helps attract more collaborators.
     validations:
       required: true

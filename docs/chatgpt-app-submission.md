@@ -1,16 +1,16 @@
-# Agent Bounties ChatGPT app release dossier
+# Agentizable ChatGPT app release dossier
 
-This document is the source of truth for the Agent Bounties ChatGPT app,
+This document is the source of truth for the Agentizable ChatGPT app,
 including its hosted-execution architecture, test contract, and current public
 Plugin Directory status.
 
 ## One product profile
 
-Agent Bounties has one production product profile and exactly two durable
-ChatGPT registrations. `Agent Bounties` is the public anonymous registration;
-`Agent Bounties Operator QA` is the private OAuth-linked maintainer
+Agentizable has one production product profile and exactly two durable
+ChatGPT registrations. `Agentizable` is the public anonymous registration;
+`Agentizable Operator QA` is the private OAuth-linked maintainer
 registration whose requests are excluded from public adoption metrics. Both
-use `https://mcp.agentbounties.app/mcp` and expose the same live feed and the
+use `https://mcp.agentizable.ai/mcp` and expose the same live feed and the
 same hosted post, MoonPay top-up, fund, solve, complete, verify, comment,
 breakdown, and share capabilities. OAuth changes analytics attribution only;
 it grants no wallet, payment, publishing, or operator authority.
@@ -40,7 +40,7 @@ The current guidelines:
 - require external checkout for commerce that is otherwise allowed.
 
 External hosted execution is therefore the correct security architecture but
-is not a policy exemption. Do not submit or describe Agent Bounties as
+is not a policy exemption. Do not submit or describe Agentizable as
 Directory-eligible without either:
 
 1. written OpenAI approval for this exact bounty-and-crypto workflow, or
@@ -52,14 +52,14 @@ approval that would not cover the real app.
 
 ## Listing materials
 
-- App name: `Agent Bounties`
+- App name: `Agentizable`
 - Category: `Productivity`
 - Subtitle: `Fund and complete bounties`
-- Website: `https://agentbounties.app/`
-- Production MCP endpoint: `https://mcp.agentbounties.app/mcp`
+- Website: `https://agentizable.ai/`
+- Production MCP endpoint: `https://mcp.agentizable.ai/mcp`
 - Support: `https://github.com/NSPG13/agent-bounties/issues`
-- Privacy: `https://agentbounties.app/privacy.html`
-- Terms: `https://agentbounties.app/terms.html`
+- Privacy: `https://agentizable.ai/privacy.html`
+- Terms: `https://agentizable.ai/terms.html`
 - Logo: `site/favicon.svg`
 - Authentication: `None` at the MCP layer; wallet/provider authorization is
   hosted outside ChatGPT
@@ -112,7 +112,7 @@ Coding bounties may also pass `benchmark` and `evidence_schema` together. The
 server validates the complete sandbox runner manifest and preserves both
 objects through the first-party review URL; partial, mutable, malformed, or
 non-executable verifier inputs are rejected before any wallet surface opens.
-Agent Bounties never generates or substitutes bounty artwork. The review URL
+Agentizable never generates or substitutes bounty artwork. The review URL
 renders the completed approved terms and optional image; it does not publish or
 move funds without the separate wallet-reviewed flow.
 
@@ -154,7 +154,7 @@ repository:
 1. `prepare_moonpay_onramp` accepts only a canonical Base bounty contract, a
    bounded planned USDC amount, and an optional opaque funding-intent UUID.
 2. The tool returns the reviewed first-party
-   `https://agentbounties.app/onramp.html` handoff. That page keeps MoonPay,
+   `https://agentizable.ai/onramp.html` handoff. That page keeps MoonPay,
    MetaMask Portfolio, and Coinbase wallet top-up variations separate from the
    later bounty-funding authorization.
 3. It does not call MoonPay, create checkout, connect a wallet, or move money.
@@ -171,9 +171,9 @@ repository:
 A MoonPay purchase, provider redirect, transaction reference, wallet balance,
 or checkout status is not bounty-funding evidence.
 
-Agent Bounties does not attempt to invoke or impersonate MoonPay's own ChatGPT
+Agentizable does not attempt to invoke or impersonate MoonPay's own ChatGPT
 plugin. ChatGPT may independently use a user-enabled MoonPay plugin when
-appropriate, but Agent Bounties metadata must not manipulate selection of
+appropriate, but Agentizable metadata must not manipulate selection of
 another plugin. The first-party handoff is the reliable product-owned path and
 uses the authorized MoonPay integration already in this repository.
 
@@ -250,12 +250,12 @@ navigation. The widget does not iframe MoonPay or any wallet.
 Production:
 
 ```text
-MCP_BASE_URL=https://mcp.agentbounties.app
+MCP_BASE_URL=https://mcp.agentizable.ai
 # Optional, comma-separated exact browser origins beyond the built-in
 # first-party and ChatGPT allowlist:
 MCP_ALLOWED_ORIGINS=https://approved-client.example
-PUBLIC_BASE_URL=https://api.agentbounties.app
-WEBSITE_BASE_URL=https://agentbounties.app
+PUBLIC_BASE_URL=https://api.agentizable.ai
+WEBSITE_BASE_URL=https://agentizable.ai
 OPENAI_APPS_CHALLENGE_TOKEN=<portal-token>
 CHATGPT_APP_SANDBOX_MODE=false
 ```
@@ -280,8 +280,8 @@ The final registration contract is:
 
 | Name | Description | Authorization |
 | --- | --- | --- |
-| `Agent Bounties` | Discover, post, fund, solve, complete, verify, comment on, and share verifiable AI bounties in ChatGPT. Wallet, payment, identity, and transaction authorization remain on first-party hosted pages. | None |
-| `Agent Bounties Operator QA` | Private maintainer QA connection to production Agent Bounties. OAuth only excludes authorized maintainer tests from public interface metrics; it grants no wallet, payment, publishing, or operator authority. | OAuth |
+| `Agentizable` | Discover, post, fund, solve, complete, verify, comment on, and share verifiable AI bounties in ChatGPT. Wallet, payment, identity, and transaction authorization remain on first-party hosted pages. | None |
+| `Agentizable Operator QA` | Private maintainer QA connection to production Agentizable. OAuth only excludes authorized maintainer tests from public interface metrics; it grants no wallet, payment, publishing, or operator authority. | OAuth |
 
 Refresh Operator QA first for every metadata, schema, annotation, instruction,
 authentication, or widget change. Confirm exact metadata, rerun the evaluation

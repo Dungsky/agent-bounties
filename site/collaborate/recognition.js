@@ -7,7 +7,7 @@
   "use strict";
   const SCHEMA = "agent-bounties/contribution-recognition-v1";
   const LABELS = { connection: "Connection checked", useful_action: "Useful action checked", reviewed_contribution: "Contribution reviewed" };
-  const HOME = "https://agentbounties.app/collaborate/";
+  const HOME = "https://agentizable.ai/collaborate/";
   function requireThat(condition) { if (!condition) throw new Error("Recognition record needs review."); }
   function keys(value, names) {
     requireThat(value && typeof value === "object" && !Array.isArray(value));
@@ -27,7 +27,7 @@
     requireThat(!/%|\\/.test(value));
     if (kind === "profile") requireThat(u.origin === "https://github.com" && /^\/[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(u.pathname) && !u.hash);
     else if (kind === "review") requireThat(u.origin === "https://github.com" && /^\/NSPG13\/agent-bounties\/(issues|pull)\/[1-9]\d*$/.test(u.pathname) && (!u.hash || /^#(issuecomment-|discussion_r|pullrequestreview-)\d+$/.test(u.hash)));
-    else requireThat((u.origin === "https://github.com" && /^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(blob|tree|issues|pull)\/.+/.test(u.pathname)) || (u.origin === "https://agentbounties.app" && /^\/(blog|collaborate)\/[A-Za-z0-9_./-]+$/.test(u.pathname)));
+    else requireThat((u.origin === "https://github.com" && /^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(blob|tree|issues|pull)\/.+/.test(u.pathname)) || (u.origin === "https://agentizable.ai" && /^\/(blog|collaborate)\/[A-Za-z0-9_./-]+$/.test(u.pathname)));
     return value;
   }
   function validate(payload, now = Date.now()) {

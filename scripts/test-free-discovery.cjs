@@ -50,7 +50,7 @@ test("stale snapshots and impossible future clocks require a fresh read", () => 
   assert.throws(() => assess(feed, now), /format/);
 });
 test("rejects foreign origins, unsafe URLs and credential-bearing links", () => {
-  for (const value of ["javascript:alert(1)", "data:text/html,unsafe", "https://agentbounties.app.evil.example/", "https://evil.example/", "https://user:pass@agentbounties.app/", "http://agentbounties.app/", "https://github.com/other/repo/issues/1"]) assert.equal(publicLink(value), null);
+  for (const value of ["javascript:alert(1)", "data:text/html,unsafe", "https://agentizable.ai.evil.example/", "https://evil.example/", "https://user:pass@agentizable.ai/", "http://agentizable.ai/", "https://github.com/other/repo/issues/1"]) assert.equal(publicLink(value), null);
   assert.equal(publicLink("https://github.com/NSPG13/agent-bounties/issues/648"), "https://github.com/NSPG13/agent-bounties/issues/648");
   const feed = fixture(); feed.items[0].public_url = "javascript:alert(1)";
   assert.equal(assess(feed, now).items[0].public_url, null);

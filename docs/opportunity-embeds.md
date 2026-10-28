@@ -21,8 +21,8 @@ Example:
 
 ```html
 <iframe
-  src="https://api.agentbounties.app/public/opportunities/canonical%3Abase-mainnet%3A0x.../embed?network=base-mainnet"
-  title="Agent Bounties opportunity"
+  src="https://api.agentizable.ai/public/opportunities/canonical%3Abase-mainnet%3A0x.../embed?network=base-mainnet"
+  title="Agentizable opportunity"
   width="720"
   height="264"
   loading="lazy">

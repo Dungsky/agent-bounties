@@ -1,6 +1,6 @@
 # Hosted Cloud Agent Operations
 
-Agent Bounties can turn an unstructured digital-work objective into measurable
+Agentizable can turn an unstructured digital-work objective into measurable
 draft bounty terms without running a model on a contributor's computer.
 
 ## Runtime Boundary
@@ -87,14 +87,14 @@ payment.
 
 Render runs the API, MCP service, Postgres, and Base indexer. GitHub Actions
 runs the scheduled inventory, verifier, relay, and deployment-control loops.
-GitHub Pages serves `agentbounties.app`. Turning off a maintainer workstation
+GitHub Pages serves `agentizable.ai`. Turning off a maintainer workstation
 must not affect any of those paths.
 
 Verify after each production deployment:
 
 ```bash
-curl https://api.agentbounties.app/health
-curl https://api.agentbounties.app/v1/cloud-agent/readiness
-curl "https://api.agentbounties.app/v1/base/autonomous-bounties/inventory-summary?network=base-mainnet&claimable_only=true"
-curl https://mcp.agentbounties.app/tools
+curl https://api.agentizable.ai/health
+curl https://api.agentizable.ai/v1/cloud-agent/readiness
+curl "https://api.agentizable.ai/v1/base/autonomous-bounties/inventory-summary?network=base-mainnet&claimable_only=true"
+curl https://mcp.agentizable.ai/tools
 ```

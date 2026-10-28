@@ -2,7 +2,7 @@
 
 ## Decision
 
-Agent Bounties exposes wallet providers through a vendor-neutral EIP-1193 and EIP-6963 adapter registry. Coinbase CDP is the first embedded-wallet implementation, not a protocol dependency.
+Agentizable exposes wallet providers through a vendor-neutral EIP-1193 and EIP-6963 adapter registry. Coinbase CDP is the first embedded-wallet implementation, not a protocol dependency.
 
 The Coinbase adapter creates an EVM EOA with:
 
@@ -10,7 +10,7 @@ The Coinbase adapter creates an EVM EOA with:
 ethereum.createOnLogin: "eoa"
 ```
 
-The EOA is intentional. Agent Bounties' existing claim and funding relays require exact EIP-712 signatures from the wallet that owns the Base USDC. An EOA preserves one visible address for:
+The EOA is intentional. Agentizable' existing claim and funding relays require exact EIP-712 signatures from the wallet that owns the Base USDC. An EOA preserves one visible address for:
 
 - MoonPay delivery;
 - Base USDC balance checks;
@@ -197,13 +197,13 @@ relay may claim sponsorship. Ship the new bundle and composer together.
 
 Two cross-origin boundaries are verified separately:
 
-1. The Agent Bounties API uses Tower HTTP's `CorsLayer::permissive()`, permitting the website to issue x402 requests and read `payment-required` and `payment-response`.
+1. The Agentizable API uses Tower HTTP's `CorsLayer::permissive()`, permitting the website to issue x402 requests and read `payment-required` and `payment-response`.
 2. Coinbase must authorize the exact production origin for its locked SDK routes. Before a production build, check:
    - `GET https://api.cdp.coinbase.com/platform/v2/embedded-wallet-api/projects/{project}/config`;
    - unauthenticated `POST` preflight for `content-type` and `x-idempotency-key`; and
    - signed-in linking preflight for `content-type` and `x-wallet-auth`.
 
-The gate requires HTTP success, exact `Access-Control-Allow-Origin: https://agentbounties.app`, credentialed CORS, `POST`, and each requested header. It deliberately does not demand an `Authorization` header on unauthenticated `auth/init`, because the locked SDK does not send one there.
+The gate requires HTTP success, exact `Access-Control-Allow-Origin: https://agentizable.ai`, credentialed CORS, `POST`, and each requested header. It deliberately does not demand an `Authorization` header on unauthenticated `auth/init`, because the locked SDK does not send one there.
 
 ## x402 funding evidence boundary
 
@@ -211,7 +211,7 @@ The browser:
 
 1. requests the exact challenge from `/v1/x402/base/bounties/{contract}/funding`;
 2. verifies x402 v2, Base mainnet, native USDC, amount, bounty contract, `fundWithAuthorization`, `FundingAdded`, and expiry;
-3. carries the already reviewed Agent Bounties legal-acceptance receipt into the cross-origin relay request;
+3. carries the already reviewed Agentizable legal-acceptance receipt into the cross-origin relay request;
 4. asks the selected EIP-1193 wallet to sign `TransferWithAuthorization`;
 5. retries with `PAYMENT-SIGNATURE`;
 6. polls the durable relay when the server returns `202`; and
@@ -222,14 +222,14 @@ A challenge, signature, relay ID, transaction hash, token balance, MoonPay retur
 ## Privacy and custody
 
 - Coinbase handles authentication and private-key security infrastructure while the user retains custody of the wallet.
-- Agent Bounties disables optional Coinbase SDK analytics in this implementation.
-- Agent Bounties does not store authentication credentials or OTPs.
-- Agent Bounties never exports a private key into its JavaScript context.
+- Agentizable disables optional Coinbase SDK analytics in this implementation.
+- Agentizable does not store authentication credentials or OTPs.
+- Agentizable never exports a private key into its JavaScript context.
 - The user should eventually receive a clearly exposed secure key-export path supplied by Coinbase so provider choice does not become practical lock-in.
 
 ## Activation and verification
 
-The production project and exact `https://agentbounties.app` domain are configured and verified. For another deployment or replacement CDP project:
+The production project and exact `https://agentizable.ai` domain are configured and verified. For another deployment or replacement CDP project:
 
 1. Create a CDP project and enable embedded user wallets.
 2. Allowlist the exact HTTPS production and staging origins.
@@ -271,7 +271,7 @@ A signed-in wallet appears immediately as **Ready to verify**. The user reviews 
 
 ## Provider incentives and portability
 
-Coinbase benefits when more users authenticate and keep wallets inside its ecosystem. Agent Bounties reduces that lock-in pressure by exposing Coinbase through the same EIP-1193/EIP-6963 adapter boundary as other wallets, retaining existing wallet choices, using a normal EOA address, disabling optional SDK analytics, and documenting Coinbase's user key-export capability. Auth-method linking remains important: an unlinked method can create a second identity and wallet.
+Coinbase benefits when more users authenticate and keep wallets inside its ecosystem. Agentizable reduces that lock-in pressure by exposing Coinbase through the same EIP-1193/EIP-6963 adapter boundary as other wallets, retaining existing wallet choices, using a normal EOA address, disabling optional SDK analytics, and documenting Coinbase's user key-export capability. Auth-method linking remains important: an unlinked method can create a second identity and wallet.
 
 ## Rollback
 

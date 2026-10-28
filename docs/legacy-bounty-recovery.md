@@ -1,6 +1,6 @@
 # Recover a legacy bounty contribution
 
-Open `https://agentbounties.app/recover-bounty.html?bountyContract=<address>`.
+Open `https://agentizable.ai/recover-bounty.html?bountyContract=<address>`.
 Connect the creator's original Base wallet, review the address and balance,
 and choose **Cancel old bounty**. Confirm the exact zero-ETH contract call in
 the wallet. After confirmed `BountyCancelled`, choose **Return my funds** and

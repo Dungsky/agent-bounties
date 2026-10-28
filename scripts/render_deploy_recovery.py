@@ -79,7 +79,7 @@ OPEN_COMPETITION_WORKER_ENVIRONMENT = {
     "APP_PACKAGE": "worker",
     "APP_BINARY": "worker",
     "RUST_LOG": "info",
-    "PUBLIC_BASE_URL": "https://api.agentbounties.app",
+    "PUBLIC_BASE_URL": "https://api.agentizable.ai",
     "BASE_INDEXER_PROTOCOL": "open-competition-v1",
     "OPEN_COMPETITION_INDEXER_NETWORK": "base-mainnet",
     "OPEN_COMPETITION_V1_FACTORY_CONTRACT": (
@@ -112,10 +112,11 @@ FAILED_STATUSES = {
 }
 TRANSIENT_HTTP_STATUSES = {429, 500, 503}
 CUSTOM_DOMAINS = {
-    # Render Hobby permits two custom domains per workspace. Keep runtime
-    # domains here; marketing and legacy hosts redirect at the DNS edge.
-    "agent-bounties-api": ("api.agentbounties.app",),
-    "agent-bounties-mcp": ("mcp.agentbounties.app",),
+    # Preserve existing API/MCP clients during the Agentizable migration.
+    # Adding canonical hosts requires capacity for both names; never remove a
+    # working legacy hostname to make room on a plan with a custom-domain cap.
+    "agent-bounties-api": ("api.agentizable.ai", "api.agentbounties.app"),
+    "agent-bounties-mcp": ("mcp.agentizable.ai", "mcp.agentbounties.app"),
 }
 PUBLIC_ENV_SERVICE_NAMES = {
     "agent-bounties-api",
@@ -1474,18 +1475,19 @@ class RenderClient:
         if len({name.lower() for name in names}) != len(names):
             raise RecoveryError(f"{service['name']} has duplicate Render custom domains")
 
-        # Delete obsolete aliases first so a plan-level domain cap cannot block
-        # attaching the canonical replacement. The onrender.com origin remains
-        # available throughout this control-plane migration.
+        # Attach replacements before retiring unrelated aliases. A failed attach
+        # (including plan limits) must leave the old public route available.
+        reconciled = [self.ensure_custom_domain(service, domain) for domain in domains]
+        legacy = {"api.agentbounties.app", "mcp.agentbounties.app"}
         for name in names:
-            if name.lower() not in desired:
+            if name.lower() not in desired | legacy:
                 encoded_name = urllib.parse.quote(name, safe="")
                 self._request_json(
                     "DELETE",
                     f"/services/{service_id}/custom-domains/{encoded_name}",
                 )
 
-        return [self.ensure_custom_domain(service, domain) for domain in domains]
+        return reconciled
 
     def ensure_env_var(
         self,
@@ -2218,7 +2220,11 @@ def normalize_site_auth_environment(
     api = public_base_url.rstrip("/")
     values.update(
         {
-            "SITE_AUTH_ALLOWED_ORIGINS": website_base_url.rstrip("/"),
+            "SITE_AUTH_ALLOWED_ORIGINS": (
+                "https://agentizable.ai,https://www.agentizable.ai,https://agentbounties.app,https://www.agentbounties.app"
+                if website_base_url.rstrip("/") in {"https://agentizable.ai", "https://agentbounties.app"}
+                else website_base_url.rstrip("/")
+            ),
             "GOOGLE_OAUTH_REDIRECT_URI": f"{api}/v1/site-auth/callback/google",
             "MICROSOFT_OAUTH_TENANT": "common",
             "MICROSOFT_OAUTH_REDIRECT_URI": f"{api}/v1/site-auth/callback/microsoft",
@@ -2509,7 +2515,7 @@ def ensure_neynar_social_webhook(
     bot_fid: str,
     target_url: str,
 ) -> tuple[dict[str, Any], str]:
-    name = "Agent Bounties social mention drafts"
+    name = "Agentizable social mention drafts"
     fid = int(bot_fid)
     desired_subscription = {"cast.created": {"mentioned_fids": [fid]}}
     listed = client.request_json("GET", "/v2/farcaster/webhook/list/")
@@ -2519,11 +2525,11 @@ def ensure_neynar_social_webhook(
     matches = [
         item
         for item in webhooks
-        if str(item.get("title", "")).casefold() == name.casefold()
+        if str(item.get("title", "")).casefold() in {name.casefold(), "agent bounties social mention drafts"}
         or item.get("target_url") == target_url
     ]
     if len(matches) > 1:
-        raise RecoveryError("Neynar has duplicate Agent Bounties webhook registrations")
+        raise RecoveryError("Neynar has duplicate Agentizable webhook registrations")
 
     changed = False
     webhook = matches[0] if matches else None
@@ -2618,9 +2624,9 @@ def deploy(
     deploy_timeout_seconds: float,
     health_timeout_seconds: float,
     poll_seconds: float,
-    public_base_url: str = "https://api.agentbounties.app",
-    mcp_base_url: str = "https://mcp.agentbounties.app",
-    website_base_url: str = "https://agentbounties.app",
+    public_base_url: str = "https://api.agentizable.ai",
+    mcp_base_url: str = "https://mcp.agentizable.ai",
+    website_base_url: str = "https://agentizable.ai",
     cloud_agent_api_key: str | None = None,
     site_auth_environment: dict[str, str | None] | None = None,
     moonpay_publishable_key: str | None = None,
@@ -3043,15 +3049,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--public-base-url",
-        default="https://api.agentbounties.app",
+        default="https://api.agentizable.ai",
     )
     parser.add_argument(
         "--mcp-base-url",
-        default="https://mcp.agentbounties.app",
+        default="https://mcp.agentizable.ai",
     )
     parser.add_argument(
         "--website-base-url",
-        default="https://agentbounties.app",
+        default="https://agentizable.ai",
     )
     parser.add_argument("--base-mainnet-leaderboard-reward-contract")
     parser.add_argument("--base-sepolia-leaderboard-reward-contract")

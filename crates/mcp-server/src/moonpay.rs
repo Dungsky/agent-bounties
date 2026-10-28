@@ -21,7 +21,7 @@ use uuid::Uuid;
 type HmacSha256 = Hmac<Sha256>;
 
 const RESPONSE_SCHEMA: &str = "agent-bounties/moonpay-onramp-checkout-v1";
-const DEFAULT_ALLOWED_ORIGIN: &str = "https://agentbounties.app";
+const DEFAULT_ALLOWED_ORIGIN: &str = "https://agentizable.ai,https://www.agentizable.ai,https://agentbounties.app,https://www.agentbounties.app";
 const DEFAULT_CLIENT_IP_HEADER: &str = "x-forwarded-for";
 const DEFAULT_RATE_LIMIT_PER_MINUTE: u32 = 10;
 const DEFAULT_MIN_FIAT_MINOR: u64 = 100;
@@ -262,7 +262,7 @@ pub struct PrepareCheckoutRequest {
 }
 
 /// A cash-out request: the user's own wallet sells Base USDC it already received from a canonical
-/// settlement. Agent Bounties never holds or sends the USDC.
+/// settlement. Agentizable never holds or sends the USDC.
 #[derive(Debug, Deserialize)]
 pub struct PrepareSellRequest {
     wallet_address: String,
@@ -350,7 +350,7 @@ impl ApiError {
             status: StatusCode::FORBIDDEN,
             code,
             message: message.into(),
-            next_action: "Open the on-ramp from an approved Agent Bounties page.".to_string(),
+            next_action: "Open the on-ramp from an approved Agentizable page.".to_string(),
         }
     }
 
@@ -689,7 +689,7 @@ fn build_checkout_plan(
         checkout_url: checkout.to_string(),
         bounty_funded: false,
         canonical_funding_event: None,
-        next_action: "Complete the MoonPay checkout, return to Agent Bounties, verify the wallet balance on Base, and separately approve the exact canonical bounty contribution.",
+        next_action: "Complete the MoonPay checkout, return to Agentizable, verify the wallet balance on Base, and separately approve the exact canonical bounty contribution.",
         evidence_boundary: "MoonPay checkout status and wallet top-up evidence are not bounty-funding evidence. Only the matching indexed canonical FundingAdded event changes the bounty's funded state.",
         sandbox_notice: is_sandbox.then_some(
             "MoonPay sandbox uses simulated payments and test assets. It validates checkout integration but does not top up Base mainnet.",
@@ -740,14 +740,14 @@ fn validate_return_url(value: &str, request_origin: &str) -> Result<String, ApiE
         return Err(ApiError::bad_request(
             "moonpay_return_url_too_long",
             "return_url is too long",
-            "Return to the bounded Agent Bounties on-ramp page without extra tracking parameters.",
+            "Return to the bounded Agentizable on-ramp page without extra tracking parameters.",
         ));
     }
     let parsed = Url::parse(value).map_err(|_| {
         ApiError::bad_request(
             "moonpay_return_url_invalid",
             "return_url must be an absolute URL",
-            "Use the current Agent Bounties on-ramp page as the return URL.",
+            "Use the current Agentizable on-ramp page as the return URL.",
         )
     })?;
     if !parsed.username().is_empty()
@@ -758,7 +758,7 @@ fn validate_return_url(value: &str, request_origin: &str) -> Result<String, ApiE
     {
         return Err(ApiError::bad_request(
             "moonpay_return_url_not_allowed",
-            "return_url must point to /onramp.html on the requesting Agent Bounties origin",
+            "return_url must point to /onramp.html on the requesting Agentizable origin",
             "Use the on-ramp page's own URL without a fragment.",
         ));
     }
@@ -1072,6 +1072,30 @@ fn json_response(status: StatusCode, body: serde_json::Value) -> Response {
 mod tests {
     use super::*;
 
+    #[test]
+    fn migration_onramp_defaults_keep_return_urls_bound_to_request_origin() {
+        let allowed: Vec<_> = DEFAULT_ALLOWED_ORIGIN.split(',').collect();
+        for origin in [
+            "https://agentizable.ai",
+            "https://www.agentizable.ai",
+            "https://agentbounties.app",
+            "https://www.agentbounties.app",
+        ] {
+            assert!(allowed.contains(&origin));
+            assert!(validate_return_url(&format!("{origin}/onramp.html"), origin).is_ok());
+        }
+        assert!(validate_return_url(
+            "https://agentbounties.app/onramp.html",
+            "https://agentizable.ai"
+        )
+        .is_err());
+        assert!(validate_return_url(
+            "https://agentizable.ai.attacker.example/onramp.html",
+            "https://agentizable.ai"
+        )
+        .is_err());
+    }
+
     fn config(environment: MoonpayEnvironment) -> MoonpayConfig {
         MoonpayConfig {
             publishable_key: match environment {
@@ -1083,7 +1107,7 @@ mod tests {
                 MoonpayEnvironment::Live => "sk_live_example".to_string(),
             },
             environment,
-            allowed_origins: vec!["https://agentbounties.app".to_string()],
+            allowed_origins: vec!["https://agentizable.ai".to_string()],
             client_ip_header: DEFAULT_CLIENT_IP_HEADER.to_string(),
             trusted_proxy_hops: None,
             min_fiat_minor: 100,
@@ -1099,7 +1123,7 @@ mod tests {
             base_currency_code: "usd".to_string(),
             amount_minor: 2_500,
             asset: OnrampAsset::parse(Some(asset)).unwrap(),
-            return_url: "https://agentbounties.app/onramp.html?bountyContract=0x1111111111111111111111111111111111111111".to_string(),
+            return_url: "https://agentizable.ai/onramp.html?bountyContract=0x1111111111111111111111111111111111111111".to_string(),
             intent_id: Some(Uuid::parse_str("9e5c6d19-ae7a-4b4c-a49f-36f322fd4532").unwrap()),
             bounty_contract: "0x1111111111111111111111111111111111111111".to_string(),
         }
@@ -1145,7 +1169,7 @@ mod tests {
             &config(MoonpayEnvironment::Live),
             "0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae".to_string(),
             "42.50".to_string(),
-            "https://agentbounties.app/onramp.html".to_string(),
+            "https://agentizable.ai/onramp.html".to_string(),
             Some("8.8.8.8"),
         )
         .unwrap();
@@ -1173,7 +1197,7 @@ mod tests {
             &config(MoonpayEnvironment::Sandbox),
             "0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae".to_string(),
             "10.00".to_string(),
-            "https://agentbounties.app/onramp.html".to_string(),
+            "https://agentizable.ai/onramp.html".to_string(),
             None,
         )
         .unwrap();
@@ -1198,14 +1222,11 @@ mod tests {
 
     #[test]
     fn validation_rejects_wrong_origin_return_path_and_unknown_asset() {
-        assert!(validate_return_url(
-            "https://evil.example/onramp.html",
-            "https://agentbounties.app"
-        )
-        .is_err());
         assert!(
-            validate_return_url("https://agentbounties.app/", "https://agentbounties.app").is_err()
+            validate_return_url("https://evil.example/onramp.html", "https://agentizable.ai")
+                .is_err()
         );
+        assert!(validate_return_url("https://agentizable.ai/", "https://agentizable.ai").is_err());
         assert!(OnrampAsset::parse(Some("btc")).is_err());
     }
 
