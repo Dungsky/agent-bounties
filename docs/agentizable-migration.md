@@ -2,9 +2,35 @@
 
 Agentizable is the product name. Its canonical website is `https://agentizable.ai`,
 with API at `https://api.agentizable.ai` and MCP at `https://mcp.agentizable.ai/mcp`.
-This document describes the prepared migration; it is not evidence of a live cutover.
+The production cutover completed on October 28, 2026. The original rollout
+sequence below is retained as a runbook; its steps are not outstanding work.
 
-## Current deployment and ordering
+## Verified cutover status — October 28, 2026
+
+- Public rebrand [PR #1691](https://github.com/NSPG13/agent-bounties/pull/1691)
+  and cache/canary follow-up
+  [PR #1696](https://github.com/NSPG13/agent-bounties/pull/1696) are merged.
+  The verified website release is `a585ab0ae11d55d5098dbff36bc8203c40da1c12`.
+- Cloudflare DNS, Pages and TLS serve the new website. The final website
+  canary passed for all 23 homepage assets, and a real Google sign-in returned
+  successfully to the new domain.
+- API and MCP serve the new domains at the separately gated runtime revision
+  `77bfa2136cd1ad9a538a001995842b6a55602548`. Both old API/MCP hosts remain
+  available directly for existing integrations.
+- Old website GET/HEAD requests redirect with HTTP 301 to the equivalent
+  `https://agentizable.ai` path and query. Old POST requests are not redirected.
+  The new www hostname also redirects to the new apex.
+- Provider origins/callbacks, sender-domain authentication, analytics,
+  monitoring and Search Console migration were updated. Glama uses the new
+  name and endpoint. MCP Market and MCP.so still require vendor-managed edits;
+  external caches may update independently.
+
+These checks establish the rebrand and login cutover, not a paid transaction.
+The separate funding-setup probe still encounters a preexisting upstream RPC
+rate-limit failure; no wallet signature or payment was used to verify branding.
+Recheck live revisions and health before any later release or incident action.
+
+## Deployment topology and original rollout sequence
 
 The public website is served by Cloudflare Pages (`agent-bounties.pages.dev`).
 The GitHub Pages configuration is retained but is not the live DNS target.
@@ -14,8 +40,8 @@ Changing the public repository alone does not release the runtime.
 
 1. Add `agentizable.ai` to the existing Cloudflare account. Preserve any real mail
    records. Obtain the assigned nameservers and change them at the registrar;
-   wait for Cloudflare to report the zone active. The domain currently uses
-   Namecheap parking nameservers, and registrar authentication is still needed.
+   wait for Cloudflare to report the zone active. This delegation is complete;
+   the former Namecheap parking nameservers are no longer the active setup.
 2. Attach `agentizable.ai` and `www.agentizable.ai` to the existing Cloudflare
    Pages project. Point the apex and www CNAMEs to `agent-bounties.pages.dev`.
    Use DNS-only CNAMEs for `api` and `mcp` pointing to their existing Render
@@ -76,8 +102,8 @@ updated while preserving documented legacy aliases. Existing work on wallet,
 OAuth, website and discovery surfaces may need a textual rebase. Concurrent
 card-payment repairs remain separate; merge the rebrand into the eventual release
 base without discarding those changes.
-Publish the prepared contributor notice through an authorized maintainer channel
-before the public rollout.
+For future changes that affect contributors, publish the contributor notice
+through an authorized maintainer channel before rollout.
 
 Run `bash scripts/preflight.sh core`, `python scripts/check-site.py`,
 `python scripts/check-render-blueprint.py`, the discovery/portable-skill checks,
