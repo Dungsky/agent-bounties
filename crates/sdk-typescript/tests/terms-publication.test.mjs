@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs';
 import {keccak_256} from '@noble/hashes/sha3';
 import {AgentBountiesClient,AgentBountiesHttpError} from '../dist/index.js';
 const creator='0x'+'11'.repeat(20),document={acceptance_criteria:['deliver'],benchmark:{},evidence_schema:{},title:'Expected',verification_policy:{}};
 const hash=v=>'0x'+Buffer.from(keccak_256(new TextEncoder().encode(JSON.stringify(v)))).toString('hex');
-const record={creator_wallet:creator,document,terms_hash:hash(document),policy_hash:hash({}),acceptance_criteria_hash:hash(['deliver']),benchmark_hash:hash({}),evidence_schema_hash:hash({})};
+const canonicalDocument={acceptance_criteria:document.acceptance_criteria,benchmark:{},discovery_source:null,evidence_schema:{},source_url:null,title:'Expected',verification_policy:{}};
+const record={creator_wallet:creator,document:canonicalDocument,terms_hash:hash(canonicalDocument),policy_hash:hash({}),acceptance_criteria_hash:hash(['deliver']),benchmark_hash:hash({}),evidence_schema_hash:hash({})};
 test('publication requires caller key, keeps credential and exact retries, never auto-follows409',async()=>{
  const prior=globalThis.fetch,calls=[];globalThis.fetch=async(url,init)=>{calls.push({url,init});return new Response(JSON.stringify({error_code:'publication_already_exists',next_action_url:'/v1/base/autonomous-bounties/terms/'+record.terms_hash}),{status:409});};
  try{
@@ -23,6 +25,21 @@ test('explicit readback validates all expected commitments and never writes',asy
   const client=new AgentBountiesClient({baseUrl:'https://example.test'});
   assert.deepEqual(await client.getVerifiedAutonomousBountyTerms(record.terms_hash,creator,document),record);
   for(const changed of [{...record,creator_wallet:'wrong'},{...record,document:{...document,title:'Changed'}},{...record,benchmark_hash:'0x'+'00'.repeat(32)}]){value=changed;await assert.rejects(client.getVerifiedAutonomousBountyTerms(record.terms_hash,creator,document));}
+  assert.ok(calls.every(({init})=>init.method===undefined));
+ }finally{globalThis.fetch=prior;}
+});
+
+const readbackCases=JSON.parse(fs.readFileSync(new URL('../../../scripts/fixtures/terms-publication-readback.json',import.meta.url),'utf8')).cases;
+for(const fixture of readbackCases)test('server-shaped readback '+fixture.name+' preserves exact caller values',async()=>{
+ const prior=globalThis.fetch,calls=[],wire=structuredClone(fixture.request),before=JSON.stringify(wire);
+ globalThis.fetch=async(url,init)=>{calls.push({url,init});return new Response(JSON.stringify(fixture.record));};
+ try{
+  const client=new AgentBountiesClient({baseUrl:'https://example.test'});
+  assert.deepEqual(await client.getVerifiedAutonomousBountyTerms(fixture.record.terms_hash,wire.creator_wallet,wire.document),fixture.record);
+  assert.equal(JSON.stringify(wire),before);
+  for(const change of [{goal:'Different'},{unknown_requirement:true},{agent_eligibility:{unknown_requirement:true}},{claim_coordination:{waitlist_capacity:null}}])
+   await assert.rejects(client.getVerifiedAutonomousBountyTerms(fixture.record.terms_hash,wire.creator_wallet,{...wire.document,...change}));
+  if(wire.document.image)await assert.rejects(client.getVerifiedAutonomousBountyTerms(fixture.record.terms_hash,wire.creator_wallet,{...wire.document,image:{...wire.document.image,unknown_requirement:true}}));
   assert.ok(calls.every(({init})=>init.method===undefined));
  }finally{globalThis.fetch=prior;}
 });

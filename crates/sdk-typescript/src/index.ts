@@ -942,6 +942,35 @@ export interface AgentWalletReadinessProblem extends Record<string, unknown> {
   next_action: string;
 }
 
+// Match AutonomousBountyTermsDocument serde and validate_claim_metadata.
+// Only the expected readback is normalized; the saved wire request stays exact.
+function normalizeAutonomousTermsDocument(document: Record<string, unknown>): Record<string, unknown> {
+  const value = JSON.parse(JSON.stringify(document)) as Record<string, unknown>;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Expected a terms document");
+  for (const key of ["source_url", "discovery_source"]) if (!(key in value)) value[key] = null;
+  for (const key of ["image", "agent_eligibility", "claim_coordination"]) if (value[key] == null) delete value[key];
+  const expand = (key: string, defaults: Record<string, unknown>) => {
+    if (!(key in value)) return;
+    const supplied = value[key] as Record<string, unknown>;
+    if (!supplied || typeof supplied !== "object" || Array.isArray(supplied)
+      || Object.keys(supplied).some(field => !Object.prototype.hasOwnProperty.call(defaults, field) || supplied[field] === null)) throw new Error("Invalid terms policy: " + key);
+    value[key] = { ...defaults, ...supplied };
+  };
+  expand("agent_eligibility", { required_capabilities: [], minimum_paid_completions: 0, minimum_paid_usdc_base_units: 0,
+    wallet_allowlist: [], wallet_denylist: [], creator_may_claim: false, sponsorship_allowed: false, maximum_sponsored_bond_base_units: 100000 });
+  expand("claim_coordination", { exclusive_claim_seconds: 900, waitlist_capacity: 20, takeover_grace_seconds: 60 });
+  if (value.agent_eligibility) for (const key of ["wallet_allowlist", "wallet_denylist"]) {
+    const eligibility = value.agent_eligibility as Record<string, unknown>;
+    const wallets = eligibility[key];
+    if (!Array.isArray(wallets)) throw new Error("Invalid eligibility wallet list");
+    eligibility[key] = [...new Set(wallets.map(wallet => {
+      if (typeof wallet !== "string" || !/^(?:0x)?[0-9a-fA-F]{40}$/.test(wallet)) throw new Error("Invalid eligibility wallet");
+      return "0x" + wallet.replace(/^0x/, "").toLowerCase();
+    }))].sort();
+  }
+  return value;
+}
+
 export class AgentBountiesHttpError extends Error {
   readonly path: string;
   readonly status: number;
@@ -2129,6 +2158,7 @@ export class AgentBountiesClient {
     termsHash: string, creatorWallet: string, document: Record<string, unknown>,
   ): Promise<unknown> {
     // Explicit immutable readback only. This does not resume signing or funding.
+    document = normalizeAutonomousTermsDocument(document);
     if (!/^0x[0-9a-f]{64}$/.test(termsHash)) throw new Error("Use a canonical terms hash");
     const canonical = (value: unknown): string => {
       if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";

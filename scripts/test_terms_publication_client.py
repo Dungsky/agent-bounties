@@ -12,6 +12,7 @@ DOCUMENT = {'contract_terms': {'network':'base-mainnet','creator_wallet':ADDRESS
 
 
 def record(document=DOCUMENT):
+    document = {"source_url":None,"discovery_source":None,**document}
     from _shared.evm import keccak256
     result = {'creator_wallet':ADDRESS,'document':document}
     for field, value in [('terms_hash',document),('policy_hash',document['verification_policy']),('acceptance_criteria_hash',document['acceptance_criteria']),('benchmark_hash',document['benchmark']),('evidence_schema_hash',document['evidence_schema'])]:
@@ -77,5 +78,27 @@ class PublicationClientTests(unittest.TestCase):
             guard=next(node for node in calls if isinstance(node.func,ast.Attribute) and node.func.attr=='require_creator_session')
             mutations=[node for node in calls if isinstance(node.func,ast.Name) and node.func.id in ('deploy_singleton','create_if_missing','submit_action')]
             self.assertTrue(all(guard.lineno<node.lineno for node in mutations))
+
+    def test_server_shaped_readback_preserves_wire_payload_and_key(self):
+        from pathlib import Path
+        cases=json.loads((Path(__file__).parent/'fixtures/terms-publication-readback.json').read_text())['cases']
+        for fixture in cases:
+            with self.subTest(case=fixture['name']):
+                wire=fixture['request'];before=json.dumps(wire);calls=[]
+                def send(api,path,token,body=None,key=None):
+                    calls.append((path,body,key))
+                    return (200,{'principal':{'kind':'wallet','address':wire['creator_wallet'],'chain_id':8453}}) if path=='/v1/auth/session' else (200,fixture['record'])
+                with patch.dict(os.environ,{'TERMS_CREATOR_SESSION_TOKEN':TOKEN}),patch.object(client,'request',side_effect=send):
+                    for _ in range(2):self.assertEqual(client.publish_terms('https://api.agentizable.ai',wire['creator_wallet'],wire['document']),fixture['record'])
+                self.assertEqual(json.dumps(wire),before);self.assertEqual(calls[1],calls[3]);self.assertEqual(calls[1][1],wire)
+                self.assertEqual(calls[1][2],'activation-terms-v1-'+hashlib.sha256(client.canonical(wire)).hexdigest())
+
+    def test_normalization_keeps_unknown_substantive_changes_rejected(self):
+        from pathlib import Path
+        cases=json.loads((Path(__file__).parent/'fixtures/terms-publication-readback.json').read_text())['cases']
+        first,image=cases[0],cases[3]
+        for field,value in [('goal','Different'),('unknown_requirement',True),('benchmark',{'command':'different'}),('agent_eligibility',{'unknown_requirement':True}),('claim_coordination',{'waitlist_capacity':None})]:
+            with self.assertRaises(client.PublicationError):client.validate_record(first['record'],first['request']['creator_wallet'],{**first['request']['document'],field:value})
+        with self.assertRaises(client.PublicationError):client.validate_record(image['record'],image['request']['creator_wallet'],{**image['request']['document'],'image':{**image['request']['document']['image'],'unknown_requirement':True}})
 
 if __name__=='__main__':unittest.main()

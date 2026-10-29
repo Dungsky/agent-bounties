@@ -34,7 +34,35 @@
     win.sessionStorage.setItem(name, JSON.stringify(saved));
     return saved;
   }
+  // Match AutonomousBountyTermsDocument serde and validate_claim_metadata.
+  // Only the expected readback is normalized; the saved wire request stays exact.
+  function normalizeDocument(document) {
+    const value = JSON.parse(JSON.stringify(document));
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Expected a terms document");
+    for (const key of ["source_url", "discovery_source"]) if (!(key in value)) value[key] = null;
+    for (const key of ["image", "agent_eligibility", "claim_coordination"]) if (value[key] == null) delete value[key];
+    const expand = (key, defaults) => {
+      if (!(key in value)) return;
+      const supplied = value[key];
+      if (!supplied || typeof supplied !== "object" || Array.isArray(supplied)
+        || Object.keys(supplied).some(field => !Object.prototype.hasOwnProperty.call(defaults, field) || supplied[field] === null)) throw new Error("Invalid terms policy: " + key);
+      value[key] = { ...defaults, ...supplied };
+    };
+    expand("agent_eligibility", { required_capabilities: [], minimum_paid_completions: 0, minimum_paid_usdc_base_units: 0,
+      wallet_allowlist: [], wallet_denylist: [], creator_may_claim: false, sponsorship_allowed: false, maximum_sponsored_bond_base_units: 100000 });
+    expand("claim_coordination", { exclusive_claim_seconds: 900, waitlist_capacity: 20, takeover_grace_seconds: 60 });
+    if (value.agent_eligibility) for (const key of ["wallet_allowlist", "wallet_denylist"]) {
+      const wallets = value.agent_eligibility[key];
+      if (!Array.isArray(wallets)) throw new Error("Invalid eligibility wallet list");
+      value.agent_eligibility[key] = [...new Set(wallets.map(wallet => {
+        if (typeof wallet !== "string" || !/^(?:0x)?[0-9a-fA-F]{40}$/.test(wallet)) throw new Error("Invalid eligibility wallet");
+        return "0x" + wallet.replace(/^0x/, "").toLowerCase();
+      }))].sort();
+    }
+    return value;
+  }
   function validate(record, creator, document, evm) {
+    document = normalizeDocument(document);
     if (!record || String(record.creator_wallet).toLowerCase() !== creator.toLowerCase()
       || canonical(record.document) !== canonical(document)) throw new Error("Published terms differ from the approved document or creator. No wallet action was requested.");
     for (const [key, value] of [["terms_hash", document], ["policy_hash", document.verification_policy],

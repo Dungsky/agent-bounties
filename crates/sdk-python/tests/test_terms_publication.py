@@ -9,8 +9,9 @@ ADDRESS='0x'+'11'*20
 DOCUMENT={'title':'Expected','verification_policy':{},'acceptance_criteria':['deliver'],'benchmark':{},'evidence_schema':{}}
 
 def record():
-    result={'creator_wallet':ADDRESS,'document':DOCUMENT}
-    for key,value in [('terms_hash',DOCUMENT),('policy_hash',{}),('acceptance_criteria_hash',['deliver']),('benchmark_hash',{}),('evidence_schema_hash',{})]:
+    document={'source_url':None,'discovery_source':None,**DOCUMENT}
+    result={'creator_wallet':ADDRESS,'document':document}
+    for key,value in [('terms_hash',document),('policy_hash',{}),('acceptance_criteria_hash',['deliver']),('benchmark_hash',{}),('evidence_schema_hash',{})]:
         result[key]='0x'+keccak(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hex()
     return result
 
@@ -38,3 +39,17 @@ class TermsPublicationTests(unittest.TestCase):
         for changed in [{**record(),'creator_wallet':'wrong'},{**record(),'document':{**DOCUMENT,'title':'Changed'}},{**record(),'benchmark_hash':'0x'+'00'*32}]:
             with patch.object(client,'get_autonomous_bounty_terms',return_value=changed),self.assertRaises(ValueError):
                 client.get_verified_autonomous_bounty_terms(record()['terms_hash'],ADDRESS,DOCUMENT)
+
+    def test_server_shaped_records_match_without_changing_caller_document(self):
+        from pathlib import Path
+        cases=json.loads((Path(__file__).resolve().parents[3]/'scripts/fixtures/terms-publication-readback.json').read_text())['cases']
+        client=AgentBountiesClient('https://example.test')
+        for fixture in cases:
+            with self.subTest(case=fixture['name']):
+                wire=fixture['request'];before=json.dumps(wire)
+                with patch.object(client,'get_autonomous_bounty_terms',return_value=fixture['record']) as read:
+                    self.assertEqual(client.get_verified_autonomous_bounty_terms(fixture['record']['terms_hash'],wire['creator_wallet'],wire['document']),fixture['record'])
+                read.assert_called_once_with(fixture['record']['terms_hash']);self.assertEqual(json.dumps(wire),before)
+                for field,value in [('goal','Different'),('unknown_requirement',True),('agent_eligibility',{'unknown_requirement':True}),('claim_coordination',{'waitlist_capacity':None})]:
+                    with patch.object(client,'get_autonomous_bounty_terms',return_value=fixture['record']),self.assertRaises(ValueError):
+                        client.get_verified_autonomous_bounty_terms(fixture['record']['terms_hash'],wire['creator_wallet'],{**wire['document'],field:value})

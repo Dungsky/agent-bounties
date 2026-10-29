@@ -221,6 +221,38 @@ def _v2_uint_word(value, label: str, bits: int) -> bytes:
     return value.to_bytes(32, "big")
 
 
+def _normalize_terms_document(document):
+    """Mirror terms serde/defaults and claim metadata for readback only."""
+    value = json_module.loads(json_module.dumps(document, allow_nan=False))
+    if not isinstance(value, dict):
+        raise ValueError("Expected a terms document")
+    for key in ("source_url", "discovery_source"):
+        value.setdefault(key, None)
+    for key in ("image", "agent_eligibility", "claim_coordination"):
+        if value.get(key) is None:
+            value.pop(key, None)
+    defaults = {
+        "agent_eligibility": {"required_capabilities": [], "minimum_paid_completions": 0,
+            "minimum_paid_usdc_base_units": 0, "wallet_allowlist": [], "wallet_denylist": [],
+            "creator_may_claim": False, "sponsorship_allowed": False, "maximum_sponsored_bond_base_units": 100000},
+        "claim_coordination": {"exclusive_claim_seconds": 900, "waitlist_capacity": 20, "takeover_grace_seconds": 60},
+    }
+    for key, fields in defaults.items():
+        if key not in value:
+            continue
+        supplied = value[key]
+        if not isinstance(supplied, dict) or any(field not in fields or supplied[field] is None for field in supplied):
+            raise ValueError("Invalid terms policy: " + key)
+        value[key] = {**fields, **supplied}
+    if "agent_eligibility" in value:
+        for key in ("wallet_allowlist", "wallet_denylist"):
+            wallets = value["agent_eligibility"][key]
+            if not isinstance(wallets, list) or any(not isinstance(wallet, str) or not re.fullmatch(r"(?:0x)?[0-9a-fA-F]{40}", wallet) for wallet in wallets):
+                raise ValueError("Invalid eligibility wallet list")
+            value["agent_eligibility"][key] = sorted({"0x" + wallet.removeprefix("0x").lower() for wallet in wallets})
+    return value
+
+
 class AgentBountiesHttpError(httpx.HTTPStatusError):
     """HTTP error that preserves the platform's parsed machine-readable problem."""
 
@@ -1375,6 +1407,7 @@ class AgentBountiesClient:
         if not re.fullmatch(r"0x[0-9a-f]{64}", terms_hash):
             raise ValueError("Use a canonical terms hash")
         record = self.get_autonomous_bounty_terms(terms_hash)
+        document = _normalize_terms_document(document)
         canonical = lambda value: json_module.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
         if not isinstance(record, dict) or record.get("terms_hash") != terms_hash or str(record.get("creator_wallet", "")).lower() != creator_wallet.lower() or canonical(record.get("document")) != canonical(document):
             raise ValueError("Existing terms do not match the expected identity, creator and document")

@@ -12,6 +12,7 @@ const address = '0x' + '11'.repeat(20);
 const doc = {contract_terms:{creator_wallet:address,creation_nonce:'0x'+'22'.repeat(32),funding_deadline:1900000000},
   title:'Expected',acceptance_criteria:['Exact files'],verification_policy:{threshold:2},benchmark:{engine:'test'},evidence_schema:{type:'object'}};
 function record(document=doc) {
+  document = {source_url:null,discovery_source:null,...document};
   const result = {document,creator_wallet:address};
   for (const [key,value] of [['terms_hash',document],['policy_hash',document.verification_policy],['acceptance_criteria_hash',document.acceptance_criteria],['benchmark_hash',document.benchmark],['evidence_schema_hash',document.evidence_schema]]) result[key]=evm.keccak256Hex(evm.textHex(publication.canonical(value)));
   return result;
@@ -80,4 +81,26 @@ test('linked authority failure, unsupported embedded wallet, cancellation and un
  for(const options of [{linked:true},{kind:'embedded'},{capabilities:{reviewedPostingOnly:true}},{capabilities:{directTransactions:false}},{confirm:false},{errorCode:'publication_authentication_unavailable'}]){
   const f=authFixture(options);await assert.rejects(f.run(api,api+'/terms',{method:'POST'}));assert.equal(f.logins.length,0);assert.equal(f.calls.length,1);
  }
+});
+
+const readbackCases = JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/terms-publication-readback.json'),'utf8')).cases;
+for (const fixture of readbackCases) test('server-shaped readback: '+fixture.name,async()=>{
+ const wire=structuredClone(fixture.request),before=JSON.stringify(wire),win=windowFixture();
+ const saved=publication.reserve(win,'direct',{},wire),key=saved.key,payloadHash=saved.payload_hash,calls=[];
+ const request=async(url,options)=>{calls.push(options);return structuredClone(fixture.record);};
+ for(let retry=0;retry<2;retry++)assert.deepEqual(await publication.publish(win,api,saved,request,{},evm),fixture.record);
+ assert.equal(JSON.stringify(wire),before);assert.equal(saved.key,key);assert.equal(saved.payload_hash,payloadHash);
+ assert.ok(calls.every(o=>o.body===before&&o.headers['Idempotency-Key']===key));
+});
+test('normalization never discards unknown requirements or changes arbitrary JSON values',()=>{
+ const f=readbackCases[0], image=readbackCases[3];
+ for(const changed of [{...f.request.document,goal:'Different goal'},
+   {...f.request.document,unknown_requirement:'must not disappear'},
+   {...f.request.document,benchmark:{...f.request.document.benchmark,extra:null}},
+   {...f.request.document,contract_terms:{...f.request.document.contract_terms,extra:null}},
+   {...f.request.document,agent_eligibility:{unknown_requirement:true}},
+   {...f.request.document,claim_coordination:{waitlist_capacity:null}}])
+  assert.throws(()=>publication.validate(f.record,f.request.creator_wallet,changed,evm));
+ for(const change of [{alt_text:'Different'},{unknown_requirement:'preserve'}])
+  assert.throws(()=>publication.validate(image.record,image.request.creator_wallet,{...image.request.document,image:{...image.request.document.image,...change}},evm));
 });

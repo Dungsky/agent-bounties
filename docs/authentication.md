@@ -53,3 +53,10 @@ Do not add either credential or key to `terms_publication_request.document`:
 that would alter the committed content and hashes. Stop and reconcile any
 existing publication or pending creation before approving wallet calls. The
 portable planner itself does not publish, sign or fund anything.
+
+Readback checks follow the server’s documented optional-field serialization:
+missing `source_url`/`discovery_source` fields become null; null image, eligibility and coordination
+objects are omitted; present eligibility/coordination objects receive their
+defaults, and eligibility wallet lists are normalized, sorted and deduplicated.
+The exact saved POST body and key are unchanged. Unknown substantive fields are
+not silently discarded by the client, and every resulting commitment is checked.

@@ -10,6 +10,38 @@ import urllib.parse
 import urllib.request
 
 
+def _normalize_terms_document(document):
+    """Mirror terms serde/defaults and claim metadata for readback only."""
+    value = json.loads(json.dumps(document, allow_nan=False))
+    if not isinstance(value, dict):
+        raise ValueError("Expected a terms document")
+    for key in ("source_url", "discovery_source"):
+        value.setdefault(key, None)
+    for key in ("image", "agent_eligibility", "claim_coordination"):
+        if value.get(key) is None:
+            value.pop(key, None)
+    defaults = {
+        "agent_eligibility": {"required_capabilities": [], "minimum_paid_completions": 0,
+            "minimum_paid_usdc_base_units": 0, "wallet_allowlist": [], "wallet_denylist": [],
+            "creator_may_claim": False, "sponsorship_allowed": False, "maximum_sponsored_bond_base_units": 100000},
+        "claim_coordination": {"exclusive_claim_seconds": 900, "waitlist_capacity": 20, "takeover_grace_seconds": 60},
+    }
+    for key, fields in defaults.items():
+        if key not in value:
+            continue
+        supplied = value[key]
+        if not isinstance(supplied, dict) or any(field not in fields or supplied[field] is None for field in supplied):
+            raise ValueError("Invalid terms policy: " + key)
+        value[key] = {**fields, **supplied}
+    if "agent_eligibility" in value:
+        for key in ("wallet_allowlist", "wallet_denylist"):
+            wallets = value["agent_eligibility"][key]
+            if not isinstance(wallets, list) or any(not isinstance(wallet, str) or not re.fullmatch(r"(?:0x)?[0-9a-fA-F]{40}", wallet) for wallet in wallets):
+                raise ValueError("Invalid eligibility wallet list")
+            value["agent_eligibility"][key] = sorted({"0x" + wallet.removeprefix("0x").lower() for wallet in wallets})
+    return value
+
+
 class PublicationError(RuntimeError):
     pass
 
@@ -70,6 +102,10 @@ def validate_record(record, creator, document):
     # Existing tooling already uses this exact Keccak implementation. Import
     # lazily so planning-only commands do not need its native dependency.
     from _shared.evm import keccak256
+    try:
+        document = _normalize_terms_document(document)
+    except (TypeError, ValueError):
+        raise PublicationError("Invalid expected terms document") from None
     if not isinstance(record, dict) or str(record.get("creator_wallet", "")).lower() != creator.lower() or canonical(record.get("document")) != canonical(document):
         raise PublicationError("Published content or creator differs from the reviewed document")
     for field, value in (("terms_hash", document), ("policy_hash", document["verification_policy"]),

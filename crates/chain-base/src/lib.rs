@@ -8883,6 +8883,34 @@ mod tests {
     }
 
     #[test]
+    fn publication_readback_vectors_match_server_serde_and_metadata() {
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../../scripts/fixtures/terms-publication-readback.json"
+        ))
+        .unwrap();
+        let cases = fixture["cases"].as_array().unwrap();
+        assert_eq!(cases.len(), 4);
+        for case in cases {
+            let document = serde_json::from_value(case["request"]["document"].clone()).unwrap();
+            let now = DateTime::parse_from_rfc3339("2026-10-29T01:00:00Z")
+                .unwrap()
+                .with_timezone(&Utc);
+            let record = build_autonomous_bounty_terms_record(
+                case["request"]["creator_wallet"].as_str().unwrap(),
+                document,
+                now,
+            )
+            .unwrap();
+            assert_eq!(
+                serde_json::to_value(record).unwrap(),
+                case["record"],
+                "{}",
+                case["name"]
+            );
+        }
+    }
+
+    #[test]
     fn builds_content_addressed_autonomous_terms_commitments() {
         let now = Utc::now();
         let document = AutonomousBountyTermsDocument {
