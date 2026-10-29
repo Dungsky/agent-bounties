@@ -239,8 +239,8 @@ test("wallet approval progress begins only after the exact request is saved", as
   assert.deepEqual(stages, ["wallet_check", "bounty_check", "wallet_approval"]); assert.equal(f.sends.length, 1);
 });
 
-async function pageFixture(change = () => {}) {
-  const f = fixture(), nodes = new Map(), events = new Map();
+async function pageFixture(change = () => {}, expiry = false) {
+  const f = expiry ? expiryFixture() : fixture(), nodes = new Map(), events = new Map();
   const node = id => {
     if (!nodes.has(id)) nodes.set(id, { textContent: "", hidden: false, disabled: false, addEventListener: (type, fn) => events.set(`${id}:${type}`, fn) });
     return nodes.get(id);
@@ -249,13 +249,13 @@ async function pageFixture(change = () => {}) {
   const pageCore = { ...core, create: () => f.engine(), connectWallet: provider => core.connectWallet(provider, 10, 5), walletRead: (provider, method) => core.walletRead(provider, method, 5) };
   const timers = [];
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../site/bounty-recovery-page.js"), "utf8"), {
-    window: { AgentBountiesRecovery: pageCore, AgentBountiesWalletLink: { select: async options => { assert.equal(options.purpose, "recovery"); return { label: "MetaMask", kind: "browser", provider: f.provider }; } } },
+    window: { AgentBountiesRecovery: pageCore, AgentBountiesWalletLink: { select: async options => { assert.equal(options.purpose, expiry ? "claim-expiry" : "recovery"); return { label: "MetaMask", kind: "browser", provider: f.provider }; } } },
     document: { getElementById: node }, localStorage: f.storage, navigator: { locks: f.locks },
-    location: { search: `?bountyContract=${BOUNTY}` }, URLSearchParams, AbortSignal,
+    location: { search: `?bountyContract=${BOUNTY}${expiry ? "&network=base-mainnet&action=expire_claim&round=3" : ""}` }, URLSearchParams, AbortSignal,
     fetch: () => { throw new Error("No network in page fixture"); },
     setTimeout: (fn, ms) => { const t = setTimeout(fn, ms); t.unref(); timers.push(t); return t; }, clearTimeout,
   });
-  await new Promise(done => setImmediate(done));
+  for (let i = 0; i < 5; i++) await new Promise(done => setImmediate(done));
   return { f, node, click: id => events.get(`recovery-${id}:click`)({ isTrusted: true }), close: () => timers.forEach(clearTimeout) };
 }
 test("recovery page connects the already-authorized extension and shows its balance", async () => {
@@ -308,9 +308,9 @@ for (const failRead of [false, true]) test(`a stale status ${failRead ? "error" 
   p.f.pauseRead = true;
   const checking = p.click("refresh"); await new Promise(done => setImmediate(done));
   rejectSend(Object.assign(new Error("User rejected"), { code: 4001 })); await sending;
-  assert.match(p.node("recovery-status").textContent, /You declined/);
+  assert.match(p.node("recovery-status").textContent, /wallet request did not finish/);
   finishRead(); await checking;
-  assert.match(p.node("recovery-status").textContent, /You declined/);
+  assert.match(p.node("recovery-status").textContent, /wallet request did not finish/);
   assert.equal(p.node("recovery-send").disabled, false);
   assert.equal(p.f.stored.size, 0); assert.equal(p.f.sends.length, 1); p.close();
 });
@@ -399,4 +399,167 @@ if (process.env.RECOVERY_BROWSER_TEST === "1") test("real browser: review, reloa
       await context.close();
     }
   } finally { if (browser) await browser.close(); await new Promise(resolve => server.close(resolve)); }
+});
+
+// Synthetic bytecode is mapped only for these two reviewed hash pins. All ABI,
+// selectors, event hashing, and receipt validation use the real EVM helper.
+function expiryFixture() {
+  const f = fixture();
+  const localCore = require('../site/bounty-recovery.js')({ ...evm, keccak256Hex: code => code === '0x6001'
+    ? '0x06f810de7b46f854ecc29e9c0c28156edab4b0d3e0bbe2bf5be8876687bebfc6'
+    : code === '0x6002' ? '0xc36fcba5176b2cd8b57a9fd0cbf931177dc8b36cf8367c1568ccebe5f03be3f6' : evm.keccak256Hex(code) });
+  Object.assign(f, { now: () => 1000000, state: 2, round: 3, deadline: 900, fundingDeadline: 950, bond: 1000000n, pool: 2000000n, reads: [], sessions: [] });
+  f.plan = async (action, contract, account) => ({ from: account, to: contract, function: 'expireClaim()', data: core.selector('expireClaim()'), value_wei: 0, ...f.badPlan });
+  f.expiryRpc = { session(limit) {
+    const session = []; f.sessions.push(session);
+    return async (index, method, params) => {
+      const call = { index, method, params }; session.push(call); f.reads.push(call); assert.ok(session.length <= limit);
+      if (f.override) { const result = f.override(call); if (result !== undefined) return result; }
+      if (method === 'eth_chainId') return core.CHAIN;
+      if (method === 'eth_getBlockByNumber') return { number: params[0] === 'safe' || params[0] === 'latest' ? '0x64' : params[0], hash: BLOCK, timestamp: '0x3e8' };
+      if (method === 'eth_getCode') return params[0] === core.FACTORY ? '0x6001' : params[0] === core.IMPLEMENTATION ? '0x6002' : core.CODE;
+      if (method === 'eth_getTransactionCount') return '0x1';
+      if (method === 'eth_estimateGas') return '0x122be';
+      if (method === 'eth_getTransactionReceipt') return f.receipt;
+      if (method === 'eth_getTransactionByHash') return f.transaction;
+      if (method === 'eth_call') {
+        const signature = params[0].data.slice(0,10);
+        const values = { 'implementation()': addr(core.IMPLEMENTATION), 'isCanonicalBounty(address)': word(1), 'factory()': addr(core.FACTORY), 'settlementToken()': addr(core.TOKEN), 'creator()': addr(OTHER), 'bountyId()': ID, 'termsHash()': '0x'+'7'.repeat(64), 'status()': word(f.state), 'round()': word(f.round), 'claimExpiresAt()': word(f.deadline), 'fundingDeadline()': word(f.fundingDeadline), 'solver()': addr(OTHER), 'activeClaimBond()': word(f.bond), 'timeoutBondPool()': word(f.pool), 'fundedAmount()': word(f.funded), 'expireClaim()': '0x' };
+        for (const [name,value] of Object.entries(values)) if (core.selector(name) === signature) return value;
+      }
+      throw new Error('Unexpected expiry read '+method);
+    };
+  } };
+  f.engine = () => localCore.create(f);
+  f.review = e => e.expirySnapshot(BOUNTY,3);
+  f.release = (e,reviewed) => e.requestExpiry({ contract: BOUNTY, account: OWNER, round: 3, reviewed, provider: f.provider });
+  f.confirmExpiry = () => {
+    f.transaction = { hash: TX, from: OWNER, to: BOUNTY, input: core.selector('expireClaim()'), value:'0x0', chainId:core.CHAIN, blockHash:BLOCK, blockNumber:'0x64', transactionIndex:'0x0' };
+    f.receipt = { transactionHash:TX,from:OWNER,to:BOUNTY,blockHash:BLOCK,blockNumber:'0x64',transactionIndex:'0x0',status:'0x1',logs:[{address:BOUNTY,topics:[core.topic('ClaimExpired(bytes32,uint64,address,uint256,uint256)'),ID,word(3),addr(OTHER)],data:'0x'+evm.uint256Word(f.bond)+evm.uint256Word(f.pool+f.bond),removed:false,transactionHash:TX,blockHash:BLOCK,blockNumber:'0x64',transactionIndex:'0x0',logIndex:'0x0'}] };
+  };
+  return f;
+}
+test('expiry checks two readers within 56/64 calls, permits noncreator, and preserves passed funding deadline', async () => {
+  const f=expiryFixture(), e=f.engine(), reviewed=await f.review(e);
+  assert.equal(reviewed.creator,OTHER); assert.equal(f.sessions[0].length,56);
+  assert.equal(reviewed.fundingDeadline,950);
+  await f.release(e,reviewed);
+  assert.equal(f.sessions[1].length,64); assert.equal(f.sends.length,1);
+  assert.deepEqual(f.sends[0],{from:OWNER,to:BOUNTY,value:'0x0',data:core.selector('expireClaim()'),chainId:core.CHAIN});
+  const simulations=f.sessions[1].filter(x=>x.method==='eth_call'&&x.params[0].data===core.selector('expireClaim()'));
+  assert.equal(simulations.length,2); assert.ok(simulations.every(x=>x.params[1]==='pending'&&x.params[0].from===OWNER));
+});
+test('expiry rejects changed round, boundary, code, reader disagreement and pending nonce before wallet send', async () => {
+  const cases=[f=>{f.round=4;}, f=>{f.deadline=1000;}, f=>{f.state=3;},
+    f=>{f.override=x=>x.method==='eth_getCode'&&x.params[0]===core.IMPLEMENTATION?'0x6003':undefined;},
+    f=>{f.override=x=>x.index===1&&x.method==='eth_getBlockByNumber'?{number:'0x64',hash:'0x'+'8'.repeat(64),timestamp:'0x3e8'}:undefined;},
+    f=>{f.override=x=>x.method==='eth_getTransactionCount'&&x.params[1]==='pending'?'0x2':undefined;},
+    f=>{f.override=x=>x.index===1&&x.method==='eth_getTransactionCount'?'0x2':undefined;},
+    f=>{f.badPlan={function:'cancel()'};}, f=>{f.walletChain='0x1';}];
+  for(const mutate of cases){const f=expiryFixture(),e=f.engine(),reviewed=await f.review(e);mutate(f);await assert.rejects(f.release(e,reviewed));assert.equal(f.sends.length,0);assert.equal(f.stored.size,0);}
+});
+test('expiry changed pending state or review amount cannot be sent',async()=>{
+  for(const mode of ['pending','bond']){const f=expiryFixture(),e=f.engine(),reviewed=await f.review(e);
+    if(mode==='pending')f.override=x=>x.method==='eth_call'&&x.params[1]==='pending'&&x.params[0].data===core.selector('status()')?word(3):undefined;else f.bond++;
+    await assert.rejects(f.release(e,reviewed));assert.equal(f.sends.length,0);}
+});
+test('lost expiry wallet reply survives reload and never resends; explicit rejection before hash permits retry',async()=>{
+  for(const rejected of [false,true]){const f=expiryFixture(),e=f.engine(),reviewed=await f.review(e);f.sendError=Object.assign(new Error('lost or rejected'),rejected?{code:4001}:{});
+    await assert.rejects(f.release(e,reviewed));assert.equal(f.sends.length,1);
+    if(rejected)assert.equal(f.stored.size,0);else{assert.equal((await f.engine().reconcile(BOUNTY,OWNER)).status,'unknown');await assert.rejects(f.release(f.engine(),reviewed),/previous/);assert.equal(f.sends.length,1);}}
+});
+test('expiry pending poll reads only receipts and confirmation durably preserves exact bond evidence',async()=>{
+  const f=expiryFixture(),e=f.engine(),reviewed=await f.review(e);await f.release(e,reviewed);
+  assert.equal((await e.reconcile(BOUNTY,OWNER)).status,'pending');assert.equal(f.sessions.at(-1).length,2);
+  f.confirmExpiry();const result=await e.reconcile(BOUNTY,OWNER);
+  assert.equal(result.status,'confirmed');assert.equal(result.bond,'1000000');assert.equal(result.pool,'3000000');assert.equal(e.saved(BOUNTY,OWNER),null);
+  assert.ok([...f.stored.keys()].some(k=>k.endsWith(':confirmed')));assert.equal((await f.engine().reconcile(BOUNTY,OWNER)).status,'confirmed');assert.equal(f.sends.length,1);
+});
+test('expiry confirmation rejects wrong round, solver, bond, topic count, extra bytes, transaction and reader receipt mismatch',async()=>{
+  const mutations=[f=>{f.receipt.logs[0].removed=true;},f=>{f.receipt.logs[0].topics[2]=word(4);},f=>{f.receipt.logs[0].topics[3]=addr(OWNER);},f=>{f.receipt.logs[0].data='0x'+evm.uint256Word(2)+evm.uint256Word(3000000);},f=>{f.receipt.logs[0].topics.push(ID);},f=>{f.receipt.logs[0].data+='00';},f=>{f.transaction.input=core.selector('cancel()');},f=>{f.override=x=>x.index===1&&x.method==='eth_getTransactionReceipt'?{...f.receipt,status:'0x0'}:undefined;}];
+  for(const mutate of mutations){const f=expiryFixture(),e=f.engine();await f.release(e,await f.review(e));f.confirmExpiry();mutate(f);await assert.rejects(e.reconcile(BOUNTY,OWNER));assert.ok(e.saved(BOUNTY,OWNER));assert.equal(f.sends.length,1);}
+});
+test('expiry confirmation save failure retains pending fence',async()=>{
+  const f=expiryFixture(),e=f.engine();await f.release(e,await f.review(e));f.confirmExpiry();const set=f.storage.setItem;f.storage.setItem=(k,v)=>{if(!k.endsWith(':confirmed'))set(k,v);};
+  await assert.rejects(e.reconcile(BOUNTY,OWNER),/could not be saved/);assert.ok(e.saved(BOUNTY,OWNER));
+});
+test('expiry RPC does not retry rate limits and rejects unallowed calls before network',async()=>{
+  let calls=0;const reader=core.createExpiryRpc(async()=>{calls++;return {ok:false};}).session();
+  await assert.rejects(reader(0,'eth_chainId',[]),/unavailable/);await assert.rejects(reader(1,'eth_chainId',[]));assert.equal(calls,1);
+  const forbidden=core.createExpiryRpc(async()=>{calls++;throw new Error('wire');}).session();await assert.rejects(forbidden(0,'eth_sendTransaction',[]));assert.equal(calls,1);
+});
+test('expiry round links require exact positive safe integer',()=>{for(const value of [null,'','0','-1','3.0','3e0','9007199254740992'])assert.throws(()=>core.expiryRound(value));assert.equal(core.expiryRound('3'),3);});
+test('expiry page explains forfeiture and passed funding deadline, connects a noncreator without sending',async()=>{
+ const p=await pageFixture(()=>{},true);await p.click('connect');assert.equal(p.node('recovery-send').disabled,false);assert.equal(p.node('recovery-title').textContent,'Release expired claim');assert.match(p.node('recovery-bond').textContent,/1(?:\.0+)? USDC.*not refunded or paid/);assert.match(p.node('recovery-deadline').textContent,/Neither date is extended/);assert.equal(p.f.sends.length,0);p.close();
+});
+test('expiry page polls receipt only after trusted click and never sends on refresh',async()=>{
+ const p=await pageFixture(()=>{},true);await p.click('connect');await p.click('send');assert.equal(p.f.sends.length,1);assert.equal(p.node('recovery-send').disabled,true);assert.equal(p.f.sessions.at(-1).length,2);await p.click('refresh');assert.equal(p.f.sends.length,1);assert.equal(p.f.sessions.at(-1).length,2);p.f.confirmExpiry();await p.click('refresh');assert.match(p.node('recovery-status').textContent,/Claim 3 was released.*No deadline was extended/);assert.equal(p.node('recovery-send').disabled,true);p.close();
+});
+test('expiry page lost reply remains blocked after Check status',async()=>{
+ const p=await pageFixture(f=>{f.sendError=new Error('connection lost');},true);await p.click('connect');await p.click('send');await p.click('refresh');assert.equal(p.f.sends.length,1);assert.equal(p.node('recovery-send').disabled,true);assert.match(p.node('recovery-status').textContent,/reply was lost.*stale wallet prompt/);p.close();
+});
+test('a confirmed expiry does not break the later normal cancellation page or claim a refund',async()=>{
+ const source=expiryFixture(),e=source.engine();await source.release(e,await source.review(e));source.confirmExpiry();await e.reconcile(BOUNTY,OWNER);
+ const p=await pageFixture(f=>{f.storage=source.storage;f.stored=source.stored;f.engine=()=>({snapshot:async()=>({contract:BOUNTY,creator:OWNER,state:1,funded:'17068098',contribution:'0'}),reconcile:()=>e.reconcile(BOUNTY,OWNER),saved:()=>null});});
+ await p.click('connect');assert.match(p.node('recovery-status').textContent,/expired claim was released.*No refund or payment/);assert.equal(p.node('recovery-send').disabled,false);assert.equal(p.node('recovery-send').textContent,'Cancel old bounty');p.close();
+});
+test('expiry initial scan blocks connection and duplicate refresh until its reads finish',async()=>{
+ let release,blocked=true;const wait=new Promise(done=>{release=done;});
+ const p=await pageFixture(f=>{f.override=x=>{if(blocked&&x.method==='eth_chainId'){blocked=false;return wait.then(()=>core.CHAIN);}};},true);
+ assert.equal(p.node('recovery-connect').disabled,true);await p.click('connect');await p.click('refresh');assert.equal(p.f.sessions.length,1);assert.equal(p.f.reads.length,1);
+ release();for(let i=0;i<5;i++)await new Promise(done=>setImmediate(done));assert.equal(p.f.sessions.length,1);assert.equal(p.node('recovery-connect').disabled,false);p.close();
+});
+test('expiry receipt refresh is single flight and never amplifies pending polls',async()=>{
+ const p=await pageFixture(()=>{},true);await p.click('connect');await p.click('send');let release,blocked=true;const wait=new Promise(done=>{release=done;});p.f.override=x=>{if(blocked&&x.method==='eth_getTransactionReceipt'){blocked=false;return wait.then(()=>null);}};
+ const before=p.f.sessions.length,first=p.click('refresh');await new Promise(done=>setImmediate(done));await p.click('refresh');assert.equal(p.f.sessions.length,before+1);assert.equal(p.node('recovery-connect').disabled,true);release();await first;assert.equal(p.f.sessions.at(-1).length,2);assert.equal(p.f.sends.length,1);p.close();
+});
+test('expiry hash persistence error, including a misleading4001, never removes the durable unknown request',async()=>{
+ for(const code of [undefined,4001]){const f=expiryFixture(),e=f.engine(),reviewed=await f.review(e),set=f.storage.setItem;f.storage.setItem=(k,v)=>{if(JSON.parse(v).txHash)throw Object.assign(new Error('disk write failed'),{code});set(k,v);};await assert.rejects(f.release(e,reviewed));assert.equal(f.sends.length,1);assert.equal(f.engine().saved(BOUNTY,OWNER).txHash,null);await assert.rejects(f.release(f.engine(),reviewed),/previous/);assert.equal(f.sends.length,1);}
+});
+test('expiry parallel tabs cannot open a second wallet request',async()=>{
+ const f=expiryFixture(),e=f.engine(),reviewed=await f.review(e);let release;f.waitSend=new Promise(done=>{release=done;});const first=f.release(e,reviewed);for(let i=0;i<5;i++)await new Promise(done=>setImmediate(done));await assert.rejects(f.release(f.engine(),reviewed),/previous/);release();await first;assert.equal(f.sends.length,1);
+});
+if (process.env.RECOVERY_BROWSER_TEST === '1') test('real browser: expiry picker, review, one request, reload and exact confirmation',async()=>{
+ const {chromium}=require('playwright'),browser=await chromium.launch({headless:true});
+ const origin='http://127.0.0.1:48937',site=path.resolve(__dirname,'../site');
+ try{for(const width of [390,1280]){
+  const f=expiryFixture(),errors=[],context=await browser.newContext({viewport:{width,height:900}});
+  // Actual transport and page code run; all traffic is intercepted locally.
+  const read=f.expiryRpc.session(1000);
+  await context.route('**/*',async route=>{
+   const url=new URL(route.request().url());
+   if(['https://mainnet.base.org','https://base.drpc.org'].includes(url.origin)){
+    const body=route.request().postDataJSON();return route.fulfill({json:{jsonrpc:'2.0',id:body.id,result:await read(url.origin==='https://mainnet.base.org'?0:1,body.method,body.params)}});
+   }
+   if(url.origin==='https://api.agentizable.ai'&&url.pathname.endsWith('/expire-claim-plan')){const body=route.request().postDataJSON();return route.fulfill({json:await f.plan('expire_claim',body.bounty_contract,body.caller)});}
+   if(url.origin!==origin)return route.abort();
+   const filename=path.resolve(site,'.'+url.pathname);if(!filename.startsWith(site+path.sep)||!fs.existsSync(filename))return route.fulfill({status:404,body:''});
+   let body=fs.readFileSync(filename);if(url.pathname==='/evm.js')body=body.toString()+`\nwindow.AgentBountiesEvm={...window.AgentBountiesEvm,keccak256Hex:(original=>code=>code==='0x6001'?'0x06f810de7b46f854ecc29e9c0c28156edab4b0d3e0bbe2bf5be8876687bebfc6':code==='0x6002'?'0xc36fcba5176b2cd8b57a9fd0cbf931177dc8b36cf8367c1568ccebe5f03be3f6':original(code))(window.AgentBountiesEvm.keccak256Hex)};`;
+   return route.fulfill({body,contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css'})[path.extname(filename)]||'application/octet-stream'});
+  });
+  await context.exposeBinding('expiryWalletFixture',async(_,{method,params})=>{
+   if(method==='eth_accounts'||method==='eth_requestAccounts')return[OWNER];if(method==='eth_chainId')return core.CHAIN;
+   assert.equal(method,'eth_sendTransaction');f.sends.push(params[0]);return TX;
+  });
+  await context.addInitScript(()=>{Date.now=()=>1000000;window.ethereum={isMetaMask:true,on:()=>{},request:args=>window.expiryWalletFixture(args)};});
+  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(`${origin}/recover-bounty.html?bountyContract=${BOUNTY}&network=base-mainnet&action=expire_claim&round=3&analytics=off`);
+  await page.getByRole('button',{name:'Connect my wallet',exact:true}).click();
+  assert.equal(await page.getByRole('dialog').getByText(/Buy USDC/).count(),0);
+  await page.getByRole('button',{name:/MetaMask in this browser/}).click();
+  await page.getByText(/Review claim 3/).waitFor();assert.equal(f.sends.length,0);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  if(process.env.RECOVERY_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.RECOVERY_SCREENSHOT_DIR,`expiry-review-${width}.png`),fullPage:true});
+  await page.getByRole('button',{name:'Release expired claim',exact:true}).click();
+  await page.getByText(/Your expiry transaction was sent/).waitFor();assert.equal(f.sends.length,1);
+  await page.reload();await page.getByRole('button',{name:'Connect my wallet',exact:true}).click();await page.getByRole('button',{name:/MetaMask in this browser/}).click();
+  await page.getByText(/Your expiry transaction was sent/).waitFor();assert.equal(f.sends.length,1);assert.equal(await page.locator('#recovery-send').isEnabled(),false);
+  f.confirmExpiry();await page.getByRole('button',{name:'Check status',exact:true}).click();await page.getByText(/Claim 3 was released/).waitFor();assert.equal(f.sends.length,1);assert.deepEqual(errors,[]);
+  if(process.env.RECOVERY_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.RECOVERY_SCREENSHOT_DIR,`expiry-confirmed-${width}.png`),fullPage:true});
+  await context.close();
+ }}finally{await browser.close();}
+});
+test('expiry page never says no transaction was sent when hash persistence throws4001',async()=>{
+ const p=await pageFixture(f=>{const set=f.storage.setItem;f.storage.setItem=(k,v)=>{if(JSON.parse(v).txHash)throw Object.assign(new Error('write failed after returned hash'),{code:4001});set(k,v);};},true);
+ await p.click('connect');assert.match(p.node('recovery-bond').textContent,new RegExp('Claim 3, solver '+OTHER));await p.click('send');assert.equal(p.f.sends.length,1);assert.doesNotMatch(p.node('recovery-status').textContent,/No transaction was sent/i);assert.match(p.node('recovery-status').textContent,/Check status and wallet activity/);assert.equal(p.node('recovery-send').disabled,true);await p.click('refresh');assert.equal(p.f.sends.length,1);assert.match(p.node('recovery-status').textContent,/reply was lost/);p.close();
 });

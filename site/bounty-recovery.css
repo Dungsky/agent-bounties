@@ -8,5 +8,6 @@
 .recovery-actions button { border: 1px solid currentColor; border-radius: .65rem; padding: .8rem 1rem; font: inherit; font-weight: 700; cursor: pointer; }
 .recovery-actions button:disabled { opacity: .5; cursor: default; }
 #recovery-send:not(:disabled) { background: #8ee46b; color: #10251a; }
+#recovery-bond { overflow-wrap: anywhere; }
 #recovery-status { white-space: pre-line; overflow-wrap: anywhere; }
 @media (max-width: 540px) { .recovery-page { margin: 1rem auto; padding: 1rem; } .recovery-facts { grid-template-columns: 1fr; gap: .1rem; } .recovery-facts dd { margin-bottom: .7rem; } .recovery-actions button { width: 100%; } }

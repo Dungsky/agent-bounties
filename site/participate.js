@@ -260,6 +260,7 @@
         || lower(plan.from) !== lower(input.caller) || plan.function !== signature) throw new Error("The recovery plan differs from the current bounty and timeout action.");
       return { status: "recovery_prepared", network, bounty_contract: contract, round: recovery.round, deadline: recovery.deadline,
         plan, effect: recovery.effect, expected_event: recovery.expected_event, confirmed: false, paid: false,
+        ...(recovery.action === "expire_claim" ? { review_url: `https://agentizable.ai/recover-bounty.html?bountyContract=${contract}&network=${network}&action=expire_claim&round=${recovery.round}` } : {}),
         user_confirmation_required: true, next_action: "Review the exact expiry and its bond effect before authorizing execution. No wallet, relay or payment was invoked." };
     }
     async function publishEvidence() {
