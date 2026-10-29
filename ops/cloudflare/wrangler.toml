@@ -4,6 +4,8 @@ compatibility_date = "2026-10-01"
 workers_dev = false
 
 [triggers]
-crons = ["17 12 * * *"]
+# Retired after the verified daily artifact publication on October 28, 2026.
+# The existing 3 p.m. task collects; reviewed main merges deploy through Pages.
+crons = []
 
 # PAGES_DEPLOY_HOOK is an encrypted Worker secret, never a source variable.
