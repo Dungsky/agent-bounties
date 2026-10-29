@@ -137,9 +137,9 @@
     chooser.querySelector("[data-wallet-intro]").textContent = brand ? "" : "Use one wallet to add money and approve your bounty.";
     chooser.querySelector("[data-wallet-back]").hidden = !brand;
     chooser.querySelector("[data-wallet-create]").hidden = brand !== "coinbase";
-    if (purpose === "recovery" || ["creator-open", "sponsored-setup"].includes(purpose)) {
+    if (["recovery", "claim-expiry"].includes(purpose) || ["creator-open", "sponsored-setup"].includes(purpose)) {
       chooser.querySelector("#wallet-link-title").textContent = "Connect your wallet";
-      chooser.querySelector("[data-wallet-intro]").textContent = ["creator-open", "sponsored-setup"].includes(purpose) ? "Choose the wallet that will authorize this action. Connecting does not move money." : "Use the wallet that funded this bounty. Connecting does not move money.";
+      chooser.querySelector("[data-wallet-intro]").textContent = ["creator-open", "sponsored-setup", "claim-expiry"].includes(purpose) ? "Choose the wallet that will authorize this action. Connecting does not move money." : "Use the wallet that funded this bounty. Connecting does not move money.";
       chooser.querySelector("[data-wallet-back]").hidden = true;
       chooser.querySelector("[data-wallet-create]").hidden = true;
       const available = choices().filter(item => ["creator-open", "sponsored-setup"].includes(purpose) ? !item.provider.agentBountiesCapabilities?.reviewedPostingOnly && (item.kind !== "phone" || requestedChain === 8453) : item.provider.agentBountiesCapabilities?.directTransactions !== false);

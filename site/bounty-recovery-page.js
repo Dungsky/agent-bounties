@@ -1,9 +1,9 @@
 "use strict";
 (async () => {
   const core = window.AgentBountiesRecovery;
-  const ui = Object.fromEntries(["contract", "owner", "balance", "wallet", "contribution", "connect", "send", "refresh", "status", "receipt", "next"].map(name => [name, document.getElementById(`recovery-${name}`)]));
+  const ui = Object.fromEntries(["contract", "owner", "balance", "wallet", "contribution", "connect", "send", "refresh", "status", "receipt", "next", "title", "intro", "steps", "disclosure", "deadline", "bond"].map(name => [name, document.getElementById(`recovery-${name}`)]));
   const api = "https://api.agentizable.ai";
-  let contract, provider, account, view, busy = false, walletWaiting = false, refreshing = false, timer, refreshVersion = 0;
+  let contract, provider, account, view, busy = false, walletWaiting = false, refreshing = false, timer, refreshVersion = 0, expiry = false, round = null, expiryPolls = 0, expiryRefresh = null;
   const message = text => { ui.status.textContent = text; };
   const invalidateReads = () => { refreshVersion++; clearTimeout(timer); };
   async function json(url, init) {
@@ -14,7 +14,7 @@
   const engine = core.create({
     storage: localStorage, locks: navigator.locks,
     rpc: core.createRpc(),
-    plan: (action, bounty, caller) => json(`${api}/v1/base/autonomous-bounties/${action === "cancel" ? "cancel-plan" : "refund-withdrawal-plan"}`, {
+    plan: (action, bounty, caller) => json(`${api}/v1/base/autonomous-bounties/${action === "expire_claim" ? "expire-claim-plan" : action === "cancel" ? "cancel-plan" : "refund-withdrawal-plan"}`, {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ network: "base-mainnet", bounty_contract: bounty, caller }),
     }),
   });
@@ -23,16 +23,27 @@
     ui.send.disabled = true;
     ui.refresh.disabled = refreshing || (busy && !walletWaiting);
     ui.wallet.textContent = account || "Not connected";
-    if (!view) { ui.contribution.textContent = account ? "Check status to update" : "Connect to check"; return; }
+    if (!view) { ui.contribution.textContent = expiry ? "Not needed for claim release" : account ? "Check status to update" : "Connect to check"; return; }
     ui.owner.textContent = view.creator;
     ui.balance.textContent = `${core.usdc(view.funded)} USDC`;
-    ui.contribution.textContent = account ? `${core.usdc(view.contribution)} USDC` : "Connect to check";
-    ui.send.textContent = view.state === 5 ? "Return my funds" : "Cancel old bounty";
-    if (account && provider && account === view.creator && !busy && !refreshing && !engine.saved(contract, account)) {
-      ui.send.disabled = !([0, 1].includes(view.state) || (view.state === 5 && BigInt(view.contribution) > 0n));
+    ui.contribution.textContent = expiry ? "Not needed for claim release" : account ? `${core.usdc(view.contribution)} USDC` : "Connect to check";
+    ui.send.textContent = expiry ? "Release expired claim" : view.state === 5 ? "Return my funds" : "Cancel old bounty";
+    if (expiry) {
+      ui.deadline.textContent = `Claim deadline: ${new Date(view.deadline * 1000).toLocaleString()}. Funding deadline: ${new Date(view.fundingDeadline * 1000).toLocaleString()}. Neither date is extended.`;
+      ui.bond.textContent = `Claim ${view.round}, solver ${view.solver}: ${core.usdc(view.bond)} USDC moves from the solver's bond to the bounty's bonus pool. It is not refunded or paid to you.`;
+    }
+    if (account && provider && (expiry || account === view.creator) && !busy && !refreshing && !engine.saved(contract, account)) {
+      ui.send.disabled = expiry ? view.state !== 2 || view.round !== round : !([0, 1].includes(view.state) || (view.state === 5 && BigInt(view.contribution) > 0n));
     }
   }
-  async function refresh() {
+  function refresh() {
+    if (!expiry) return refreshOnce();
+    if (expiryRefresh) return expiryRefresh;
+    refreshing = true; render();
+    expiryRefresh = refreshOnce().finally(() => { expiryRefresh = null; refreshing = false; render(); });
+    return expiryRefresh;
+  }
+  async function refreshOnce() {
     clearTimeout(timer);
     const connected = account, version = ++refreshVersion;
     const current = () => version === refreshVersion && connected === account;
@@ -40,7 +51,20 @@
     try {
       result = connected ? await engine.reconcile(contract, connected) : { status: "idle" };
       if (!current()) return;
-      nextView = await engine.snapshot(contract, connected);
+      if (expiry && ["pending", "unknown", "failed", "confirmed"].includes(result.status) && (result.status !== "confirmed" || result.action !== "expire_claim" || result.round === round)) {
+        if (result.txHash) { ui.receipt.href = `https://basescan.org/tx/${result.txHash}`; ui.receipt.hidden = false; }
+        if (result.status === "confirmed" && result.action === "expire_claim") {
+          message(`Claim ${result.round} was released. Its ${core.usdc(result.bond)} USDC bond moved to the bounty's bonus pool. No deadline was extended and no payment or refund was made.`);
+          view = null; render(); ui.send.textContent = "Claim expiry confirmed"; return;
+        }
+        message(result.status === "failed" ? "The transaction failed. No claim was released. Check the current state before preparing anything else."
+          : result.status === "pending" ? "Your expiry transaction was sent. Waiting for confirmation; do not send it again."
+          : "A wallet request is still open or its reply was lost. Check wallet activity. Cancel a stale wallet prompt; do not confirm it later or send another request.");
+        view = null; render();
+        if (result.status === "pending" && ++expiryPolls < 4) timer = setTimeout(() => refresh().catch(error => { view = null; message(error.message); render(); }), 15000);
+        return;
+      }
+      nextView = expiry ? await engine.expirySnapshot(contract, round) : await engine.snapshot(contract, connected);
     } catch (error) { if (current()) throw error; return; }
     if (!current()) return;
     view = nextView;
@@ -49,10 +73,12 @@
       ui.receipt.href = `https://basescan.org/tx/${result.txHash}`;
       ui.receipt.hidden = false;
     }
-    if (result.status === "confirmed") message(result.action === "cancel" ? "Cancellation confirmed. Choose Return my funds for the separate refund request." : `${core.usdc(result.amount)} USDC returned to your wallet. The refund is complete.`);
+    if (result.status === "confirmed" && result.action === "expire_claim") message("The expired claim was released. No refund or payment was made. Review the current bounty state before choosing its next recovery step.");
+    else if (result.status === "confirmed") message(result.action === "cancel" ? "Cancellation confirmed. Choose Return my funds for the separate refund request." : `${core.usdc(result.amount)} USDC returned to your wallet. The refund is complete.`);
     else if (result.status === "failed") message("The transaction failed. No recovery step was completed. Review the current state before trying again.");
     else if (result.status === "pending") message("Your transaction was sent. Waiting for confirmation on Base; do not send it again.");
     else if (result.status === "unknown") message(walletWaiting ? "Open your wallet to finish the refund or cancellation request. If you already confirmed it, wait for the receipt. Do not send it again." : result.message);
+    else if (expiry) message(account ? `Review claim ${round}. Releasing it forfeits the solver's ${core.usdc(view.bond)} USDC bond to the bounty's bonus pool. Your wallet shows the Base gas fee.` : "Connect the wallet you want to use. Connecting does not move money. Any wallet may release this expired claim.");
     else if (!account) message("Connect the wallet that created this bounty. Connecting does not cancel or spend anything.");
     else if (account !== view.creator) message("This is not the creator wallet. Connect the creator address shown above.");
     else if ([2, 3].includes(view.state)) message("There is an active claim or submission. This page cannot cancel it or interrupt the solver.");
@@ -63,11 +89,11 @@
     if (result.status === "pending") timer = setTimeout(() => refresh().catch(error => { view = null; message(error.message); render(); }), 10000);
   }
   ui.connect.addEventListener("click", async () => {
-    if (busy) return;
+    if (busy || refreshing) return;
     invalidateReads();
     busy = true; render();
     try {
-      const choice = await window.AgentBountiesWalletLink.select({ purpose: "recovery" });
+      const choice = await window.AgentBountiesWalletLink.select({ purpose: expiry ? "claim-expiry" : "recovery" });
       if (choice.provider?.agentBountiesCapabilities?.directTransactions === false) throw new Error("Choose MetaMask or another wallet that supports direct contract calls.");
       message(choice.kind === "phone" ? "Open your phone wallet to connect. This does not move money." : `Open ${choice.label} in your browser. Unlock it and approve the connection if asked.`);
       const selected = await core.connectWallet(choice.provider);
@@ -80,7 +106,7 @@
       provider = choice.provider; account = selected; view = null;
       const changed = () => { if (provider !== choice.provider) return; invalidateReads(); provider = null; account = null; ui.next.hidden = true; ui.send.disabled = true; message("Your wallet changed. Connect it again before continuing."); render(); };
       provider.on?.("accountsChanged", changed); provider.on?.("chainChanged", changed); provider.on?.("disconnect", changed);
-      render(); ui.contribution.textContent = "Checking…"; message("Wallet connected. Checking your refundable balance…");
+      render(); ui.contribution.textContent = "Checking…"; message(expiry ? "Wallet connected. Checking the expired claim…" : "Wallet connected. Checking your refundable balance…");
       await refresh();
     } catch (error) { view = null; message(error.code === -32002 ? "A connection request is already open in your wallet. Finish it there, then connect again." : error.code === 4001 ? "Connection cancelled. Choose Connect my wallet when you are ready." : error.message); }
     finally { busy = false; render(); }
@@ -90,26 +116,40 @@
     invalidateReads();
     busy = true; render();
     try {
-      const action = view.state === 5 ? "refund" : "cancel";
-      await engine.request({ contract, account, action, provider, onProgress: stage => {
+      const action = expiry ? "expire_claim" : view.state === 5 ? "refund" : "cancel";
+      const request = expiry ? engine.requestExpiry : engine.request;
+      expiryPolls = 0;
+      await request({ contract, account, action, round, reviewed: view, provider, onProgress: stage => {
         walletWaiting = stage === "wallet_approval";
         message(stage === "wallet_check" ? "Checking that your wallet is connected…" : stage === "bounty_check" ? "Checking the bounty and network fee. No wallet approval has been requested yet."
-          : `Open your wallet to confirm the ${action === "refund" ? "refund to your own address" : "cancellation"}. Your wallet shows the Base network fee. Do not send another request.`);
+          : `Open your wallet to confirm the ${action === "expire_claim" ? "claim expiry and bond forfeiture" : action === "refund" ? "refund to your own address" : "cancellation"}. Your wallet shows the Base network fee. Do not send another request.`);
         render();
       } });
       walletWaiting = false;
       await refresh();
-    } catch (error) { invalidateReads(); message(error.code === 4001 ? "You declined the wallet request. No transaction was sent." : `${error.message}\nCheck wallet activity before retrying if a request was opened.`); }
+    } catch (error) { invalidateReads(); message(error.code === 4001 ? "The wallet request did not finish. Check status and wallet activity before trying again." : `${error.message}\nCheck wallet activity before retrying if a request was opened.`); }
     finally { busy = false; walletWaiting = false; render(); }
   });
   ui.refresh.addEventListener("click", async () => {
     if (refreshing || (busy && !walletWaiting)) return;
     refreshing = true; render();
-    try { await refresh(); } catch (error) { view = null; message(error.message); }
+    try { expiryPolls = 0; await refresh(); } catch (error) { view = null; message(error.message); }
     finally { refreshing = false; render(); }
   });
   try {
-    contract = core.address(new URLSearchParams(location.search).get("bountyContract"));
+    const params = new URLSearchParams(location.search);
+    contract = core.address(params.get("bountyContract"));
+    if (params.has("network") && params.get("network") !== "base-mainnet") throw new Error("Open a supported bounty on Base.");
+    if (params.has("action") && params.get("action") !== "expire_claim") throw new Error("This recovery action is not supported here.");
+    expiry = params.get("action") === "expire_claim";
+    if (expiry) {
+      round = core.expiryRound(params.get("round"));
+      ui.title.textContent = "Release expired claim";
+      ui.intro.textContent = "Release a claim after its work deadline. The solver's bond goes to the bounty's bonus pool. This is not a refund or payment.";
+      ui.steps.hidden = true; ui.deadline.hidden = false; ui.bond.hidden = false;
+      ui.disclosure.textContent = "Your wallet confirms one call sending 0 ETH to the bounty, plus the Base gas fee. No deadline is extended. Cancel any stale wallet prompt and check status before trying again.";
+      ui.send.textContent = "Release expired claim";
+    }
     ui.contract.textContent = contract;
     await refresh();
   } catch (error) { view = null; message(error.message); render(); }
