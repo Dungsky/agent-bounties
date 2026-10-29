@@ -126,11 +126,14 @@ def collect_snapshot(
     include_enrichment: bool = True,
     activity_since: str | None = None,
     include_repository_traffic: bool = False,
+    api_reader: Callable[..., list[dict[str, Any]]] | None = None,
+    pull_reviews_reader: Callable[[str, list[dict[str, Any]]], list[dict[str, Any]]] | None = None,
 ) -> dict[str, Any]:
-    issues = gh_api(repository, "issues?state=all&per_page=100")
-    pulls = gh_api(repository, "pulls?state=all&per_page=100")
-    issue_comments = gh_api(repository, "issues/comments?per_page=100")
-    review_comments = gh_api(repository, "pulls/comments?per_page=100")
+    read_api = api_reader or gh_api
+    issues = read_api(repository, "issues?state=all&per_page=100")
+    pulls = read_api(repository, "pulls?state=all&per_page=100")
+    issue_comments = read_api(repository, "issues/comments?per_page=100")
+    review_comments = read_api(repository, "pulls/comments?per_page=100")
     reviews: list[dict[str, Any]] = []
     reviewable_pulls = pulls
     if activity_since:
@@ -146,9 +149,11 @@ def collect_snapshot(
     ]
 
     def pull_reviews(number: int) -> tuple[int, list[dict[str, Any]]]:
-        return number, gh_api(repository, f"pulls/{number}/reviews?per_page=100")
+        return number, read_api(repository, f"pulls/{number}/reviews?per_page=100")
 
-    if review_numbers:
+    if pull_reviews_reader is not None:
+        reviews = pull_reviews_reader(repository, reviewable_pulls)
+    elif review_numbers:
         with ThreadPoolExecutor(max_workers=min(8, len(review_numbers))) as executor:
             for number, records in executor.map(pull_reviews, review_numbers):
                 for review in records:
@@ -168,7 +173,7 @@ def collect_snapshot(
         for issue in bounty_issues:
             number = issue.get("number")
             if isinstance(number, int):
-                for reaction in gh_api(
+                for reaction in read_api(
                     repository,
                     f"issues/{number}/reactions?per_page=100",
                     accept="application/vnd.github+json",
@@ -176,7 +181,7 @@ def collect_snapshot(
                     reaction["issue_number"] = number
                     reactions.append(reaction)
 
-        stargazers = gh_api(
+        stargazers = read_api(
             repository,
             "stargazers?per_page=100",
             accept="application/vnd.github.star+json",

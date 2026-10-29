@@ -78,10 +78,43 @@ only after this change is reviewed:
    rebuild through its separately reviewed configuration change.
 
 This path is prepared; an automated daily publisher has not been established.
-The current full-history collector remains bounded by its existing per-endpoint
-limits and may still exhaust GitHub rate limits. Incremental caching and a
-shared cycle request budget remain separate work; failed collection must not
-block application compilation or be retried in a tight loop.
+The full-history collector reads issue/comment pages through REST and batches
+review queries for 20 exact PR node IDs at a time. Each review connection fetches
+up to 100 records per page; overflow is paginated individually, with a hard
+100-page/10,000-review limit per PR. Node identity, repository, complete page
+counts, distinct review IDs and cursor progress must all agree. Any missing or
+partial response, count drift, unsupported access or limit exhaustion fails the
+collection; it never falls back to another full REST scan or treats missing
+reviews as zero. The GraphQL request is a fixed read-only query, with no review
+text or mutation fields. Bots and deleted authors retain the same metric rules.
+
+A shared `RequestBudget` admits at most 1,200 total REST and GraphQL requests in
+210 seconds, including calls from concurrent threads. Each network timeout is
+bounded by the remaining time. REST and GraphQL response quota headers must be
+valid nonnegative integers when present. A value below 500 stops collection;
+a value of 500 permits that completed response but blocks another request from
+that quota pool. Missing headers are tolerated. Precheck both quota pools before
+an operational run. These checks stop on observed quota and locally reserve the
+minimum unit before each shared-reader request; they are not an account-wide
+reservation. Other account activity or a higher GraphQL query cost can change
+remaining quota between observations. The actual fresh collector is sequential.
+No rate-limit retry or broader credential fallback is permitted.
+An operational wrapper should pass the same
+budget through `refresh(..., budget=budget)` and record
+`budget.requests_started`; wrapping only `Reader.page` misses GraphQL requests.
+The budget does not authorize more attempts. Keep the daily receipt's existing
+exclusive creation and reuse a successful same-cycle aggregate only when its
+exact collector source, exclusion policy and content hash match. A source or
+policy change requires a separately recorded bounded run, not silent reuse or a
+reset of an exhausted cycle. On restart or failure, do not retry in a tight loop.
+
+No incremental raw cache is introduced. Each allowed collection reads the full
+current review set, so edits, deleted reviews and deleted authors are reflected
+without relying on PR update timestamps to invalidate saved reviews. There is
+no cross-run checkpoint to mislabel as a complete new observation. A GitHub
+change during pagination may cause a safe failure; this is an observed scan,
+not a promise of an atomic repository snapshot. Only a completely validated
+aggregate is atomically published, and failed collection never blocks builds.
 
 Keep the previous host available until both production domains serve the exact
 source, wallet configuration, notification handler and manifest over valid TLS.
