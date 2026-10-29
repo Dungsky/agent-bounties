@@ -10,10 +10,11 @@ whether the aggregate was reused or unavailable. A new build never refreshes
 an old observation timestamp.
 
 The durable input is the versioned `site/generated/github-participation.json`
-in the reviewed release source. The current checked-in aggregate was recovered from the verified website
-release c232675, observed October 28 at 21:21:12 UTC. Its collector and exclusion
-policy match the reviewed source; only the policy digest was added. Counts and
-observation windows are unchanged. When no trusted aggregate is supplied, the
+in the reviewed release source. The first fresh daily collection was published in
+release `5495345`, observed October 29 at 00:07:32 UTC (October 28 locally).
+Its exact bytes, original observation time and policy digest were verified on
+both production domains and the immutable deployment. This replaces the earlier
+recovered snapshot without rewriting its historical evidence. When no trusted aggregate is supplied, the
 build uses unavailable with no counts and no invented observation time. A fresh checkout therefore makes no assumption
 about a previous deployment's files. Malformed input, raw fields, unreviewed
 metadata, wrong schema or changed exclusion policy stop validation; they do not
@@ -27,8 +28,8 @@ Raw records and the token remain in memory. Use `--output` to write a candidate 
 directory, then review and publish only that aggregate with its original
 observation windows in the release source. Do not commit
 private raw collection records. A failed attempt preserves the last success and
-must be reported separately; this patch does not establish a daily publisher or
-an incremental collection cache.
+must be reported separately. The existing 3 p.m. task now performs reviewed
+daily collection and publication; no incremental collection cache is used.
 
 Public build variables remain the existing Coinbase and WalletConnect project
 IDs, analytics measurement ID, `NODE_VERSION=22`, `PYTHON_VERSION=3.12` and
@@ -37,10 +38,12 @@ actual age. The existing two-hour delay threshold is unchanged; delayed data
 cannot supply a current complete account headline. Canonical payment metrics
 remain independent of optional GitHub participation coverage.
 
-The existing free Worker requests a Pages rebuild at 12:17 UTC. Rebuilding no
-longer collects GitHub activity. Its schedule is unchanged here; remove that
-duplicate rebuild only after the owner's daily artifact publication path is
-verified. The legacy GitHub Pages workflow is retained as manual validation only, with
+The redundant Worker's daily 12:17 UTC rebuild trigger was removed after the
+first fresh daily artifact publication was verified on October 28, 2026.
+Its saved production settings show no cron triggers, and `ops/cloudflare/wrangler.toml`
+keeps the trigger list empty so a later deployment cannot restore it by accident.
+The Worker code and scoped encrypted hook remain available; do not restore the
+schedule. Rebuilding does not collect GitHub activity. The legacy GitHub Pages workflow is retained as manual validation only, with
 its deployment job disabled in source. Its live disabled setting must remain
 disabled; no paid duplicate push or daily builds are needed. Neither schedule is proof of fresh metrics.
 The Worker hook stays restricted to this project and production branch; it has
@@ -50,8 +53,8 @@ aggregate hash and observation time. New source pushes still deploy normally.
 
 ## Existing 3 p.m. task: trusted aggregate publication
 
-No new schedule or storage provider is required. Extend the existing daily task
-only after this change is reviewed:
+The existing daily task owns this procedure. No new schedule or storage provider
+is required:
 
 1. After GitHub review, inspect that day's report watermark. Reuse a successful
    same-cycle collection; do not scan again for every deployment or retry.
@@ -73,11 +76,12 @@ only after this change is reviewed:
    granted by a scheduled collection. Preserve no-publication holds when present.
 5. Verify Cloudflare's resulting deployment and compare live manifest/aggregate
    hashes and observation time to the candidate before recording publication as
-   verified. Keep the old source artifact until that succeeds. Once one real
-   daily publication cycle is verified, retire the redundant Cloudflare daily
-   rebuild through its separately reviewed configuration change.
+   verified. Keep the old source artifact until that succeeds. The redundant
+   Cloudflare daily rebuild is already retired; keep it disabled.
 
-This path is prepared; an automated daily publisher has not been established.
+The first complete daily collection and publication cycle is verified. Each
+later run still requires its own source, aggregate and live-publication evidence;
+a successful past cycle does not make a future observation fresh.
 The full-history collector reads issue/comment pages through REST and batches
 review queries for 20 exact PR node IDs at a time. Each review connection fetches
 up to 100 records per page; overflow is paginated individually, with a hard
