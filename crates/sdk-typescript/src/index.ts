@@ -2108,15 +2108,44 @@ export class AgentBountiesClient {
   async publishAutonomousBountyTerms(
     creatorWallet: string,
     document: Record<string, unknown>,
+    idempotencyKey: string,
   ): Promise<unknown> {
-    return this.autonomousPost("terms", {
+    // Keep this key and exact document across retries. Creator authority is
+    // required; operator credentials do not qualify. Conflicts are not retried.
+    if (typeof idempotencyKey !== "string" || !/^[\x21-\x7e]{1,200}$/.test(idempotencyKey)) {
+      throw new Error("Use a stable printable Idempotency-Key of 1..200 characters");
+    }
+    return this.post("/v1/base/autonomous-bounties/terms", {
       creator_wallet: creatorWallet,
       document,
-    });
+    }, { "Idempotency-Key": idempotencyKey });
   }
 
   async getAutonomousBountyTerms(termsHash: string): Promise<unknown> {
     return this.request(`/v1/base/autonomous-bounties/terms/${termsHash}`);
+  }
+
+  async getVerifiedAutonomousBountyTerms(
+    termsHash: string, creatorWallet: string, document: Record<string, unknown>,
+  ): Promise<unknown> {
+    // Explicit immutable readback only. This does not resume signing or funding.
+    if (!/^0x[0-9a-f]{64}$/.test(termsHash)) throw new Error("Use a canonical terms hash");
+    const canonical = (value: unknown): string => {
+      if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
+      if (value && typeof value === "object") return "{" + Object.keys(value).sort().map(key => JSON.stringify(key) + ":" + canonical((value as Record<string, unknown>)[key])).join(",") + "}";
+      const encoded = JSON.stringify(value);
+      if (encoded === undefined || (typeof value === "number" && !Number.isFinite(value))) throw new Error("Terms must contain JSON values");
+      return encoded;
+    };
+    const record = await this.getAutonomousBountyTerms(termsHash) as Record<string, unknown> | null;
+    if (!record || record.terms_hash !== termsHash || String(record.creator_wallet).toLowerCase() !== creatorWallet.toLowerCase()
+      || canonical(record.document) !== canonical(document)) throw new Error("Existing terms do not match the expected identity, creator and document");
+    for (const [field, value] of [["terms_hash", document], ["policy_hash", document.verification_policy],
+      ["acceptance_criteria_hash", document.acceptance_criteria], ["benchmark_hash", document.benchmark], ["evidence_schema_hash", document.evidence_schema]] as const) {
+      const hash = "0x" + Array.from(keccak_256(new TextEncoder().encode(canonical(value))), byte => byte.toString(16).padStart(2, "0")).join("");
+      if (record[field] !== hash) throw new Error("Existing terms commitment mismatch: " + field);
+    }
+    return record;
   }
 
   async publishAutonomousSubmissionEvidence(request: {

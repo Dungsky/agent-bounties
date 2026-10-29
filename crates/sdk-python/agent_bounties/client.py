@@ -1,4 +1,6 @@
 import hashlib
+import json as json_module
+import re
 import os
 import secrets
 import time
@@ -1348,17 +1350,40 @@ class AgentBountiesClient:
     def get_agent_paid_status(self, agent_id: str):
         return self._request("GET", f"/v1/agents/{agent_id}/paid-status")
 
-    def publish_autonomous_bounty_terms(self, creator_wallet: str, document: dict):
+    def publish_autonomous_bounty_terms(self, creator_wallet: str, document: dict, *, idempotency_key: str):
+        """Publish with creator authority; persist this key and exact document for retries.
+
+        A 409 publication_already_exists must be read and checked explicitly.
+        Publication never signs or funds a bounty; operator tokens are insufficient.
+        """
+        if not isinstance(idempotency_key, str) or not re.fullmatch(r"[\x21-\x7e]{1,200}", idempotency_key):
+            raise ValueError("Use a stable printable Idempotency-Key of 1..200 characters")
         return self._request(
             "POST",
             "/v1/base/autonomous-bounties/terms",
             json={"creator_wallet": creator_wallet, "document": document},
+            headers={"Idempotency-Key": idempotency_key},
         )
 
     def get_autonomous_bounty_terms(self, terms_hash: str):
         return self._request(
             "GET", f"/v1/base/autonomous-bounties/terms/{terms_hash}"
         )
+
+    def get_verified_autonomous_bounty_terms(self, terms_hash: str, creator_wallet: str, document: dict):
+        """Explicit readback only; never resumes creation, signing or funding."""
+        if not re.fullmatch(r"0x[0-9a-f]{64}", terms_hash):
+            raise ValueError("Use a canonical terms hash")
+        record = self.get_autonomous_bounty_terms(terms_hash)
+        canonical = lambda value: json_module.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        if not isinstance(record, dict) or record.get("terms_hash") != terms_hash or str(record.get("creator_wallet", "")).lower() != creator_wallet.lower() or canonical(record.get("document")) != canonical(document):
+            raise ValueError("Existing terms do not match the expected identity, creator and document")
+        for field, value in (("terms_hash", document), ("policy_hash", document["verification_policy"]),
+                             ("acceptance_criteria_hash", document["acceptance_criteria"]),
+                             ("benchmark_hash", document["benchmark"]), ("evidence_schema_hash", document["evidence_schema"])):
+            if record.get(field) != "0x" + keccak(canonical(value)).hex():
+                raise ValueError("Existing terms commitment mismatch: " + field)
+        return record
 
     def publish_autonomous_submission_evidence(
         self,

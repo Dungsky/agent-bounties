@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import terms_publication_client
 import hashlib
 import json
 import os
@@ -416,11 +417,7 @@ def publish_terms(api: str, documents: Mapping[int, Mapping[str, Any]]) -> dict[
     published: dict[int, dict[str, Any]] = {}
     policy_hashes: set[str] = set()
     for issue, document in documents.items():
-        response = http_json(
-            "POST",
-            f"{api.rstrip('/')}/v1/base/autonomous-bounties/terms",
-            {"creator_wallet": BOUNDED_WALLET, "document": document},
-        )
+        response = terms_publication_client.publish_terms(api, BOUNDED_WALLET, document)
         if not isinstance(response, dict):
             raise DeploymentError(f"terms publication for issue #{issue} returned a non-object")
         for key in (
@@ -595,6 +592,7 @@ def deploy(
     api: str,
     output_dir: Path,
 ) -> dict[str, Any]:
+    terms_publication_client.require_creator_session(api, BOUNDED_WALLET)
     private_key = os.environ.get("BASE_KEEPER_PRIVATE_KEY", "").strip()
     if not private_key:
         raise DeploymentError("BASE_KEEPER_PRIVATE_KEY is required for deployment")

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import terms_publication_client
 import json
 import os
 from pathlib import Path
@@ -344,6 +345,7 @@ Public
 
 
 def activate(args: argparse.Namespace) -> dict[str, Any]:
+    terms_publication_client.require_creator_session(args.api, WALLET)
     private_key = os.environ.get("BASE_KEEPER_PRIVATE_KEY", "").strip()
     if not private_key:
         raise ActivationError("BASE_KEEPER_PRIVATE_KEY is required")
@@ -357,11 +359,7 @@ def activate(args: argparse.Namespace) -> dict[str, Any]:
 
     for issue, config in ISSUES.items():
         document = json.loads((ROOT / str(config["terms"])).read_text(encoding="utf-8"))
-        published = http_json(
-            "POST",
-            f"{args.api}/v1/base/autonomous-bounties/terms",
-            {"creator_wallet": WALLET, "document": document},
-        )
+        published = terms_publication_client.publish_terms(args.api, WALLET, document)
         if not isinstance(published, dict):
             raise ActivationError("terms publication returned a non-object")
         create = create_payload(document, published)

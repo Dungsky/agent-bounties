@@ -295,6 +295,7 @@ def main() -> int:
     )
     py("scripts/rehearse_immutable_watchdog.py")
     py("-m", "pip", "install", "-r", "scripts/requirements-wallet.txt")
+    py("scripts/test_terms_publication_client.py", "-v")
     for name in ("local_delegate_wallet", "self_heal", "marketplace_readiness", "leaderboard_reward_pipeline"):
         py(f"scripts/test_{name}.py", "-v")
     py("scripts/self_heal.py", "bench", "--policy", "ops/self-healing-policy.json", "--fixtures", "ops/fixtures/recovery-cases.json", "--output", "target/tmp/recovery-bench.json")
