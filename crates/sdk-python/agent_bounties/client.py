@@ -1,4 +1,6 @@
 import hashlib
+import json as json_module
+import re
 import os
 import secrets
 import time
@@ -217,6 +219,38 @@ def _v2_uint_word(value, label: str, bits: int) -> bytes:
     if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value < 2**bits:
         raise ValueError(f"{label} must fit u{bits}")
     return value.to_bytes(32, "big")
+
+
+def _normalize_terms_document(document):
+    """Mirror terms serde/defaults and claim metadata for readback only."""
+    value = json_module.loads(json_module.dumps(document, allow_nan=False))
+    if not isinstance(value, dict):
+        raise ValueError("Expected a terms document")
+    for key in ("source_url", "discovery_source"):
+        value.setdefault(key, None)
+    for key in ("image", "agent_eligibility", "claim_coordination"):
+        if value.get(key) is None:
+            value.pop(key, None)
+    defaults = {
+        "agent_eligibility": {"required_capabilities": [], "minimum_paid_completions": 0,
+            "minimum_paid_usdc_base_units": 0, "wallet_allowlist": [], "wallet_denylist": [],
+            "creator_may_claim": False, "sponsorship_allowed": False, "maximum_sponsored_bond_base_units": 100000},
+        "claim_coordination": {"exclusive_claim_seconds": 900, "waitlist_capacity": 20, "takeover_grace_seconds": 60},
+    }
+    for key, fields in defaults.items():
+        if key not in value:
+            continue
+        supplied = value[key]
+        if not isinstance(supplied, dict) or any(field not in fields or supplied[field] is None for field in supplied):
+            raise ValueError("Invalid terms policy: " + key)
+        value[key] = {**fields, **supplied}
+    if "agent_eligibility" in value:
+        for key in ("wallet_allowlist", "wallet_denylist"):
+            wallets = value["agent_eligibility"][key]
+            if not isinstance(wallets, list) or any(not isinstance(wallet, str) or not re.fullmatch(r"(?:0x)?[0-9a-fA-F]{40}", wallet) for wallet in wallets):
+                raise ValueError("Invalid eligibility wallet list")
+            value["agent_eligibility"][key] = sorted({"0x" + wallet.removeprefix("0x").lower() for wallet in wallets})
+    return value
 
 
 class AgentBountiesHttpError(httpx.HTTPStatusError):
@@ -1348,17 +1382,41 @@ class AgentBountiesClient:
     def get_agent_paid_status(self, agent_id: str):
         return self._request("GET", f"/v1/agents/{agent_id}/paid-status")
 
-    def publish_autonomous_bounty_terms(self, creator_wallet: str, document: dict):
+    def publish_autonomous_bounty_terms(self, creator_wallet: str, document: dict, *, idempotency_key: str):
+        """Publish with creator authority; persist this key and exact document for retries.
+
+        A 409 publication_already_exists must be read and checked explicitly.
+        Publication never signs or funds a bounty; operator tokens are insufficient.
+        """
+        if not isinstance(idempotency_key, str) or not re.fullmatch(r"[\x21-\x7e]{1,200}", idempotency_key):
+            raise ValueError("Use a stable printable Idempotency-Key of 1..200 characters")
         return self._request(
             "POST",
             "/v1/base/autonomous-bounties/terms",
             json={"creator_wallet": creator_wallet, "document": document},
+            headers={"Idempotency-Key": idempotency_key},
         )
 
     def get_autonomous_bounty_terms(self, terms_hash: str):
         return self._request(
             "GET", f"/v1/base/autonomous-bounties/terms/{terms_hash}"
         )
+
+    def get_verified_autonomous_bounty_terms(self, terms_hash: str, creator_wallet: str, document: dict):
+        """Explicit readback only; never resumes creation, signing or funding."""
+        if not re.fullmatch(r"0x[0-9a-f]{64}", terms_hash):
+            raise ValueError("Use a canonical terms hash")
+        record = self.get_autonomous_bounty_terms(terms_hash)
+        document = _normalize_terms_document(document)
+        canonical = lambda value: json_module.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        if not isinstance(record, dict) or record.get("terms_hash") != terms_hash or str(record.get("creator_wallet", "")).lower() != creator_wallet.lower() or canonical(record.get("document")) != canonical(document):
+            raise ValueError("Existing terms do not match the expected identity, creator and document")
+        for field, value in (("terms_hash", document), ("policy_hash", document["verification_policy"]),
+                             ("acceptance_criteria_hash", document["acceptance_criteria"]),
+                             ("benchmark_hash", document["benchmark"]), ("evidence_schema_hash", document["evidence_schema"])):
+            if record.get(field) != "0x" + keccak(canonical(value)).hex():
+                raise ValueError("Existing terms commitment mismatch: " + field)
+        return record
 
     def publish_autonomous_submission_evidence(
         self,

@@ -145,6 +145,7 @@ REQUIRED_FILES = {
     "webmcp.js",
     "participate.js",
     "wallet-session.js",
+    "terms-publication.js",
     "creator-open-core.js",
     "sponsored-setup-core.js",
     "sponsored-setup.js",
@@ -305,6 +306,7 @@ ALLOWED_UI_CODE = {
     "webmcp.js",
     "participate.js",
     "wallet-session.js",
+    "terms-publication.js",
     "creator-open-core.js",
     "sponsored-setup-core.js",
     "sponsored-setup.js",
@@ -704,7 +706,7 @@ def check_analytics(site_dir: Path, repo_root: Path) -> None:
             "data-card-verifier",
             "function renderVerifierTerms",
             "if (!ui.verifierSummary || !ui.verifier) return;",
-            'bounty-composer-v2.js?v=33',
+            'bounty-composer-v2.js?v=34',
             "function verificationReadiness",
             "verificationReadiness(benchmark, state.draft?.evidence_schema)",
             'sourceSnapshotDigest.pattern === "^sha256:[0-9a-f]{64}$"',
@@ -742,7 +744,7 @@ def check_analytics(site_dir: Path, repo_root: Path) -> None:
             'data-post-auth-start',
             'posting-auth.js?v=3',
             'solarpunk-home.js?v=32',
-            'bounty-composer-v2.js?v=33',
+            'bounty-composer-v2.js?v=34',
             'label: "LOG IN TO POST"',
             'credentials: "include"',
             'account_status === "ready" && payload.account_complete === true',
@@ -1460,6 +1462,7 @@ def main() -> int:
         str(repo_root / "scripts/test-work-history.cjs"),
         str(repo_root / "scripts/test-payout-proof.cjs"),
         str(repo_root / "scripts/test-solver-v2.cjs"),
+        str(repo_root / "scripts/test-terms-publication.cjs"),
     ], check=True)
     for relative in sorted(REQUIRED_FILES | EXPECTED_SCENE_ASSETS):
         if not (site_dir / relative).exists():

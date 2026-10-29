@@ -10,6 +10,8 @@ const { UniversalProvider } = require("../tools/phone-wallet/node_modules/@walle
 const { EthereumProvider } = require("../tools/phone-wallet/node_modules/@walletconnect/ethereum-provider");
 const createPhoneWallet = require("../site/phone-wallet.js");
 const postingSessionLibrary = require("../site/posting-session.js");
+const termsPublication = require("../site/terms-publication.js");
+const termsFixture = require("./fixtures/terms-publication-readback.json").cases[0];
 const { createPostingJournal } = require("../site/marketplace-workflow.js");
 const fundingReadinessWindow = {};
 vm.runInNewContext(fs.readFileSync(require.resolve("../site/funding-readiness.js"), "utf8"), { window: fundingReadinessWindow });
@@ -20,6 +22,9 @@ const source = fs.readFileSync(require.resolve("../site/bounty-composer-v2.js"),
 const start = source.indexOf("  async function fundApprovedBounty()"), end = source.indexOf("  function showAuthorizationRecovery", start);
 assert.ok(start >= 0 && end > start);
 const fundingFunction = source.slice(start, end) + "; fundApprovedBounty";
+const publicationStart = source.indexOf("  async function publicationRequest("), publicationEnd = source.indexOf("  function draftContext(");
+assert.ok(publicationStart >= 0 && publicationEnd > publicationStart);
+const publicationFunction = source.slice(publicationStart, publicationEnd);
 const batchFunction = source.slice(source.indexOf("  async function sendWalletCalls("), source.indexOf("  function contractTerms("));
 const walletFunctions = source.slice(source.indexOf("  function signatureParts("), source.indexOf("  async function sendWalletCalls("));
 const bindingFunctions = source.slice(source.indexOf("  async function prepareWalletRequest("), source.indexOf("  async function watchUsdcAsset("));
@@ -31,7 +36,7 @@ const syntheticSignature = "0x" + "12".repeat(64) + "1b", transactionHash = "0x"
 
 async function fixture({ adapted = true, change = null, uncertain = false, batch = false, legacy = false, pending = false,
   accountCode = batch ? "0x6001600055" : "0x", approveAuthorization = false, wrapped = false, rejectTransaction = false,
-  mutateAt = null, mutation = "draft", syncFailure = false, authorizedMismatch = null, batchReply = { id: "synthetic-batch-id" }, authorizationTamper = null, relayFault = null, gasSponsored = true, walletSignature = syntheticSignature } = {}) {
+  mutateAt = null, mutation = "draft", syncFailure = false, authorizedMismatch = null, batchReply = { id: "synthetic-batch-id" }, authorizationTamper = null, relayFault = null, gasSponsored = true, walletSignature = syntheticSignature, missingPublicationHelper = false, publicationFault = null } = {}) {
   const storage = new Map(), signing = [], statuses = [], network = [], checkpoints = [], publications = [], relays = [];
   let saved = null, broadcast = false, faulted = false, synchronized = false;
   const store = { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) };
@@ -78,11 +83,13 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
     },
   };
   win.location.assign = () => {};
+  vm.runInNewContext(fs.readFileSync(require.resolve("../site/evm.js"), "utf8"), { window: win, TextEncoder });
+  if (!missingPublicationHelper) win.AgentBountiesTermsPublication = termsPublication;
   const phone = createPhoneWallet(win, { loadVendor: async () => ({ createProvider: async () => sdk }) });
   await phone.restore();
   const provider = adapted ? phone.provider : sdk;
   const journal = createPostingJournal(win);
-  const state = { approved: true, provider, account: address, gasSponsored, balances: { usdc: 1000000n, required: 1000000n, eth: 0n }, draft: { title: "Synthetic review" }, fundingUsdc: 1 };
+  const state = { approved: true, provider, providerKind: "phone", linkedWallets: [{ address }], accountSession: { user: { id: "fixture-account" } }, taskWindowDays: 7, account: address, gasSponsored, balances: { usdc: 1000000n, required: 1000000n, eth: 0n }, draft: { title: "Synthetic review" }, fundingUsdc: 1 };
   let journey = { id: "12345678-1234-1234-1234-123456789012", role: "post", draft: state.draft };
   function mutate() {
     if (mutation === "draft") journey = { ...journey, draft: { title: "Other device revised this draft" } };
@@ -100,7 +107,18 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
     validateFundingAuthorization,
   };
   const creationNonce = "0x" + "ef".repeat(32);
-  const fundingDeadline = Math.floor(Date.now() / 1000) + (authorizationTamper === "expired" ? -1 : 3600);
+  const fundingDeadline = Math.floor(Date.now() / 1000) + 3600;
+  // Use the Rust-builder-verified record shape, not a request echo. Only this
+  // fixture's creator, nonce and live deadline vary; optional fields retain
+  // their canonical server representation. The real helper checks all hashes.
+  const committed = { ...structuredClone(termsFixture.request.document.contract_terms), creator_wallet: address,
+    creation_nonce: creationNonce, funding_deadline: fundingDeadline };
+  const publicationDocument = { ...structuredClone(termsFixture.request.document), contract_terms: committed };
+  const publishedDocument = { ...structuredClone(termsFixture.record.document), contract_terms: structuredClone(committed) };
+  const publishedRecord = { ...structuredClone(termsFixture.record), creator_wallet: address, document: publishedDocument };
+  for (const [field,value] of [["terms_hash",publishedDocument],["policy_hash",publishedDocument.verification_policy],
+    ["acceptance_criteria_hash",publishedDocument.acceptance_criteria],["benchmark_hash",publishedDocument.benchmark],["evidence_schema_hash",publishedDocument.evidence_schema]])
+    publishedRecord[field] = win.AgentBountiesEvm.keccak256Hex(win.AgentBountiesEvm.textHex(termsPublication.canonical(value)));
   const authorization = {
     types: {
       EIP712Domain: [{ name: "name", type: "string" }, { name: "version", type: "string" }, { name: "chainId", type: "uint256" }, { name: "verifyingContract", type: "address" }],
@@ -108,7 +126,7 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
     },
     domain: { name: "USD Coin", version: "2", chainId: 8453, verifyingContract: nativeUsdc },
     primaryType: "TransferWithAuthorization",
-    message: { from: address, value: "1000000", to: "0x" + "78".repeat(20), validAfter: "0", validBefore: String(fundingDeadline), nonce: creationNonce },
+    message: { from: address, value: "1000000", to: "0x" + "78".repeat(20), validAfter: "0", validBefore: String(authorizationTamper === "expired" ? Math.floor(Date.now() / 1000) - 1 : fundingDeadline), nonce: creationNonce },
   };
   if (authorizationTamper === "sender") authorization.message.from = other;
   if (authorizationTamper === "recipient") authorization.message.to = other;
@@ -135,7 +153,7 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
     approved: async () => state.approved,
     reconcile: async () => ({ creation_confirmed: broadcast && !pending, funding_confirmed: broadcast && !pending, claimable: broadcast && !pending, public_inventory_verified: broadcast && !pending }),
   };
-  const run = vm.runInNewContext(legalFunctions + bindingFunctions + walletFunctions + (legacy ? batchFunction.replace("atomicRequired:false,", "") : batchFunction) + finishFunction + fundingFunction, {
+  const run = vm.runInNewContext(legalFunctions + bindingFunctions + publicationFunction + walletFunctions + (legacy ? batchFunction.replace("atomicRequired:false,", "") : batchFunction) + finishFunction + fundingFunction, {
     postingBusy: false, postingBinding: null, postingJournal: journal, postingSession, state, window: win, ui: { form: { querySelectorAll: () => [] }, fundNow: {}, badge: {} }, document: { querySelector: () => null },
     sessionStorage: store,
     fetch: async (url, options) => {
@@ -152,10 +170,26 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
     updatePostingCost() {}, updatePostingTracker() {},
     loadProtocol: async () => ({ api_base_url: "https://api.agentizable.ai", factory: "0x" + "90".repeat(20), chain_id_hex: "0x2105", native_usdc: nativeUsdc }),
     currentRewardSplit: () => ({ solver: "900000", verifier: "100000", total: "1000000" }),
-    contractTerms: () => ({}), termsDocument: () => ({}), createPayload: () => ({ creator: address, creation_nonce: creationNonce, funding_deadline: fundingDeadline }), validateCreationPlan() {}, formatUsdc: String,
+    contractTerms: () => structuredClone(committed), termsDocument: () => structuredClone(publicationDocument), createPayload: () => ({ creator: address, creation_nonce: creationNonce, funding_deadline: fundingDeadline }), validateCreationPlan() {}, formatUsdc: String,
     requestJson: async (url, options) => {
       publications.push(url);
-      if (url.endsWith("/terms")) return {};
+      if (url.endsWith("/terms")) {
+        assert.equal(options.method, "POST");
+        assert.match(options.headers["Idempotency-Key"], /^publication-[0-9a-f-]{36}$/);
+        assert.deepEqual(JSON.parse(options.body), { creator_wallet: address, document: publicationDocument });
+        // Synthetic website-account authority is linked to this exact wallet.
+        // The happy path must not request a separate ownership signature.
+        assert.deepEqual(state.linkedWallets, [{ address }]);
+        assert.equal(options.headers.Authorization, undefined);
+        if (["authentication", "authority"].includes(publicationFault)) throw Object.assign(new Error("Publication authority required"), {
+          status: publicationFault === "authentication" ? 401 : 403,
+          body: { error_code: publicationFault === "authentication" ? "publication_authentication_required" : "publication_wallet_authority_required" },
+        });
+        const result = structuredClone(publishedRecord);
+        if (publicationFault === "hash") result.terms_hash = "0x" + "00".repeat(32);
+        if (publicationFault === "content") result.document.goal = "Substituted goal";
+        return result;
+      }
       if (url.endsWith("/authorized-creation-plan")) {
         assert.equal(JSON.parse(options.body).signature.v, 27);
         return {
@@ -176,6 +210,20 @@ async function fixture({ adapted = true, change = null, uncertain = false, batch
   return { sdk, provider, run, signing, statuses, network, journal, authorization, calls, checkpoints, publications, relays, saved: () => saved };
 }
 
+
+test("missing publication helper stops before publication, signature or relay", async () => {
+  const env = await fixture({ missingPublicationHelper: true, approveAuthorization: true });
+  await env.run();
+  assert.match(env.statuses.at(-1), /Publication checks could not load/);
+  assert.equal(env.publications.length, 0); assert.equal(env.signing.length, 0); assert.equal(env.relays.length, 0);
+});
+for (const publicationFault of ["authentication", "authority", "hash", "content"]) test(`publication ${publicationFault} stops before funding authority`, async () => {
+  const env = await fixture({ publicationFault, approveAuthorization: true });
+  await env.run();
+  assert.match(env.statuses.at(-1), publicationFault === "hash" ? /terms_hash.*does not match/ : publicationFault === "content" ? /differ from/ : /Verify this wallet/);
+  assert.equal(env.publications.length, 1); assert.ok(env.publications[0].endsWith("/terms"));
+  assert.equal(env.signing.length, 0); assert.equal(env.relays.length, 0); assert.equal(env.network.length, 0);
+});
 
 test("pinned SDK network normalization reaches one exact signature and no wallet-paid transaction", async () => {
   const old=await fixture({adapted:false});assert.equal(await old.sdk.request({method:"eth_chainId"}),8453);await old.run();assert.equal(old.signing.length,0);assert.match(old.statuses.at(-1),/network changed/);

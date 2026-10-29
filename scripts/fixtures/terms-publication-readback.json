@@ -1,0 +1,531 @@
+{
+  "schema": "terms-publication-readback-v1",
+  "cases": [
+    {
+      "name": "omitted_optional_fields",
+      "request": {
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          }
+        }
+      },
+      "record": {
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          },
+          "source_url": null,
+          "discovery_source": null
+        },
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "created_at": "2026-10-29T01:00:00Z",
+        "terms_hash": "0x5d3d6aba65e0674e0b70ec436ce95453f97cf87b10e65c7ef692af62f2c98011",
+        "policy_hash": "0x2223f956d3831185ac9431f20ad5975a42feb4046754e02c1b9c90f45f6001d7",
+        "acceptance_criteria_hash": "0x2552ed67b6aff27d2f59df87de4062d1a1d26da1ca17b66c8fd3d96a5571b4a3",
+        "benchmark_hash": "0xcd3461178742af45327d3ee23d9673e03dc12b957974098970ea43ef6d2beab1",
+        "evidence_schema_hash": "0x2b8a61dbe0f3feb891f7210882a6aac25406ec446e1f1a1656c3883f60d870c9"
+      }
+    },
+    {
+      "name": "explicit_null_omitted_fields",
+      "request": {
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          },
+          "image": null,
+          "agent_eligibility": null,
+          "claim_coordination": null
+        }
+      },
+      "record": {
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          },
+          "source_url": null,
+          "discovery_source": null
+        },
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "created_at": "2026-10-29T01:00:00Z",
+        "terms_hash": "0x5d3d6aba65e0674e0b70ec436ce95453f97cf87b10e65c7ef692af62f2c98011",
+        "policy_hash": "0x2223f956d3831185ac9431f20ad5975a42feb4046754e02c1b9c90f45f6001d7",
+        "acceptance_criteria_hash": "0x2552ed67b6aff27d2f59df87de4062d1a1d26da1ca17b66c8fd3d96a5571b4a3",
+        "benchmark_hash": "0xcd3461178742af45327d3ee23d9673e03dc12b957974098970ea43ef6d2beab1",
+        "evidence_schema_hash": "0x2b8a61dbe0f3feb891f7210882a6aac25406ec446e1f1a1656c3883f60d870c9"
+      }
+    },
+    {
+      "name": "nested_defaults_and_wallet_lists",
+      "request": {
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          },
+          "agent_eligibility": {
+            "sponsorship_allowed": true,
+            "wallet_allowlist": [
+              "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+              "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            ]
+          },
+          "claim_coordination": {
+            "waitlist_capacity": 7
+          }
+        }
+      },
+      "record": {
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          },
+          "source_url": null,
+          "discovery_source": null,
+          "agent_eligibility": {
+            "required_capabilities": [],
+            "minimum_paid_completions": 0,
+            "minimum_paid_usdc_base_units": 0,
+            "wallet_allowlist": [
+              "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            ],
+            "wallet_denylist": [],
+            "creator_may_claim": false,
+            "sponsorship_allowed": true,
+            "maximum_sponsored_bond_base_units": 100000
+          },
+          "claim_coordination": {
+            "exclusive_claim_seconds": 900,
+            "waitlist_capacity": 7,
+            "takeover_grace_seconds": 60
+          }
+        },
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "created_at": "2026-10-29T01:00:00Z",
+        "terms_hash": "0x986bf8d446a726d9c08135885570112aa3ff4ba65ed6a3625ec6d5f78fee1705",
+        "policy_hash": "0x2223f956d3831185ac9431f20ad5975a42feb4046754e02c1b9c90f45f6001d7",
+        "acceptance_criteria_hash": "0x2552ed67b6aff27d2f59df87de4062d1a1d26da1ca17b66c8fd3d96a5571b4a3",
+        "benchmark_hash": "0xcd3461178742af45327d3ee23d9673e03dc12b957974098970ea43ef6d2beab1",
+        "evidence_schema_hash": "0x2b8a61dbe0f3feb891f7210882a6aac25406ec446e1f1a1656c3883f60d870c9"
+      }
+    },
+    {
+      "name": "present_values_preserved",
+      "request": {
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          },
+          "source_url": "https://example.invalid/source",
+          "discovery_source": "exact fixture",
+          "image": {
+            "source": "chatgpt_user_generated",
+            "prompt": "Show the checked files.",
+            "alt_text": "A checked file.",
+            "asset_url": "https://example.invalid/file.webp",
+            "sha256": "abababababababababababababababababababababababababababababababab",
+            "mime_type": "image/webp"
+          }
+        }
+      },
+      "record": {
+        "document": {
+          "schema_version": "agent-bounties/terms-v1",
+          "contract_terms": {
+            "protocol_version": "agent-bounties/autonomous-v1",
+            "creator_wallet": "0x3333333333333333333333333333333333333333",
+            "network": "base-mainnet",
+            "settlement_token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "solver_reward": {
+              "amount": 900000,
+              "currency": "usdc"
+            },
+            "verifier_reward": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "claim_bond": {
+              "amount": 100000,
+              "currency": "usdc"
+            },
+            "initial_funding": {
+              "amount": 1000000,
+              "currency": "usdc"
+            },
+            "funding_deadline": 1793322000,
+            "claim_window_seconds": 3600,
+            "verification_window_seconds": 1800,
+            "creation_nonce": "0x1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "title": "Check the committed files",
+          "goal": "Make the agreed check pass.",
+          "acceptance_criteria": [
+            "Published check exits zero"
+          ],
+          "benchmark": {
+            "command": "cargo test",
+            "exit_code": 0
+          },
+          "evidence_schema": {
+            "required": [
+              "commit",
+              "check_run"
+            ]
+          },
+          "verification_policy": {
+            "mechanism": "signed_quorum",
+            "threshold": 1,
+            "verifiers": [
+              "0x4444444444444444444444444444444444444444"
+            ]
+          },
+          "source_url": "https://example.invalid/source",
+          "discovery_source": "exact fixture",
+          "image": {
+            "source": "chatgpt_user_generated",
+            "prompt": "Show the checked files.",
+            "alt_text": "A checked file.",
+            "asset_url": "https://example.invalid/file.webp",
+            "sha256": "abababababababababababababababababababababababababababababababab",
+            "mime_type": "image/webp"
+          }
+        },
+        "creator_wallet": "0x3333333333333333333333333333333333333333",
+        "created_at": "2026-10-29T01:00:00Z",
+        "terms_hash": "0x36c7e3161429cac3f58ad4507d8a203730c8cb4e4b2ad17153b8e64d33c57004",
+        "policy_hash": "0x2223f956d3831185ac9431f20ad5975a42feb4046754e02c1b9c90f45f6001d7",
+        "acceptance_criteria_hash": "0x2552ed67b6aff27d2f59df87de4062d1a1d26da1ca17b66c8fd3d96a5571b4a3",
+        "benchmark_hash": "0xcd3461178742af45327d3ee23d9673e03dc12b957974098970ea43ef6d2beab1",
+        "evidence_schema_hash": "0x2b8a61dbe0f3feb891f7210882a6aac25406ec446e1f1a1656c3883f60d870c9"
+      }
+    }
+  ]
+}

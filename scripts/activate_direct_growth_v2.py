@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import terms_publication_client
 import hashlib
 import json
 import os
@@ -714,6 +715,7 @@ def execute_creation_plan(
 
 def activate(args: argparse.Namespace) -> dict[str, Any]:
     manifest = load_manifest(args.manifest)
+    terms_publication_client.require_creator_session(args.api, manifest["wallet"])
     commit = args.commit.strip().lower()
     if not COMMIT_RE.fullmatch(commit):
         raise ActivationError("--commit must be the exact 40-character merged commit")
@@ -739,11 +741,7 @@ def activate(args: argparse.Namespace) -> dict[str, Any]:
     for task in manifest["tasks"]:
         issue = int(task["issue"])
         document = terms_document(manifest, task)
-        published = http_json(
-            "POST",
-            f"{args.api}/v1/base/autonomous-bounties/terms",
-            {"creator_wallet": manifest["wallet"], "document": document},
-        )
+        published = terms_publication_client.publish_terms(args.api, manifest["wallet"], document)
         if not isinstance(published, dict):
             raise ActivationError(
                 f"issue #{issue} terms publication returned a non-object"

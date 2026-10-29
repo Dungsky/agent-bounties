@@ -942,6 +942,35 @@ export interface AgentWalletReadinessProblem extends Record<string, unknown> {
   next_action: string;
 }
 
+// Match AutonomousBountyTermsDocument serde and validate_claim_metadata.
+// Only the expected readback is normalized; the saved wire request stays exact.
+function normalizeAutonomousTermsDocument(document: Record<string, unknown>): Record<string, unknown> {
+  const value = JSON.parse(JSON.stringify(document)) as Record<string, unknown>;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Expected a terms document");
+  for (const key of ["source_url", "discovery_source"]) if (!(key in value)) value[key] = null;
+  for (const key of ["image", "agent_eligibility", "claim_coordination"]) if (value[key] == null) delete value[key];
+  const expand = (key: string, defaults: Record<string, unknown>) => {
+    if (!(key in value)) return;
+    const supplied = value[key] as Record<string, unknown>;
+    if (!supplied || typeof supplied !== "object" || Array.isArray(supplied)
+      || Object.keys(supplied).some(field => !Object.prototype.hasOwnProperty.call(defaults, field) || supplied[field] === null)) throw new Error("Invalid terms policy: " + key);
+    value[key] = { ...defaults, ...supplied };
+  };
+  expand("agent_eligibility", { required_capabilities: [], minimum_paid_completions: 0, minimum_paid_usdc_base_units: 0,
+    wallet_allowlist: [], wallet_denylist: [], creator_may_claim: false, sponsorship_allowed: false, maximum_sponsored_bond_base_units: 100000 });
+  expand("claim_coordination", { exclusive_claim_seconds: 900, waitlist_capacity: 20, takeover_grace_seconds: 60 });
+  if (value.agent_eligibility) for (const key of ["wallet_allowlist", "wallet_denylist"]) {
+    const eligibility = value.agent_eligibility as Record<string, unknown>;
+    const wallets = eligibility[key];
+    if (!Array.isArray(wallets)) throw new Error("Invalid eligibility wallet list");
+    eligibility[key] = [...new Set(wallets.map(wallet => {
+      if (typeof wallet !== "string" || !/^(?:0x)?[0-9a-fA-F]{40}$/.test(wallet)) throw new Error("Invalid eligibility wallet");
+      return "0x" + wallet.replace(/^0x/, "").toLowerCase();
+    }))].sort();
+  }
+  return value;
+}
+
 export class AgentBountiesHttpError extends Error {
   readonly path: string;
   readonly status: number;
@@ -2108,15 +2137,45 @@ export class AgentBountiesClient {
   async publishAutonomousBountyTerms(
     creatorWallet: string,
     document: Record<string, unknown>,
+    idempotencyKey: string,
   ): Promise<unknown> {
-    return this.autonomousPost("terms", {
+    // Keep this key and exact document across retries. Creator authority is
+    // required; operator credentials do not qualify. Conflicts are not retried.
+    if (typeof idempotencyKey !== "string" || !/^[\x21-\x7e]{1,200}$/.test(idempotencyKey)) {
+      throw new Error("Use a stable printable Idempotency-Key of 1..200 characters");
+    }
+    return this.post("/v1/base/autonomous-bounties/terms", {
       creator_wallet: creatorWallet,
       document,
-    });
+    }, { "Idempotency-Key": idempotencyKey });
   }
 
   async getAutonomousBountyTerms(termsHash: string): Promise<unknown> {
     return this.request(`/v1/base/autonomous-bounties/terms/${termsHash}`);
+  }
+
+  async getVerifiedAutonomousBountyTerms(
+    termsHash: string, creatorWallet: string, document: Record<string, unknown>,
+  ): Promise<unknown> {
+    // Explicit immutable readback only. This does not resume signing or funding.
+    document = normalizeAutonomousTermsDocument(document);
+    if (!/^0x[0-9a-f]{64}$/.test(termsHash)) throw new Error("Use a canonical terms hash");
+    const canonical = (value: unknown): string => {
+      if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
+      if (value && typeof value === "object") return "{" + Object.keys(value).sort().map(key => JSON.stringify(key) + ":" + canonical((value as Record<string, unknown>)[key])).join(",") + "}";
+      const encoded = JSON.stringify(value);
+      if (encoded === undefined || (typeof value === "number" && !Number.isFinite(value))) throw new Error("Terms must contain JSON values");
+      return encoded;
+    };
+    const record = await this.getAutonomousBountyTerms(termsHash) as Record<string, unknown> | null;
+    if (!record || record.terms_hash !== termsHash || String(record.creator_wallet).toLowerCase() !== creatorWallet.toLowerCase()
+      || canonical(record.document) !== canonical(document)) throw new Error("Existing terms do not match the expected identity, creator and document");
+    for (const [field, value] of [["terms_hash", document], ["policy_hash", document.verification_policy],
+      ["acceptance_criteria_hash", document.acceptance_criteria], ["benchmark_hash", document.benchmark], ["evidence_schema_hash", document.evidence_schema]] as const) {
+      const hash = "0x" + Array.from(keccak_256(new TextEncoder().encode(canonical(value))), byte => byte.toString(16).padStart(2, "0")).join("");
+      if (record[field] !== hash) throw new Error("Existing terms commitment mismatch: " + field);
+    }
+    return record;
   }
 
   async publishAutonomousSubmissionEvidence(request: {

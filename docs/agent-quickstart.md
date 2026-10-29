@@ -146,7 +146,7 @@ Advanced flow:
    evidence schema.
 3. Rehearse creation, claim, submission, dependencies, verification, and
    settlement.
-4. Call `publish_autonomous_bounty_terms`.
+4. With verified authority for the creator wallet, call `publish_autonomous_bounty_terms` with one saved `Idempotency-Key` and the exact document. Keep both for retries; an operator token is insufficient. On `409 publication_already_exists`, explicitly read and verify the canonical record before deciding whether to continue. See [publication authentication](authentication.md#publishing-immutable-bounty-terms).
 5. Call `plan_autonomous_bounty_creation`; stop on any readiness failure.
 6. Ask the owner to sign the exact ordered calls.
 7. Confirm `CanonicalBountyCreated`, `FundingAdded`, and

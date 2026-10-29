@@ -634,9 +634,28 @@
           : `Request failed (${response.status}).`);
       const error = new Error(message);
       error.status = response.status;
+      error.body = body;
       throw error;
     }
     return body;
+  }
+
+  async function publicationRequest(api, url, options = {}) {
+    try { return await requestJson(url, options); }
+    catch (error) {
+      if (![401, 403].includes(error.status) || !["publication_authentication_required", "publication_wallet_authority_required"].includes(error.body?.error_code)) throw error;
+      const linked = state.linkedWallets.some(wallet => wallet.address.toLowerCase() === state.account.toLowerCase());
+      const supported = ["browser", "phone"].includes(state.providerKind)
+        && !state.provider.agentBountiesCapabilities?.reviewedPostingOnly
+        && state.provider.agentBountiesCapabilities?.directTransactions !== false;
+      if (linked || !supported || !window.AgentBountiesWalletSession) throw new Error("Verify this wallet in your account before publishing. This wallet cannot use the separate ownership login here. Your draft is saved; no wallet action was requested.");
+      if (!window.confirm("Prove ownership of this wallet for 15 minutes? This signature does not link your account or approve any payment.")) throw new Error("Wallet login cancelled. Your draft is saved; no payment was requested.");
+      await assertPostingBinding();
+      const token = await window.AgentBountiesWalletSession.authenticate(window, state.provider, state.account,
+        (path, body) => requestJson(api + path, { method: "POST", credentials: "omit", body: JSON.stringify(body) }), api);
+      await assertPostingBinding();
+      return requestJson(url, { ...options, credentials: "omit", headers: { ...options.headers, Authorization: `Bearer ${token}` } });
+    }
   }
 
   function draftContext(extra = "") {
@@ -1895,7 +1914,7 @@
       const accounts = await item.provider.request({ method: "eth_requestAccounts" });
       if (!accounts?.[0] || !/^0x[0-9a-f]{40}$/i.test(accounts[0])) throw new Error("The wallet did not return a valid account.");
       if (expectedAddress && accounts[0].toLowerCase() !== expectedAddress.toLowerCase()) throw new Error("This signing session belongs to another address. Choose the verified wallet you selected; no payment was requested.");
-      state.provider = item.provider; state.account = accounts[0]; state.selectedWallet = state.account;
+      state.provider = item.provider; state.providerKind = item.kind; state.account = accounts[0]; state.selectedWallet = state.account;
       state.provider.on?.("accountsChanged", (values) => {
         if (state.provider !== item.provider) return;
         if (!values?.[0] || values[0].toLowerCase() !== state.account?.toLowerCase()) {
@@ -2263,25 +2282,28 @@
         // This endpoint publishes hosted terms. It is invoked only after the
         // person's trusted funding action and durable publication consent above.
         await assertPostingBinding();
-        childPlan = await requestJson(`${api}/v1/base/autonomous-bounties/standing-meta-v2-child-preparation`, {
-          method: "POST", body: JSON.stringify(input),
+        const savedChild = window.AgentBountiesTermsPublication.reserve(window, "child", { approval: legalBinding(), input }, input);
+        childPlan = await publicationRequest(api, `${api}/v1/base/autonomous-bounties/standing-meta-v2-child-preparation`, {
+          method: "POST", headers: { "Idempotency-Key": savedChild.key }, body: JSON.stringify(savedChild.payload),
         });
         metaChild.validatePlan(childPlan, input, rewards, window.AgentBountiesEvm);
         if (childPlan.hosted_terms_published !== true) throw new Error("The exact child terms were not published; no wallet action was sent.");
         create = childPlan.child_create;
         plan = childPlan.child_creation;
       } else {
-        const committed = contractTerms(protocol, rewards);
-        const document = termsDocument(committed);
+        const publication = window.AgentBountiesTermsPublication;
+        if (!publication) throw new Error("Publication checks could not load. Reload before funding.");
+        const saved = publication.reserve(window, "direct", {
+          approval: legalBinding(), rewards: Object.fromEntries(Object.entries(rewards).map(([key, value]) => [key, String(value)])),
+          taskWindowDays: state.taskWindowDays, deliveryDeadline: state.deliveryDeadline || null, protocol,
+        }, { creator_wallet: state.account, document: termsDocument(contractTerms(protocol, rewards)) });
+        const committed = saved.payload.document.contract_terms;
         await assertPostingBinding();
-        const terms = await requestJson(`${api}/v1/base/autonomous-bounties/terms`, {
-          method: "POST",
-          headers: state.distributionAttribution ? {
+        const terms = await publication.publish(window, api, saved,
+          (url, options) => publicationRequest(api, url, options), state.distributionAttribution ? {
             "x-agent-bounties-acquisition-id": state.distributionAttribution.acquisition,
             "x-agent-bounties-handoff-id": state.distributionAttribution.handoff,
-          } : {},
-          body: JSON.stringify({ creator_wallet: state.account, document }),
-        });
+          } : {}, window.AgentBountiesEvm);
         create = createPayload(terms, committed);
         authorizationValidBefore = Math.min(create.funding_deadline, Math.floor(Date.now() / 1000) + 7200);
         plan = await requestJson(`${api}/v1/base/autonomous-bounties/creation-plan`, {
