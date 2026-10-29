@@ -43,9 +43,9 @@
     return `sha256:${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
   }
 
-  async function loadPolicy() {
-    if (policyPromise) return policyPromise;
-    policyPromise = (async () => {
+  async function loadPolicy({ fresh = false } = {}) {
+    if (policyPromise && !fresh) return policyPromise;
+    const request = (async () => {
       try {
         const protocolResponse = await fetch("protocol.json", { cache: "no-store" });
         if (!protocolResponse.ok) throw new Error("Protocol configuration unavailable.");
@@ -70,7 +70,10 @@
         };
       }
     })();
-    return policyPromise;
+    // A fresh authorization check must never fall back to a cached hosted policy.
+    // Keep the display cache separate so concurrent UI reads cannot replace it.
+    if (!fresh) policyPromise = request;
+    return request;
   }
 
   function actionsFor(root) {

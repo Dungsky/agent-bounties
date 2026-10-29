@@ -1,4 +1,8 @@
-# Measured posting-flow verification
+# Historical wallet-paid posting verification
+
+This report describes the former customer-transaction dialog flow. Its 26/24
+scenario results do not qualify the current sponsored path. For required current
+acceptance and its 56-case matrix, see [sponsored posting verification](sponsored-posting-verification.md).
 
 **Ready for local review; production remains blocked.** The supported Coinbase
 creator-review journey now completes after cancellation, top-up and reload.

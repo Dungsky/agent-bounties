@@ -2203,7 +2203,7 @@
         await finishPosting(api, { bounty_id: saved.bounty_id, predicted_bounty_contract: saved.bounty_contract }, protocol, null);
         return;
       }
-      const policy = await window.AgentBountiesLegal.loadPolicy();
+      const policy = await window.AgentBountiesLegal.loadPolicy({ fresh: true });
       const consent = saved.legal_acceptance;
       if (!consent?.durable || consent.action !== "post_bounty" || consent.wallet_address?.toLowerCase() !== state.account.toLowerCase()
         || policy.source !== "hosted" || !policy.supported_actions.includes("post_bounty")

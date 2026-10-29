@@ -176,3 +176,91 @@ test("revocation keeps wider contract-wallet signatures exact and enforces a siz
  const env=revocationHarness(fetcher,signature);await env.run();await env.run();assert.equal(requests[0].signature,signature);assert.deepEqual(requests[0],requests[1]);
  const invalid=revocationHarness(fetcher,"0x"+"12".repeat(4097));await invalid.run();assert.equal(requests.length,2);assert.match(invalid.statuses.at(-1).text,/bounded revocation/);
 });
+
+function policyHarness() {
+  const { webcrypto, createHash } = require("node:crypto");
+  const statement = "The agreed test policy";
+  const initial = { schema_version: "agent-bounties/legal-policy-v1", terms_version: "v1", privacy_version: "v1", statement,
+    statement_hash: "sha256:" + createHash("sha256").update(statement).digest("hex"), supported_actions: ["post_bounty"] };
+  const state = { policy: initial, fault: null, blockNext: null }, calls = [], win = {};
+  vm.runInNewContext(fs.readFileSync(require.resolve("../site/legal-consent.js"), "utf8"), {
+    window: win, crypto: webcrypto, TextEncoder,
+    document: { readyState: "loading", addEventListener() {} },
+    fetch: async (url, options) => {
+      calls.push(url); assert.equal(options.cache, "no-store");
+      if (url === "protocol.json") return { ok: true, json: async () => ({ api_base_url: "https://api.example" }) };
+      assert.equal(url, "https://api.example/v1/legal/policy");
+      const policy = structuredClone(state.policy), fault = state.fault, block = state.blockNext; state.blockNext = null;
+      if (block) await block;
+      return { ok: fault !== "http", status: fault === "http" ? 503 : 200,
+        json: async () => fault === "integrity" ? { ...policy, statement_hash: "sha256:" + "00".repeat(32) } : policy };
+    },
+  });
+  return { legal: win.AgentBountiesLegal, state, calls, initial };
+}
+
+test("fresh legal reads see policy changes without replacing the display cache", async () => {
+  const h = policyHarness(); const display = await h.legal.loadPolicy();
+  assert.equal((await h.legal.loadPolicy()).terms_version, "v1"); assert.equal(h.calls.length, 2);
+  h.state.policy = { ...h.initial, terms_version: "v2" };
+  assert.equal((await h.legal.loadPolicy({ fresh: true })).terms_version, "v2");
+  assert.equal(await h.legal.loadPolicy(), display); assert.equal(h.calls.length, 4);
+});
+
+test("fresh HTTP and integrity failures never return cached hosted success", async () => {
+  const h = policyHarness(), cached = await h.legal.loadPolicy();
+  for (const fault of ["http", "integrity"]) {
+    h.state.fault = fault;
+    assert.equal((await h.legal.loadPolicy({ fresh: true })).source, "bundled");
+    assert.equal(await h.legal.loadPolicy(), cached);
+  }
+  h.state.fault = null;
+  assert.equal((await h.legal.loadPolicy({ fresh: true })).source, "hosted");
+});
+
+test("concurrent display and fresh legal reads cannot replace each other's policy", async () => {
+  const h = policyHarness(); let release;
+  h.state.blockNext = new Promise(resolve => { release = resolve; });
+  const display = h.legal.loadPolicy(); await new Promise(setImmediate);
+  h.state.policy = { ...h.initial, terms_version: "v2" };
+  assert.equal((await h.legal.loadPolicy({ fresh: true })).terms_version, "v2");
+  release(); assert.equal((await display).terms_version, "v1");
+  assert.equal((await h.legal.loadPolicy()).terms_version, "v1"); assert.equal(h.calls.length, 4);
+});
+
+async function legalContinuationHarness() {
+  const h = policyHarness(); await h.legal.loadPolicy();
+  const prior = { ...structuredClone(saved), legal_acceptance: { durable: true, action: "post_bounty", wallet_address: saved.create.creator,
+    terms_version: h.initial.terms_version, privacy_version: h.initial.privacy_version, statement_hash: h.initial.statement_hash } };
+  const before = JSON.stringify(prior), calls = [], statuses = [], state = { confirmed: false };
+  const start = source.indexOf("  async function continueSignedBounty("), end = source.indexOf("  async function fundApprovedBounty(");
+  assert.ok(start >= 0 && end > start);
+  const context = vm.createContext({
+    postingBusy: false, postingBinding: null, state: { approved: true, provider: {}, account: prior.create.creator }, ui: { fundNow: {} },
+    window: { AgentBountiesLegal: h.legal, AgentBountiesPostingSession: { stable: JSON.stringify, envelope: x => x }, AgentBountiesWorkflow: { createClient: () => ({ load: () => ({}) }) } },
+    postingSession: { refresh: async () => {}, loadContinuation: async () => prior, reconcile: async () => { calls.push("reconcile"); return { funding_confirmed: state.confirmed }; }, flush: async () => {}, canContinue: () => true },
+    assertPostingBinding: async () => {}, loadProtocol: async () => ({ api_base_url: "https://api.example", factory: "factory", native_usdc: "usdc" }),
+    requestJson: async () => { calls.push("plan"); return { bounty_id: id, predicted_bounty_contract: contract }; }, validateCreationPlan() {}, currentRewardSplit: () => ({ total: 21_300_000 }),
+    relaySignedCreation: async (_api, request) => { assert.equal(request, prior); calls.push("same-authorization"); return hash; },
+    finishPosting: async () => calls.push("confirmed"), setPaymentStatus: message => statuses.push(message), renderFundingGuide() {},
+  });
+  vm.runInContext(source.slice(start, end) + "\nglobalThis.continuePosting = continueSignedBounty;", context);
+  return { ...h, prior, before, calls, policyCalls: h.calls, statuses, state: h.state, canonical: state, run: () => context.continuePosting() };
+}
+
+for (const fault of ["changed", "http", "integrity"]) test(`saved continuation blocks fresh ${fault} policy then reuses the exact authorization after recovery`, async () => {
+  const h = await legalContinuationHarness();
+  if (fault === "changed") h.state.policy = { ...h.initial, terms_version: "v2" }; else h.state.fault = fault;
+  await h.run(); assert.deepEqual(h.calls, ["reconcile"]); assert.match(h.statuses.at(-1), /legal terms changed or could not be checked/);
+  assert.equal(JSON.stringify(h.prior), h.before);
+  h.state.policy = h.initial; h.state.fault = null; await h.run();
+  assert.deepEqual(h.calls, ["reconcile", "reconcile", "plan", "same-authorization", "confirmed"]);
+  assert.equal(JSON.stringify(h.prior), h.before);
+});
+
+test("confirmed continuation completes before policy reads even during an outage", async () => {
+  const h = await legalContinuationHarness(); h.canonical.confirmed = true; h.state.fault = "http";
+  const reads = h.calls.length, policyReads = h.policyCalls.length;
+  await h.run(); assert.deepEqual(h.calls.slice(reads), ["reconcile", "confirmed"]);
+  assert.equal(h.statuses.length, 0); assert.equal(h.policyCalls.length, policyReads); assert.equal(JSON.stringify(h.prior), h.before);
+});
