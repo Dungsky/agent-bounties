@@ -27,6 +27,7 @@ on:
       - "schemas/**"
       - "scripts/regression_verifier_pipeline.py"
       - "scripts/regression_verifier_source_guard.py"
+      - "scripts/fixtures/terms-publication-readback.json"
       - "scripts/test_regression_verifier_pipeline.py"
       - "scripts/test_regression_verifier_source_guard.py"
       - "site/**"
