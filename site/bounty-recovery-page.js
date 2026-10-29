@@ -23,10 +23,10 @@
     ui.send.disabled = true;
     ui.refresh.disabled = refreshing || (busy && !walletWaiting);
     ui.wallet.textContent = account || "Not connected";
-    if (!view) { ui.contribution.textContent = account ? "Check status to update" : "Connect to check"; return; }
+    if (!view) { ui.contribution.textContent = expiry ? "Not needed for claim release" : account ? "Check status to update" : "Connect to check"; return; }
     ui.owner.textContent = view.creator;
     ui.balance.textContent = `${core.usdc(view.funded)} USDC`;
-    ui.contribution.textContent = account ? `${core.usdc(view.contribution)} USDC` : "Connect to check";
+    ui.contribution.textContent = expiry ? "Not needed for claim release" : account ? `${core.usdc(view.contribution)} USDC` : "Connect to check";
     ui.send.textContent = expiry ? "Release expired claim" : view.state === 5 ? "Return my funds" : "Cancel old bounty";
     if (expiry) {
       ui.deadline.textContent = `Claim deadline: ${new Date(view.deadline * 1000).toLocaleString()}. Funding deadline: ${new Date(view.fundingDeadline * 1000).toLocaleString()}. Neither date is extended.`;

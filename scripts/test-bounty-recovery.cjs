@@ -490,7 +490,7 @@ test('expiry RPC does not retry rate limits and rejects unallowed calls before n
 });
 test('expiry round links require exact positive safe integer',()=>{for(const value of [null,'','0','-1','3.0','3e0','9007199254740992'])assert.throws(()=>core.expiryRound(value));assert.equal(core.expiryRound('3'),3);});
 test('expiry page explains forfeiture and passed funding deadline, connects a noncreator without sending',async()=>{
- const p=await pageFixture(()=>{},true);await p.click('connect');assert.equal(p.node('recovery-send').disabled,false);assert.equal(p.node('recovery-title').textContent,'Release expired claim');assert.match(p.node('recovery-bond').textContent,/1(?:\.0+)? USDC.*not refunded or paid/);assert.match(p.node('recovery-deadline').textContent,/Neither date is extended/);assert.equal(p.f.sends.length,0);p.close();
+ const p=await pageFixture(()=>{},true);await p.click('connect');assert.equal(p.node('recovery-send').disabled,false);assert.equal(p.node('recovery-title').textContent,'Release expired claim');assert.equal(p.node('recovery-contribution').textContent,'Not needed for claim release');assert.match(p.node('recovery-bond').textContent,/1(?:\.0+)? USDC.*not refunded or paid/);assert.match(p.node('recovery-deadline').textContent,/Neither date is extended/);assert.equal(p.f.sends.length,0);p.close();
 });
 test('expiry page polls receipt only after trusted click and never sends on refresh',async()=>{
  const p=await pageFixture(()=>{},true);await p.click('connect');await p.click('send');assert.equal(p.f.sends.length,1);assert.equal(p.node('recovery-send').disabled,true);assert.equal(p.f.sessions.at(-1).length,2);await p.click('refresh');assert.equal(p.f.sends.length,1);assert.equal(p.f.sessions.at(-1).length,2);p.f.confirmExpiry();await p.click('refresh');assert.match(p.node('recovery-status').textContent,/Claim 3 was released.*No deadline was extended/);assert.equal(p.node('recovery-send').disabled,true);p.close();
@@ -547,7 +547,7 @@ if (process.env.RECOVERY_BROWSER_TEST === '1') test('real browser: expiry picker
   await page.getByRole('button',{name:'Connect my wallet',exact:true}).click();
   assert.equal(await page.getByRole('dialog').getByText(/Buy USDC/).count(),0);
   await page.getByRole('button',{name:/MetaMask in this browser/}).click();
-  await page.getByText(/Review claim 3/).waitFor();assert.equal(f.sends.length,0);
+  await page.getByText(/Review claim 3/).waitFor();assert.equal(f.sends.length,0);assert.equal(await page.locator('#recovery-contribution').textContent(),'Not needed for claim release');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   if(process.env.RECOVERY_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.RECOVERY_SCREENSHOT_DIR,`expiry-review-${width}.png`),fullPage:true});
   await page.getByRole('button',{name:'Release expired claim',exact:true}).click();
