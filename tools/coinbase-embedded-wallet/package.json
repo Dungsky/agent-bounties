@@ -6,10 +6,11 @@
   "scripts": {
     "build": "node build.mjs",
     "test:browser": "node --test test-readiness.mjs test-posting-requests.mjs test-account-link.mjs",
-    "test:posting-flow": "node --test test-posting-flow.mjs",
+    "test:posting-flow": "node --test test-sponsored-creation.mjs",
     "check": "node --check src/index.js && node --check build.mjs && node test-dependency-compat.mjs",
     "test:posting-metrics": "node --test test-posting-metrics.mjs",
-    "test:posting-safety": "node --test test-posting-safety.mjs"
+    "test:posting-safety": "node --test test-posting-safety.mjs",
+    "test:posting-legacy-flow": "node --test test-posting-flow.mjs"
   },
   "dependencies": {
     "@coinbase/cdp-core": "0.0.118",
